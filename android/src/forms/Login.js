@@ -9,8 +9,19 @@ const Login = ({ navigation }) => {
         <Text>PICK ME UP</Text>
       </View>
       <TouchableOpacity>
-        <Button style={styles.loginButton}>
-          <Text onPress={() => navigation.navigate("Dashboard")}>Login</Text>
+        <Button
+          onPress={() => navigation.navigate("CustomerHome")}
+          style={styles.loginCustomerButton}
+        >
+          <Text>Login as Customer</Text>
+        </Button>
+      </TouchableOpacity>
+      <TouchableOpacity>
+        <Button
+          onPress={() => navigation.navigate("RiderHome")}
+          style={styles.loginRiderButton}
+        >
+          <Text>Login as Rider</Text>
         </Button>
       </TouchableOpacity>
     </View>
@@ -25,8 +36,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  loginButton: {
+  loginCustomerButton: {
     padding: 10,
     backgroundColor: "yellow",
+    marginBottom: 10,
+  },
+  loginRiderButton: {
+    padding: 10,
+    backgroundColor: "yellow",
+    marginBottom: 10,
   },
 });

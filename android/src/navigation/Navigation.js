@@ -1,47 +1,60 @@
-import { StyleSheet, Text, View } from "react-native";
 import React from "react";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import Login from "../forms/Login";
-import Dashboard from "../customer/pages/Dashboard";
+import { createDrawerNavigator } from "@react-navigation/drawer";
 import { NavigationContainer } from "@react-navigation/native";
+import Login from "../forms/Login";
+import Home from "../customer/pages/Home";
+import History from "../customer/pages/History";
+import Settings from "../customer/pages/Settings";
+import RiderHistory from "../rider/pages/History";
+import RiderSettings from "../rider/pages/Settings";
+import GetVerified from "../rider/pages/GetVerified";
+import RiderHome from "../rider/pages/Home"
 
-const Stack = createNativeStackNavigator();
+const Drawer = createDrawerNavigator();
 
-const DrawerNavigation = () => {
+const CustomerDrawerNavigation = () => {
   return (
-    <NavigationContainer>
-      <Drawer.Navigator initialRouteName="Dashboard">
-        <Drawer.Screen name="Dashboard" component={Dashboard} />
-        <Drawer.Screen />
-      </Drawer.Navigator>
-    </NavigationContainer>
+    <Drawer.Navigator initialRouteName="Home">
+      <Drawer.Screen name="Home" component={Home} />
+      <Drawer.Screen name="History" component={History} />
+      <Drawer.Screen name="Settings" component={Settings} />
+    </Drawer.Navigator>
+  );
+};
+
+const RiderDrawerNavigation = () => {
+  return (
+    <Drawer.Navigator initialRouteName="Home">
+      <Drawer.Screen name="Home" component={RiderHome} />
+      <Drawer.Screen name="Get Verified" component={GetVerified} />
+      <Drawer.Screen name="History" component={RiderHistory} />
+      <Drawer.Screen name="Settings" component={RiderSettings} />
+    </Drawer.Navigator>
   );
 };
 
 const Navigation = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen
+      <Drawer.Navigator initialRouteName="Login">
+        <Drawer.Screen
           name="Login"
           component={Login}
           options={{ headerShown: false }}
         />
-        <Stack.Screen
-          name="Dashboard"
-          component={Dashboard}
+        <Drawer.Screen
+          name="CustomerHome"
+          component={CustomerDrawerNavigation}
           options={{ headerShown: false }}
         />
-        <Stack.Screen
-          name="Drawer"
-          component={DrawerNavigation}
+        <Drawer.Screen
+          name="RiderHome"
+          component={RiderDrawerNavigation}
           options={{ headerShown: false }}
         />
-      </Stack.Navigator>
+      </Drawer.Navigator>
     </NavigationContainer>
   );
 };
 
 export default Navigation;
-
-const styles = StyleSheet.create({});
