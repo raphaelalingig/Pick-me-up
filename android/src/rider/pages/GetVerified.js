@@ -1,101 +1,148 @@
-import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
-import { TextInput, Button, Appbar } from 'react-native-paper';
+import React, { useState } from "react";
+import { View, ScrollView, StyleSheet } from "react-native";
+import { TextInput, Button, Card, Title } from "react-native-paper";
+import * as ImagePicker from "expo-image-picker";
 
-  
 const GetVerified = () => {
-  const [licenseNumber, setLicenseNumber] = useState('');
+  const [licenseNumber, setLicenseNumber] = useState("");
   const [licenseImage, setLicenseImage] = useState(null);
   const [orCr, setOrCr] = useState(null);
   const [tplInsurance, setTplInsurance] = useState(null);
   const [brgyClearance, setBrgyClearance] = useState(null);
   const [policeClearance, setPoliceClearance] = useState(null);
   const [nbiClearance, setNbiClearance] = useState(null);
-  const [motorWithPlateNumber, setMotorWithPlateNumber] = useState('');
+  const [motorPlateNumber, setMotorPlateNumber] = useState("");
 
-    const handleConfirm = () => {
-      // Handle form submission
-    };
+  const pickImage = async (setImage) => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImage(result.uri);
+    }
+  };
+
   return (
-    <ScrollView style={styles.container}>
-      <Appbar.Header>
-        <Appbar.Content title="Verified Your Account" />
-      </Appbar.Header>
-
-      <View style={styles.form}>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Card style={styles.card}>
+        <Title>Verify Your Account</Title>
         <TextInput
           label="License Number"
           value={licenseNumber}
-          onChangeText={setLicenseNumber}
+          onChangeText={(text) => setLicenseNumber(text)}
           style={styles.input}
+          labelStyle={styles.buttonText}
         />
-        <Button mode="contained" onPress={() => {}} style={styles.button}>
-          Add Photo
+        <Button
+          mode="outlined"
+          onPress={() => pickImage(setLicenseImage)}
+          style={styles.uploadButton}
+          labelStyle={styles.buttonText}
+        >
+          {licenseImage ? "Image Added" : "Add License Image"}
         </Button>
-
-        <Button mode="contained" onPress={() => {}} style={styles.button}>
-          Add Photo
+        <Button
+          mode="outlined"
+          onPress={() => pickImage(setOrCr)}
+          style={styles.uploadButton}
+          labelStyle={styles.buttonText}
+        >
+          {orCr ? "Image Added" : "Add OR CR"}
         </Button>
-
-        <Button mode="contained" onPress={() => {}} style={styles.button}>
-          Add Photo
+        <Button
+          mode="outlined"
+          onPress={() => pickImage(setTplInsurance)}
+          style={styles.uploadButton}
+          labelStyle={styles.buttonText}
+        >
+          {tplInsurance ? "Image Added" : "Add TPL Insurance"}
         </Button>
-
-        <Button mode="contained" onPress={() => {}} style={styles.button}>
-          Add Photo
+        <Button
+          mode="outlined"
+          onPress={() => pickImage(setBrgyClearance)}
+          style={styles.uploadButton}
+          labelStyle={styles.buttonText}
+        >
+          {brgyClearance ? "Image Added" : "Add Brgy Clearance"}
         </Button>
-
-        <Button mode="contained" onPress={() => {}} style={styles.button}>
-          Add Photo
+        <Button
+          mode="outlined"
+          onPress={() => pickImage(setPoliceClearance)}
+          style={styles.uploadButton}
+          labelStyle={styles.buttonText}
+        >
+          {policeClearance ? "Image Added" : "Add Police Clearance"}
         </Button>
-
-        <Button mode="contained" onPress={() => {}} style={styles.button}>
-          Add Photo
+        <Button
+          mode="outlined"
+          onPress={() => pickImage(setNbiClearance)}
+          style={styles.uploadButton}
+          labelStyle={styles.buttonText}
+        >
+          {nbiClearance ? "Image Added" : "Add NBI Clearance"}
         </Button>
-
         <TextInput
           label="Motor with Plate Number"
-          value={motorWithPlateNumber}
-          onChangeText={setMotorWithPlateNumber}
+          value={motorPlateNumber}
+          onChangeText={(text) => setMotorPlateNumber(text)}
           style={styles.input}
         />
-
         <View style={styles.buttonContainer}>
           <Button
             mode="contained"
-            onPress={() => {}}
-            style={styles.cancelButton}
+            onPress={() => console.log("Cancelled")}
+            style={[styles.button, styles.cancelButton]}
+            buttonColor="red"
           >
             Cancel
           </Button>
           <Button
             mode="contained"
-            onPress={handleConfirm}
-            style={styles.confirmButton}
+            onPress={() => console.log("Confirmed")}
+            style={[styles.button, styles.confirmButton]}
+            buttonColor="green"
           >
             Confirm
           </Button>
         </View>
-      </View>
+      </Card>
     </ScrollView>
   );
-}
+};
+
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
+    justifyContent: "center",
+    padding: 20,
   },
-  form: {
-    padding: 16,
+  card: {
+    padding: 20,
+    backgroundColor: "#FFC533",
   },
   input: {
-    marginBottom: 16,
+    marginVertical: 10,
   },
-  button: {
-    marginBottom: 16,
+  uploadButton: {
+    marginVertical: 10,
+    backgroundColor: "white",
+    borderColor: "black",
+  },
+  buttonText: {
+    color: "black", // This makes the text color black
   },
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
+    marginTop: 20,
+  },
+  button: {
+    flex: 1,
+    marginHorizontal: 5,
   },
   cancelButton: {
     backgroundColor: "red",
@@ -105,5 +152,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default GetVerified
-
+export default GetVerified;
