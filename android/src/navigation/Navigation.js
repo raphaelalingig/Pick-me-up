@@ -9,6 +9,7 @@ import RiderHistory from "../rider/pages/History";
 import RiderSettings from "../rider/pages/Settings";
 import GetVerified from "../rider/pages/GetVerified";
 import RiderHome from "../rider/pages/Home"
+import Register from "../forms/Register";
 
 const Drawer = createDrawerNavigator();
 
@@ -40,6 +41,11 @@ const Navigation = () => {
         <Drawer.Screen
           name="Login"
           component={Login}
+          options={{ headerShown: false }}
+        />
+        <Drawer.Screen
+          name="Register"
+          component={Register}
           options={{ headerShown: false }}
         />
         <Drawer.Screen
