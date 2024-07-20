@@ -1,65 +1,94 @@
 import React from "react";
-import { View, StyleSheet, TouchableOpacity } from "react-native"; // Import TouchableOpacity from react-native
+import {
+  View,
+  StyleSheet,
+  ImageBackground,
+  TouchableOpacity,
+} from "react-native";
 import { TextInput, Button, Text } from "react-native-paper"; // Import TextInput, Button, and Text from react-native-paper
 
 const Login = ({ navigation }) => {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Pick Me Up</Text>
-      <Text style={styles.subtitle}>“Pick you up where ever you are”</Text>
-
-      <TextInput label="Username" mode="outlined" style={styles.input} />
-      <TextInput
-        label="Password"
-        mode="outlined"
-        secureTextEntry
-        style={styles.input}
-      />
-
-      <Button
-        mode="contained"
-        style={styles.button}
-        labelStyle={{ color: "#FBC635" }}
-      >
-        Login
-      </Button>
-      <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-        <Text style={styles.registerText}>
-          Don't have an account?{" "}
-          <Text style={{ color: "blue", textDecorationLine: "underline" }}>
-            Register Here
-          </Text>
-        </Text>
-      </TouchableOpacity>
-    </View>
+    <ImageBackground
+      source={require("../pictures/PMU_Rider_Back.png")}
+      style={styles.background}
+    >
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>PICKME UP</Text>
+          <Text style={styles.subtitle}>"Pick you up where every you are"</Text>
+        </View>
+        <TextInput label="Username" mode="outlined" style={styles.input} />
+        <TextInput
+          label="Password"
+          mode="outlined"
+          secureTextEntry
+          style={styles.input}
+        />
+        <Button
+          mode="contained"
+          style={styles.button}
+          labelStyle={{ color: "#FFC533", fontSize: 20, fontWeight: "bold" }}
+          onPress={() => navigation.navigate("RiderHome")}
+        >
+          Login
+        </Button>
+        <View style={styles.registerContainer}>
+          <Text style={styles.registerText}>Don’t have an account? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+            <Text style={styles.registerLink}>Register Here</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  background: {
     flex: 1,
-    padding: 20,
+    resizeMode: "cover",
     justifyContent: "center",
   },
+  container: {
+    paddingHorizontal: 20,
+  },
+  header: {
+    alignItems: "center",
+    marginBottom: 50,
+    backgroundColor: "black", // Change this to the desired background color
+    paddingVertical: 20, // Add padding to make it look better
+    borderRadius: 10, // Optional: Add border radius for rounded corners
+  },
   title: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: "bold",
-    marginBottom: 10,
+    color: "#FFC533",
   },
   subtitle: {
     fontSize: 16,
-    marginBottom: 20,
+    color: "#FFC533",
   },
   input: {
-    marginBottom: 10,
+    marginBottom: 20,
   },
   button: {
-    marginTop: 10,
-    backgroundColor: "black",
+    marginTop: 20,
+    padding: 5,
+    backgroundColor: "#000",
+  },
+  registerContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 20,
   },
   registerText: {
-    marginTop: 20,
-    textAlign: "center",
+    color: "#fff",
+  },
+  registerLink: {
+    color: "#0000EE",
+    textDecorationLine: "underline",
   },
 });
 
