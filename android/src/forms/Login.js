@@ -31,7 +31,16 @@ const Login = ({ navigation }) => {
           labelStyle={{ color: "#FFC533", fontSize: 20, fontWeight: "bold" }}
           onPress={() => navigation.navigate("RiderHome")}
         >
-          Login
+          Login as rider
+        </Button>
+
+        <Button
+          mode="contained"
+          style={styles.button}
+          labelStyle={{ color: "#FFC533", fontSize: 20, fontWeight: "bold" }}
+          onPress={() => navigation.navigate("CustomerHome")}
+        >
+          Login as Customer
         </Button>
         <View style={styles.registerContainer}>
           <Text style={styles.registerText}>Don’t have an account? </Text>

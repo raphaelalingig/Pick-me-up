@@ -1,17 +1,22 @@
 import React from "react";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { NavigationContainer } from "@react-navigation/native";
+
 import Login from "../forms/Login";
 import Home from "../customer/pages/Home";
 import History from "../customer/pages/History";
 import Settings from "../customer/pages/Settings";
-import RiderHistory from "../rider/pages/History";
-import RiderSettings from "../rider/pages/Settings";
-import GetVerified from "../rider/pages/GetVerified";
-import RiderHome from "../rider/pages/Home"
+import RiderHistory from "../rider/sidebarContents/History";
+import RiderSettings from "../rider/sidebarContents/Settings";
+import GetVerified from "../rider/sidebarContents/GetVerified";
+import RiderHome from "../rider/pages/Home";
 import Register from "../forms/Register";
+import NearbyCustomerScreen from "../rider/pages/NearByCustomer";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import BookingDetailsScreen from "../rider/pages/BookingDetailsScreen";
 
 const Drawer = createDrawerNavigator();
+const Stack = createNativeStackNavigator();
 
 const CustomerDrawerNavigation = () => {
   return (
@@ -37,28 +42,32 @@ const RiderDrawerNavigation = () => {
 const Navigation = () => {
   return (
     <NavigationContainer>
-      <Drawer.Navigator initialRouteName="Login">
-        <Drawer.Screen
+      <Stack.Navigator initialRouteName="Login">
+        <Stack.Screen
           name="Login"
           component={Login}
           options={{ headerShown: false }}
         />
-        <Drawer.Screen
+        <Stack.Screen
           name="Register"
           component={Register}
           options={{ headerShown: false }}
         />
-        <Drawer.Screen
+        <Stack.Screen
           name="CustomerHome"
           component={CustomerDrawerNavigation}
           options={{ headerShown: false }}
         />
-        <Drawer.Screen
+        <Stack.Screen
           name="RiderHome"
           component={RiderDrawerNavigation}
           options={{ headerShown: false }}
         />
-      </Drawer.Navigator>
+
+        <Stack.Screen name="NearbyCustomer" component={NearbyCustomerScreen} />
+
+        <Stack.Screen name="BookingDetails" component={BookingDetailsScreen} />
+      </Stack.Navigator>
     </NavigationContainer>
   );
 };
