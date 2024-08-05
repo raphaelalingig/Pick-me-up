@@ -1,13 +1,56 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   StyleSheet,
   ImageBackground,
   TouchableOpacity,
 } from "react-native";
-import { TextInput, Button, Text } from "react-native-paper"; // Import TextInput, Button, and Text from react-native-paper
+import { TextInput, Button, Text } from "react-native-paper";
+import { useAuth } from "../services/useAuth";
+import userService from "../services/auth&services";
 
 const Login = ({ navigation }) => {
+  const [user_name, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
+
+  const handleLogin = async () => {
+    setError("");
+    setIsLoading(true);
+  
+    try {
+      const { token, role } = await userService.login(user_name, password);
+  
+      if (role === 3) {
+        login(token, role);
+        navigation.navigate("RiderHome");
+      } else if (role === 4) {
+        login(token, role);
+        navigation.navigate("CustomerHome");
+      } else {
+        setError("An error occurred during login");
+      }
+    } catch (err) {
+      if (err.response) {
+        if (err.response.status === 401) {
+          setError("Invalid email or password");
+        } else if (err.response.status === 404) {
+          setError("Account doesn't exist");
+        } else {
+          setError(err.response.data?.message || "An error occurred during login");
+        }
+      } else if (err.request) {
+        setError("Network error, please try again later");
+      } else {
+        setError("An unexpected error occurred");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <ImageBackground
       source={require("../pictures/PMU_Rider_Back.png")}
@@ -16,34 +59,41 @@ const Login = ({ navigation }) => {
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>PICKME UP</Text>
-          <Text style={styles.subtitle}>"Pick you up where every you are"</Text>
+          <Text style={styles.subtitle}>Pick you up wherever you are</Text>
         </View>
-        <TextInput label="Username" mode="outlined" style={styles.input} />
+
         <TextInput
-          label="Password"
-          mode="outlined"
-          secureTextEntry
           style={styles.input}
+          label="Username"
+          value={user_name}
+          onChangeText={setUsername}
+          mode="outlined"
         />
-        <Button
-          mode="contained"
-          style={styles.button}
-          labelStyle={{ color: "#FFC533", fontSize: 20, fontWeight: "bold" }}
-          onPress={() => navigation.navigate("RiderHome")}
-        >
-          Login as rider
-        </Button>
+
+        <TextInput
+          style={styles.input}
+          label="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          mode="outlined"
+        />
+
+        {error && <Text style={styles.error}>{error}</Text>}
 
         <Button
           mode="contained"
           style={styles.button}
-          labelStyle={{ color: "#FFC533", fontSize: 20, fontWeight: "bold" }}
-          onPress={() => navigation.navigate("CustomerHome")}
+          labelStyle={styles.buttonText}
+          onPress={handleLogin}
+          loading={isLoading}
+          disabled={isLoading}
         >
-          Login as Customer
+          {isLoading ? 'Logging in...' : 'Login'}
         </Button>
+
         <View style={styles.registerContainer}>
-          <Text style={styles.registerText}>Don’t have an account? </Text>
+          <Text style={styles.registerText}>Don't have an account? </Text>
           <TouchableOpacity onPress={() => navigation.navigate("Register")}>
             <Text style={styles.registerLink}>Register Here</Text>
           </TouchableOpacity>
@@ -65,9 +115,9 @@ const styles = StyleSheet.create({
   header: {
     alignItems: "center",
     marginBottom: 50,
-    backgroundColor: "black", // Change this to the desired background color
-    paddingVertical: 20, // Add padding to make it look better
-    borderRadius: 10, // Optional: Add border radius for rounded corners
+    backgroundColor: "black",
+    paddingVertical: 20,
+    borderRadius: 10,
   },
   title: {
     fontSize: 32,
@@ -86,6 +136,9 @@ const styles = StyleSheet.create({
     padding: 5,
     backgroundColor: "#000",
   },
+  buttonText: {
+    color: "#FFC533", 
+  },
   registerContainer: {
     flexDirection: "row",
     justifyContent: "center",
@@ -98,6 +151,11 @@ const styles = StyleSheet.create({
   registerLink: {
     color: "#0000EE",
     textDecorationLine: "underline",
+  },
+  error: {
+    color: "red",
+    fontWeight: "bold",
+    marginBottom: 20,
   },
 });
 
