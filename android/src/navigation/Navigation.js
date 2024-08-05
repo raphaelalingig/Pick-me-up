@@ -8,14 +8,18 @@ import Settings from "../customer/pages/Settings";
 import RiderHistory from "../rider/pages/History";
 import RiderSettings from "../rider/pages/Settings";
 import GetVerified from "../rider/pages/GetVerified";
-import RiderHome from "../rider/pages/Home"
+import RiderHome from "../rider/pages/Home";
 import Register from "../forms/Register";
+import CustomDrawerContent from "./CustomDrawerContent"; // Make sure the path is correct
 
 const Drawer = createDrawerNavigator();
 
 const CustomerDrawerNavigation = () => {
   return (
-    <Drawer.Navigator initialRouteName="Home">
+    <Drawer.Navigator
+      initialRouteName="Home"
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
+    >
       <Drawer.Screen name="Home" component={Home} />
       <Drawer.Screen name="History" component={History} />
       <Drawer.Screen name="Settings" component={Settings} />
@@ -25,7 +29,10 @@ const CustomerDrawerNavigation = () => {
 
 const RiderDrawerNavigation = () => {
   return (
-    <Drawer.Navigator initialRouteName="Home">
+    <Drawer.Navigator
+      initialRouteName="Home"
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
+    >
       <Drawer.Screen name="Home" component={RiderHome} />
       <Drawer.Screen name="Get Verified" component={GetVerified} />
       <Drawer.Screen name="History" component={RiderHistory} />
@@ -37,7 +44,10 @@ const RiderDrawerNavigation = () => {
 const Navigation = () => {
   return (
     <NavigationContainer>
-      <Drawer.Navigator initialRouteName="Login">
+      <Drawer.Navigator
+        initialRouteName="Login"
+        drawerContent={(props) => <CustomDrawerContent {...props} />}
+      >
         <Drawer.Screen
           name="Login"
           component={Login}

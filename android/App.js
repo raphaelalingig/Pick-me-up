@@ -5,16 +5,19 @@ import { PaperProvider } from "react-native-paper";
 import Navigation from "./src/navigation/Navigation";
 import { SafeAreaView } from "react-native-safe-area-context";
 import "react-native-gesture-handler";
+import { AuthProvider } from "./src/services/AuthContext";
 
 
 
 export default function App() {
   return (
-    <PaperProvider style={styles.container}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
-        <Navigation />
-      </SafeAreaView>
-    </PaperProvider>
+    <AuthProvider>
+      <PaperProvider style={styles.container}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
+          <Navigation />
+        </SafeAreaView>
+      </PaperProvider>
+    </AuthProvider>
   );
 }
 
