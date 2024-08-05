@@ -35,9 +35,9 @@ const Login = ({ navigation }) => {
     } catch (err) {
       if (err.response) {
         if (err.response.status === 401) {
-          setError("Invalid email or password");
+          setError("Please Input required credentials");
         } else if (err.response.status === 404) {
-          setError("Account doesn't exist");
+          setError("Username and Password do not match");
         } else {
           setError(err.response.data?.message || "An error occurred during login");
         }
@@ -157,6 +157,20 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 20,
   },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  passwordInput: {
+    flex: 1,
+    marginBottom: 0,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 0,
+  },
+
 });
 
 export default Login;
