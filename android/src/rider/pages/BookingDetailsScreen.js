@@ -1,10 +1,17 @@
-import React from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
+import React from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  ImageBackground,
+} from "react-native";
 
-const BookingDetailsScreen = () => {
+const BookingDetailsScreen = ({ navigation }) => {
   return (
     <ImageBackground
-      source={{ uri: 'https://your-map-image-url.com' }} // Replace with your map image URL or local asset
+      source={{ uri: "https://your-map-image-url.com" }} // Replace with your map image URL or local asset
       style={styles.background}
     >
       <View style={styles.header}>
@@ -19,7 +26,11 @@ const BookingDetailsScreen = () => {
         <Text style={styles.title}>Booking Details</Text>
         <View style={styles.inputContainer}>
           <Text>Name:</Text>
-          <TextInput style={styles.input} value="Ibarra, Ray Anthony" editable={false} />
+          <TextInput
+            style={styles.input}
+            value="Ibarra, Ray Anthony"
+            editable={false}
+          />
         </View>
         <View style={styles.inputContainer}>
           <Text>Location:</Text>
@@ -38,7 +49,10 @@ const BookingDetailsScreen = () => {
           <TextInput style={styles.input} value="100" editable={false} />
         </View>
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.cancelButton}>
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => navigation.goBack()}
+          >
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.acceptButton}>
@@ -53,15 +67,15 @@ const BookingDetailsScreen = () => {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   header: {
-    position: 'absolute',
+    position: "absolute",
     top: 40,
     left: 10,
     right: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   backButton: {
     padding: 10,
@@ -76,52 +90,50 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
   container: {
-    backgroundColor: '#FFD700',
+    backgroundColor: "#FFD700",
     margin: 20,
     borderRadius: 10,
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 20,
   },
   inputContainer: {
-    width: '100%',
+    width: "100%",
     marginBottom: 10,
   },
   input: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderRadius: 5,
     padding: 10,
     marginTop: 5,
   },
   buttonContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginTop: 20,
   },
   cancelButton: {
-    backgroundColor: '#FF0000',
+    backgroundColor: "#FF0000",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
     marginRight: 10,
   },
   cancelButtonText: {
-    color: '#FFF',
+    color: "#FFF",
   },
   acceptButton: {
-    backgroundColor: '#00FF00',
+    backgroundColor: "#00FF00",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
   },
   acceptButtonText: {
-    color: '#FFF',
+    color: "#FFF",
   },
 });
 
 export default BookingDetailsScreen;
-
-
