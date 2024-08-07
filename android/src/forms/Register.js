@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
-import { View, StyleSheet, Keyboard, Platform } from "react-native";
+import { View, StyleSheet, Keyboard, Platform, TouchableOpacity } from "react-native";
 import { TextInput, Button, Text, Surface, Menu, Provider as PaperProvider } from "react-native-paper";
+import Icon from 'react-native-vector-icons/MaterialIcons'; // or another icon set
 import { widthPercentageToDP, heightPercentageToDP } from "react-native-responsive-screen";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import RNPickerSelect from 'react-native-picker-select';
@@ -189,34 +190,32 @@ const Register = ({ navigation }) => {
             mode="outlined"
             style={styles.input}
           />
-          <TextInput
-            label="Create Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={HideEntry}
-            mode="outlined"
-            style={styles.input}
-            right={
-              <TextInput.Icon
-                name={!HideEntry ? "eye" : "eye-off"}
-                onPress={toggleSecureEntry}
-              />
-            }
-          />
-          <TextInput
-            label="Confirm Password"
-            value={repassword}
-            onChangeText={setRepassword}
-            secureTextEntry={HideEntry}
-            mode="outlined"
-            style={styles.input}
-            right={
-              <TextInput.Icon
-                name={!HideEntry ? "eye" : "eye-off"}
-                onPress={toggleSecureEntry}
-              />
-            }
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              label="Create Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={HideEntry}
+              mode="outlined"
+              style={[styles.input, styles.passwordInput]}
+            />
+            <TouchableOpacity onPress={toggleSecureEntry} style={styles.iconContainer}>
+              <Icon name={HideEntry ? "visibility-off" : "visibility"} size={24} color="#000" />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.passwordContainer}>
+            <TextInput
+              label="Confirm Password"
+              value={repassword}
+              onChangeText={setRepassword}
+              secureTextEntry={HideEntry}
+              mode="outlined"
+              style={[styles.input, styles.passwordInput]}
+            />
+            <TouchableOpacity onPress={toggleSecureEntry} style={styles.iconContainer}>
+              <Icon name={HideEntry ? "visibility-off" : "visibility"} size={24} color="#000" />
+            </TouchableOpacity>
+          </View>
           <TextInput
             label="Add Phone Number"
             value={mobile_number}
@@ -328,6 +327,17 @@ const styles = StyleSheet.create({
   menuItem: {
     color: "black",
   },
+  passwordContainer: {
+    position: 'relative',
+  },
+  passwordInput: {
+    paddingRight: 50, // To make space for the icon
+  },
+  iconContainer: {
+    position: 'absolute',
+    right: 10,
+    top: 10,
+  },
 });
 
 const pickerSelectStyles = StyleSheet.create({
@@ -341,20 +351,21 @@ const pickerSelectStyles = StyleSheet.create({
     paddingRight: 30, // to ensure the text is never behind the icon
     width: widthPercentageToDP("80%"),
     marginBottom: heightPercentageToDP("2%"),
-    backgroundColor: "#fff",
   },
   inputAndroid: {
     fontSize: 16,
     paddingHorizontal: 10,
     paddingVertical: 8,
-    borderWidth: 0.5,
+    borderWidth: 1,
     borderColor: "#FFC42B",
-    borderRadius: 8,
     color: "black",
-    paddingRight: 30, // to ensure the text is never behind the icon
+    paddingRight: 30,
     width: widthPercentageToDP("80%"),
     marginBottom: heightPercentageToDP("2%"),
-    backgroundColor: "#fff",
+  },
+  iconContainer: {
+    top: 12,
+    right: 10,
   },
 });
 

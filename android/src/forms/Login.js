@@ -5,7 +5,7 @@ import {
   ImageBackground,
   TouchableOpacity,
 } from "react-native";
-import { TextInput, Button, Text } from "react-native-paper";
+import { TextInput, Button, Text, Dialog, Portal } from "react-native-paper";
 import { useAuth } from "../services/useAuth";
 import userService from "../services/auth&services";
 
@@ -14,20 +14,25 @@ const Login = ({ navigation }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [token, setToken] = useState(""); // Token state
   const { login } = useAuth();
 
   const handleLogin = async () => {
     setError("");
     setIsLoading(true);
-  
+
     try {
-      const { token, role } = await userService.login(user_name, password);
-  
+      const { token: receivedToken, role } = await userService.login(user_name, password);
+      setToken(receivedToken); // Store the token
+
       if (role === 3) {
-        login(token, role);
-        navigation.navigate("RiderHome");
-      } else if (role === 4) {
-        login(token, role);
+        // For rider, show the modal to choose the role
+        setSelectedRole(role);
+        setShowDialog(true);
+      } else if (role === 4 || role === 1 || role === 2) {
+        login(receivedToken, role); // Use the token
         navigation.navigate("CustomerHome");
       } else {
         setError("An error occurred during login");
@@ -48,6 +53,16 @@ const Login = ({ navigation }) => {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRoleSelection = (role) => {
+    login(token, role); // Use the token from the state
+    setShowDialog(false);
+    if (role === 3) {
+      navigation.navigate("RiderHome");
+    } else {
+      navigation.navigate("CustomerHome");
     }
   };
 
@@ -98,6 +113,20 @@ const Login = ({ navigation }) => {
             <Text style={styles.registerLink}>Register Here</Text>
           </TouchableOpacity>
         </View>
+
+        <Portal>
+          <Dialog visible={showDialog} onDismiss={() => setShowDialog(false)} style={styles.dialog}>
+            <Dialog.Title style={styles.dialogTitle}>Select Role</Dialog.Title>
+            <Dialog.Content>
+              <Button mode="contained" style={styles.dialogButton} onPress={() => handleRoleSelection(3)}>
+                Rider
+              </Button>
+              <Button mode="contained" style={styles.dialogButton} onPress={() => handleRoleSelection(4)}>
+                Customer
+              </Button>
+            </Dialog.Content>
+          </Dialog>
+        </Portal>
       </View>
     </ImageBackground>
   );
@@ -137,7 +166,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
   },
   buttonText: {
-    color: "#FFC533", 
+    color: "#FFC533",
   },
   registerContainer: {
     flexDirection: "row",
@@ -157,20 +186,18 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 20,
   },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
+  dialog: {
+    backgroundColor: "#000",
+    borderRadius: 10,
   },
-  passwordInput: {
-    flex: 1,
-    marginBottom: 0,
+  dialogTitle: {
+    color: "#FFC533",
   },
-  eyeIcon: {
-    position: 'absolute',
-    right: 0,
+  dialogButton: {
+    marginTop: 10,
+    backgroundColor: "#FFC533",
+    color: "#000",
   },
-
 });
 
 export default Login;
