@@ -2,7 +2,7 @@ import React from "react";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-
+import { useAuth } from "../services/useAuth";
 import Login from "../forms/Login";
 import Home from "../customer/pages/Home";
 import History from "../customer/pages/History";
@@ -23,10 +23,10 @@ const Stack = createNativeStackNavigator();
 const CustomerDrawerNavigation = () => {
   return (
     <Drawer.Navigator
-      initialRouteName="Home"
+      initialRouteName="CustomerHome"
       drawerContent={(props) => <CustomDrawerContent {...props} />}
     >
-      <Drawer.Screen name="Home" component={Home} />
+      <Drawer.Screen name="CustomerHome" component={Home} />
       <Drawer.Screen name="History" component={History} />
       <Drawer.Screen name="Settings" component={Settings} />
     </Drawer.Navigator>
@@ -36,42 +36,64 @@ const CustomerDrawerNavigation = () => {
 const RiderDrawerNavigation = () => {
   return (
     <Drawer.Navigator
-      initialRouteName="Home"
+      initialRouteName="RiderHome"
       drawerContent={(props) => <CustomDrawerContent {...props} />}
     >
-      <Drawer.Screen name="Home" component={RiderHome} />
-      <Drawer.Screen name="Get Verified" component={GetVerified} />
-      <Drawer.Screen name="History" component={RiderHistory} />
-      <Drawer.Screen name="Settings" component={RiderSettings} />
+      <Drawer.Screen name="RiderHome" component={RiderHome} />
+      <Drawer.Screen name="GetVerified" component={GetVerified} />
+      <Drawer.Screen name="RiderHistory" component={RiderHistory} />
+      <Drawer.Screen name="RiderSettings" component={RiderSettings} />
     </Drawer.Navigator>
   );
 };
 
-const MainStack = () => {
+const AuthStack = () => {
   return (
-    <Stack.Navigator initialRouteName="Login">
-      <Stack.Screen
-        name="Login"
-        component={Login}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Register"
-        component={Register}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="CustomerHome"
-        component={CustomerDrawerNavigation}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="RiderHome"
-        component={RiderDrawerNavigation}
-        options={{ headerShown: false }}
-      />
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Login" component={Login} />
+      <Stack.Screen name="Register" component={Register} />
+    </Stack.Navigator>
+  );
+};
+
+const CustomerStack = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="CustomerDrawer" component={CustomerDrawerNavigation} />
       <Stack.Screen name="NearbyCustomer" component={NearbyCustomerScreen} />
       <Stack.Screen name="BookingDetails" component={BookingDetailsScreen} />
+    </Stack.Navigator>
+  );
+};
+
+const RiderStack = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="RiderDrawer" component={RiderDrawerNavigation} />
+      <Stack.Screen name="NearbyCustomer" component={NearbyCustomerScreen} />
+      <Stack.Screen name="BookingDetails" component={BookingDetailsScreen} />
+    </Stack.Navigator>
+  );
+};
+
+const RootStack = () => {
+  const { isAuthenticated, userRole, loading } = useAuth();
+
+  console.log('RootStack render:', { isAuthenticated, userRole, loading });
+
+  if (loading) {
+    return null; // Or a loading screen
+  }
+
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {!isAuthenticated ? (
+        <Stack.Screen name="Auth" component={AuthStack} />
+      ) : userRole === 3 ? (
+        <Stack.Screen name="RiderStack" component={RiderStack} />
+      ) : (
+        <Stack.Screen name="CustomerStack" component={CustomerStack} />
+      )}
     </Stack.Navigator>
   );
 };
@@ -79,7 +101,7 @@ const MainStack = () => {
 const Navigation = () => {
   return (
     <NavigationContainer>
-      <MainStack />
+      <RootStack />
     </NavigationContainer>
   );
 };

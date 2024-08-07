@@ -17,6 +17,7 @@ export const useAuth = () => {
       await AsyncStorage.setItem("role", role.toString());
       setIsAuthenticated(true);
       setUserRole(parseInt(role));
+      console.log('Login successful:', { isAuthenticated: true, userRole: parseInt(role) });
     } catch (error) {
       console.error("Error during login:", error);
     }
@@ -28,6 +29,7 @@ export const useAuth = () => {
       await AsyncStorage.removeItem("role");
       setIsAuthenticated(false);
       setUserRole(null);
+      console.log('Logout successful');
     } catch (error) {
       console.error("Error during logout:", error);
     }

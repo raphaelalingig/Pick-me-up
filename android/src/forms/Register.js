@@ -96,7 +96,7 @@ const Register = ({ navigation }) => {
       Keyboard.dismiss();
   
       setTimeout(() => {
-        navigation.navigate("Login");
+        navigation.replace("Login");
       }, 1000);
   
       resetForm();

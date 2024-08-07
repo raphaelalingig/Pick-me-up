@@ -14,7 +14,7 @@ const CustomDrawerContent = (props) => {
       await userService.logout();
       // Assuming `logout` is a function from your auth context or hook
       logout();
-      navigation.navigate('Login');
+      // navigation.navigate('Login');
     } catch (error) {
       console.error('Logout failed', error);
       // Handle any errors (e.g., show an error message to the user)
