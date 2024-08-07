@@ -5,7 +5,8 @@ import {
   ImageBackground,
   TouchableOpacity,
 } from "react-native";
-import { TextInput, Button, Text } from "react-native-paper";
+import { TextInput, Button, Text, Dialog, Portal } from "react-native-paper";
+import Icon from 'react-native-vector-icons/MaterialIcons'; // Ensure you have this package installed
 import { useAuth } from "../services/useAuth";
 import userService from "../services/auth&services";
 
@@ -14,28 +15,39 @@ const Login = ({ navigation }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [token, setToken] = useState(""); // Token state
   const { login } = useAuth();
+  const [hideEntry, setHideEntry] = useState(true);
 
   const handleLogin = async () => {
     setError("");
+  
+    if (!user_name || !password) {
+      setError("Please input required credentials");
+      return;
+    }
+  
     setIsLoading(true);
   
     try {
-      const { token, role } = await userService.login(user_name, password);
+      const { token: receivedToken, role } = await userService.login(user_name, password);
+      setToken(receivedToken);
   
       if (role === 3) {
-        login(token, role);
-        navigation.navigate("RiderHome");
-      } else if (role === 4) {
-        login(token, role);
-        navigation.navigate("CustomerHome");
+        setSelectedRole(role);
+        setShowDialog(true);
+      } else if (role === 4 || role === 1 || role === 2) {
+        await login(receivedToken, role);
+        navigation.replace(role === 3 ? "RiderStack" : "CustomerStack");
       } else {
         setError("An error occurred during login");
       }
     } catch (err) {
       if (err.response) {
         if (err.response.status === 401) {
-          setError("Please Input required credentials");
+          setError("Incorrect username or password");
         } else if (err.response.status === 404) {
           setError("Username and Password do not match");
         } else {
@@ -49,6 +61,17 @@ const Login = ({ navigation }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  
+  const handleRoleSelection = async (role) => {
+    await login(token, role);
+    setShowDialog(false);
+    navigation.replace(role === 3 ? "RiderStack" : "CustomerStack");
+  };
+
+  const toggleSecureEntry = () => {
+    setHideEntry(!hideEntry);
   };
 
   return (
@@ -69,15 +92,19 @@ const Login = ({ navigation }) => {
           onChangeText={setUsername}
           mode="outlined"
         />
-
-        <TextInput
-          style={styles.input}
-          label="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          mode="outlined"
-        />
+        <View style={styles.passwordContainer}>
+          <TextInput
+            label="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={hideEntry}
+            mode="outlined"
+            style={[styles.input, styles.passwordInput]}
+          />
+          <TouchableOpacity onPress={toggleSecureEntry} style={styles.iconContainer}>
+            <Icon name={hideEntry ? "visibility-off" : "visibility"} size={24} color="#000" />
+          </TouchableOpacity>
+        </View>
 
         {error && <Text style={styles.error}>{error}</Text>}
 
@@ -98,6 +125,20 @@ const Login = ({ navigation }) => {
             <Text style={styles.registerLink}>Register Here</Text>
           </TouchableOpacity>
         </View>
+
+        <Portal>
+          <Dialog visible={showDialog} onDismiss={() => setShowDialog(false)} style={styles.dialog}>
+            <Dialog.Title style={styles.dialogTitle}>Select Role</Dialog.Title>
+            <Dialog.Content>
+              <Button mode="contained" style={styles.dialogButton} onPress={() => handleRoleSelection(3)}>
+                Rider
+              </Button>
+              <Button mode="contained" style={styles.dialogButton} onPress={() => handleRoleSelection(4)}>
+                Customer
+              </Button>
+            </Dialog.Content>
+          </Dialog>
+        </Portal>
       </View>
     </ImageBackground>
   );
@@ -137,7 +178,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
   },
   buttonText: {
-    color: "#FFC533", 
+    color: "#FFC533",
   },
   registerContainer: {
     flexDirection: "row",
@@ -164,13 +205,24 @@ const styles = StyleSheet.create({
   },
   passwordInput: {
     flex: 1,
-    marginBottom: 0,
   },
-  eyeIcon: {
+  iconContainer: {
     position: 'absolute',
     right: 0,
+    padding: 25,
   },
-
+  dialog: {
+    backgroundColor: "#000",
+    borderRadius: 10,
+  },
+  dialogTitle: {
+    color: "#FFC533",
+  },
+  dialogButton: {
+    marginTop: 10,
+    backgroundColor: "#FFC533",
+    color: "#000",
+  },
 });
 
 export default Login;
