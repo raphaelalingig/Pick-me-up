@@ -185,12 +185,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 20,
+    padding: 10,
+    backgroundColor: "#000",
+    borderRadius: 10,
   },
   registerText: {
     color: "#fff",
   },
   registerLink: {
-    color: "#0000EE",
+    color: "#FFC533",
     textDecorationLine: "underline",
   },
   error: {
