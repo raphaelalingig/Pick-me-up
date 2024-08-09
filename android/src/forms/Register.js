@@ -1,25 +1,243 @@
-import React, { useState, useRef } from "react";
-import { View, StyleSheet, Keyboard, Platform, TouchableOpacity } from "react-native";
-import { TextInput, Button, Text, Surface, Menu, Provider as PaperProvider } from "react-native-paper";
-import Icon from 'react-native-vector-icons/MaterialIcons'; // or another icon set
-import { widthPercentageToDP, heightPercentageToDP } from "react-native-responsive-screen";
-import DateTimePicker from '@react-native-community/datetimepicker';
-import RNPickerSelect from 'react-native-picker-select';
+import React, { useState, memo, useRef } from "react";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  ImageBackground,
+} from "react-native";
+import { TextInput, Text, Button, Keyboard } from "react-native-paper";
+import { Picker } from "@react-native-picker/picker";
+import Animated, { FadeInRight, FadeOutLeft } from "react-native-reanimated";
+import { BlurView } from "expo-blur";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import Toast from "react-native-root-toast";
 import userService from "../services/auth&services";
 
+const FirstForm = memo(
+  ({
+    first_name,
+    setFirstName,
+    last_name,
+    setLastName,
+    user_name,
+    setUsername,
+    selectedUserType,
+    setSelectedUserType,
+    setCurrentForm,
+    date_of_birth,
+    setDateOfBirth,
+    showDatePicker,
+    setShowDatePicker,
+    onDateChange,
+    datePickerRef,
+    gender,
+    setGender,
+    userType,
+    setUserType,
+  }) => (
+    <Animated.View
+      entering={FadeInRight}
+      exiting={FadeOutLeft}
+      style={styles.formContainer}
+    >
+      <View style={{ width: "100%" }}>
+        <Text variant="bodyLarge" style={styles.labels}>
+          Name
+        </Text>
+        <View style={{ gap: 10 }}>
+          <TextInput
+            placeholder="First Name"
+            mode="outlined"
+            value={first_name}
+            onChangeText={setFirstName}
+            outlineStyle={styles.textinputs}
+          />
+          <TextInput
+            placeholder="Last Name"
+            mode="outlined"
+            value={last_name}
+            onChangeText={setLastName}
+            outlineStyle={styles.textinputs}
+          />
+        </View>
+      </View>
+      <View>
+        <Text variant="bodyLarge" style={styles.labels}>
+          Username
+        </Text>
+        <TextInput
+          mode="outlined"
+          value={user_name}
+          onChangeText={setUsername}
+          outlineStyle={styles.textinputs}
+        />
+      </View>
+      <View>
+        <Text variant="bodyLarge" style={styles.labels}>
+          Select Birth Date
+        </Text>
+        <Button
+          onPress={() => setShowDatePicker(true)}
+          mode="outlined"
+          style={styles.datePickerButton}
+          labelStyle={{ color: "#000" }}
+        >
+          <Text>
+            {date_of_birth
+              ? date_of_birth.toDateString()
+              : "Select date of birth"}
+          </Text>
+        </Button>
+        {showDatePicker && (
+          <DateTimePicker
+            ref={datePickerRef}
+            value={date_of_birth}
+            mode="date"
+            display="default"
+            onChange={onDateChange}
+            maximumDate={new Date()}
+          />
+        )}
+      </View>
+
+      <View>
+        <Picker
+          selectedValue={gender}
+          onValueChange={(value) => setGender(value)}
+        >
+          <Picker.Item label="Select Gender" disabled />
+          <Picker.Item label="Male" value="Male" />
+          <Picker.Item label="Female" value="Female" />
+        </Picker>
+      </View>
+      <View>
+        <Picker
+          selectedValue={userType}
+          onValueChange={(itemValue) => setUserType(itemValue)}
+        >
+          <Picker.Item label="Select User Type" disabled />
+          <Picker.Item label="Customer" value="customer" />
+          <Picker.Item label="Rider" value="rider" />
+        </Picker>
+      </View>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity>
+          <Button
+            style={styles.button}
+            onPress={() => setCurrentForm("second")}
+            mode="contained"
+          >
+            <Text>Next</Text>
+          </Button>
+        </TouchableOpacity>
+      </View>
+    </Animated.View>
+  )
+);
+
+const SecondForm = memo(
+  ({
+    setCurrentForm,
+    email,
+    setEmail,
+    handleRegistration,
+    loading,
+    password,
+    setPassword,
+    repassword,
+    setRepassword,
+    mobile_number,
+    setMobileNumber,
+  }) => (
+    <Animated.View
+      entering={FadeInRight}
+      exiting={FadeOutLeft}
+      style={styles.formContainer}
+    >
+      <View>
+        <Text variant="bodyLarge" style={styles.labels}>
+          Mobile Number
+        </Text>
+        <TextInput
+          placeholder="Phone Number"
+          mode="outlined"
+          value={mobile_number}
+          onChangeText={setMobileNumber}
+          outlineStyle={styles.textinputs}
+          keyboardType="phone-pad"
+        />
+      </View>
+      <View>
+        <Text variant="bodyLarge" style={styles.labels}>
+          Email
+        </Text>
+        <TextInput
+          placeholder="Email Address"
+          mode="outlined"
+          value={email}
+          onChangeText={setEmail}
+          outlineStyle={styles.textinputs}
+        />
+      </View>
+      <View>
+        <Text variant="bodyLarge" style={styles.labels}>
+          Password
+        </Text>
+        <View style={{ gap: 10 }}>
+          <TextInput
+            placeholder="Enter Password"
+            mode="outlined"
+            value={password}
+            onChangeText={setPassword}
+            outlineStyle={styles.textinputs}
+          />
+          <TextInput
+            placeholder="Confirm Password"
+            mode="outlined"
+            value={repassword}
+            onChangeText={setRepassword}
+            outlineStyle={styles.textinputs}
+          />
+        </View>
+      </View>
+      <View style={styles.buttonContainer}>
+        <View style={{ flexDirection: "row", gap: 5 }}>
+          <TouchableOpacity>
+            <Button
+              style={styles.button}
+              onPress={() => setCurrentForm("first")}
+              mode="contained"
+            >
+              <Text>Back</Text>
+            </Button>
+          </TouchableOpacity>
+
+          <TouchableOpacity>
+            <Button
+              style={styles.button}
+              mode="contained"
+              onPress={handleRegistration}
+              loading={loading}
+              disabled={loading}
+            >
+              <Text>Submit</Text>
+            </Button>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Animated.View>
+  )
+);
+
 const Register = ({ navigation }) => {
-  const [userType, setUserType] = useState("");
-  const [visible, setVisible] = useState(false);
-
-  const openMenu = () => setVisible(true);
-  const closeMenu = () => setVisible(false);
-
-  const [user_name, setUsername] = useState("");
   const [first_name, setFirstName] = useState("");
   const [last_name, setLastName] = useState("");
+  const [user_name, setUsername] = useState("");
+  const [selectedSex, setSelectedSex] = useState("");
+  const [selectedUserType, setSelectedUserType] = useState("");
+  const [currentForm, setCurrentForm] = useState("first");
   const [gender, setGender] = useState("");
-  const [date_of_birth, setDateOfBirth] = useState(new Date());
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repassword, setRepassword] = useState("");
@@ -28,12 +246,10 @@ const Register = ({ navigation }) => {
   const [HideEntry, setHideEntry] = useState(true);
   const [mobile_number, setMobileNumber] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [userType, setUserType] = useState("");
 
   const datePickerRef = useRef();
-
-  const toggleSecureEntry = () => {
-    setHideEntry(!HideEntry);
-  };
+  const [date_of_birth, setDateOfBirth] = useState(new Date());
 
   const showToast = (message = "Something went wrong") => {
     Toast.show(message, { duration: Toast.durations.LONG });
@@ -42,7 +258,7 @@ const Register = ({ navigation }) => {
   const handleRegistration = async () => {
     try {
       setLoading(true);
-  
+
       // Check if all required fields are filled
       if (
         user_name === "" ||
@@ -60,7 +276,7 @@ const Register = ({ navigation }) => {
         setLoading(false);
         return;
       }
-  
+
       // Check if passwords match
       if (password !== repassword) {
         showToast("Passwords do not match");
@@ -68,48 +284,50 @@ const Register = ({ navigation }) => {
         setLoading(false);
         return;
       }
-  
+
       // Convert userType to role_id
       const roleId = userType === "Customer" ? 4 : 3; // Customer = 4, Rider = 3
-  
+
       const userData = {
         user_name,
         first_name,
         last_name,
         gender,
-        date_of_birth: date_of_birth.toISOString().split('T')[0],
+        date_of_birth: date_of_birth.toISOString().split("T")[0],
         email,
         password,
         password_confirmation: repassword,
         role_id: roleId,
         mobile_number,
       };
-  
-      console.log('Request Payload:', userData); // Debugging
-  
+
+      console.log("Request Payload:", userData); // Debugging
+
       const response = await userService.signup(userData);
-  
-      console.log('Response:', response); // Debugging
-  
+
+      console.log("Response:", response); // Debugging
+
       showToast("Registration successful");
-  
-      Keyboard.dismiss();
-  
+
+      if (Keyboard && Keyboard.dismiss) {
+        Keyboard.dismiss();
+      }
+
       setTimeout(() => {
         navigation.replace("Login");
       }, 1000);
-  
+
       resetForm();
     } catch (error) {
-      console.error("Registration error:", error.response?.data || error.message);
+      console.error(
+        "Registration error:",
+        error.response?.data || error.message
+      );
       showToast("An error occurred during registration.");
     } finally {
       setLoading(false);
     }
   };
-  
-  
-
   const resetForm = () => {
     setUsername("");
     setFirstName("");
@@ -130,242 +348,136 @@ const Register = ({ navigation }) => {
   };
 
   return (
-    <PaperProvider>
-      <View style={styles.container}>
-        <Surface style={styles.surface}>
-          <Text style={styles.title}>SIGNUP</Text>
+    <ImageBackground
+      source={require("../pictures/PMU_Rider_Back.png")}
+      style={styles.background}
+      blurRadius={3}
+    >
+      <ScrollView contentContainerStyle={styles.container}>
+        <BlurView intensity={50} style={styles.containerForms}>
+          <View style={{ marginBottom: 20 }}>
+            <Text
+              variant="titleLarge"
+              style={{ fontWeight: "bold", color: "black" }}
+            >
+              Create an Account
+            </Text>
+            <Text
+              variant="titleMedium"
+              style={{ fontWeight: "semiBold", color: "black" }}
+            >
+              Welcome! Please enter your details
+            </Text>
+          </View>
 
-          <TextInput
-            label="First Name"
-            value={first_name}
-            onChangeText={setFirstName}
-            mode="outlined"
-            style={styles.input}
-          />
-          <TextInput
-            label="Last Name"
-            value={last_name}
-            onChangeText={setLastName}
-            mode="outlined"
-            style={styles.input}
-          />
-          <TextInput
-            label="Username"
-            value={user_name}
-            onChangeText={setUsername}
-            mode="outlined"
-            style={styles.input}
-          />
-          <RNPickerSelect
-            onValueChange={(value) => setGender(value)}
-            items={[
-              { label: "Male", value: "Male" },
-              { label: "Female", value: "Female" },
-            ]}
-            style={pickerSelectStyles}
-            placeholder={{ label: "Select your gender", value: null }}
-          />
-          <Button
-            onPress={() => setShowDatePicker(true)}
-            mode="outlined"
-            style={styles.datePickerButton}
-            labelStyle={{ color: "#000" }}
-          >
-            {date_of_birth ? date_of_birth.toDateString() : "Select date of birth"}
-          </Button>
-          {showDatePicker && (
-            <DateTimePicker
-              ref={datePickerRef}
-              value={date_of_birth}
-              mode="date"
-              display="default"
-              onChange={onDateChange}
-              maximumDate={new Date()}
+          {currentForm === "first" ? (
+            <FirstForm
+              first_name={first_name}
+              setFirstName={setFirstName}
+              last_name={last_name}
+              setLastName={setLastName}
+              user_name={user_name}
+              setUsername={setUsername}
+              selectedSex={selectedSex}
+              setSelectedSex={setSelectedSex}
+              selectedUserType={selectedUserType}
+              setSelectedUserType={setSelectedUserType}
+              setCurrentForm={setCurrentForm}
+              date_of_birth={date_of_birth}
+              setDateOfBirth={setDateOfBirth}
+              showDatePicker={showDatePicker}
+              setShowDatePicker={setShowDatePicker}
+              onDateChange={onDateChange}
+              datePickerRef={datePickerRef}
+              gender={gender}
+              setGender={setGender}
+              email={email}
+              setEmail={setEmail}
+              showToast={showToast}
+              isError={isError}
+              loading={loading}
+              HideEntry={HideEntry}
+              setHideEntry={setHideEntry}
+              mobile_number={mobile_number}
+              setMobileNumber={setMobileNumber}
+              userType={userType}
+              setUserType={setUserType}
+            />
+          ) : (
+            <SecondForm
+              setCurrentForm={setCurrentForm}
+              email={email}
+              setEmail={setEmail}
+              showToast={showToast}
+              loading={loading}
+              isError={isError}
+              repassword={repassword}
+              setRepassword={setRepassword}
+              password={password}
+              setPassword={setPassword}
+              mobile_number={mobile_number}
+              setMobileNumber={setMobileNumber}
+              user_name={user_name}
+              setUsername={setUsername}
+              selectedUserType={selectedUserType}
+              setSelectedUserType={setSelectedUserType}
+              date_of_birth={date_of_birth}
+              setDateOfBirth={setDateOfBirth}
+              gender={gender}
+              setGender={setGender}
+              first_name={first_name}
+              setFirstName={setFirstName}
+              last_name={last_name}
+              setLastName={setLastName}
+              handleRegistration={handleRegistration}
             />
           )}
-          <TextInput
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            mode="outlined"
-            style={styles.input}
-          />
-          <View style={styles.passwordContainer}>
-            <TextInput
-              label="Create Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={HideEntry}
-              mode="outlined"
-              style={[styles.input, styles.passwordInput]}
-            />
-            <TouchableOpacity onPress={toggleSecureEntry} style={styles.iconContainer}>
-              <Icon name={HideEntry ? "visibility-off" : "visibility"} size={24} color="#000" />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.passwordContainer}>
-            <TextInput
-              label="Confirm Password"
-              value={repassword}
-              onChangeText={setRepassword}
-              secureTextEntry={HideEntry}
-              mode="outlined"
-              style={[styles.input, styles.passwordInput]}
-            />
-            <TouchableOpacity onPress={toggleSecureEntry} style={styles.iconContainer}>
-              <Icon name={HideEntry ? "visibility-off" : "visibility"} size={24} color="#000" />
-            </TouchableOpacity>
-          </View>
-          <TextInput
-            label="Add Phone Number"
-            value={mobile_number}
-            onChangeText={setMobileNumber}
-            mode="outlined"
-            style={styles.input}
-            keyboardType="phone-pad"
-          />
-
-          <Menu
-            visible={visible}
-            onDismiss={closeMenu}
-            anchor={
-              <Button 
-                onPress={openMenu} 
-                mode="outlined" 
-                style={styles.dropdown}
-                labelStyle={styles.buttonText}
-              >
-                {userType || "Select User Type"}
-              </Button>
-            }
-            contentStyle={styles.menuContent}
-          >
-            <Menu.Item onPress={() => {setUserType("Customer"); closeMenu();}} title="Customer" titleStyle={styles.menuItem} />
-            <Menu.Item onPress={() => {setUserType("Rider"); closeMenu();}} title="Rider" titleStyle={styles.menuItem} />
-          </Menu>
-
-          <Button
-            mode="contained"
-            style={styles.button}
-            labelStyle={styles.buttonLabel}
-            onPress={handleRegistration}
-            loading={loading}
-            disabled={loading}
-          >
-            Sign Up
-          </Button>
-        </Surface>
-
-        <View style={styles.circle} />
-      </View>
-    </PaperProvider>
+        </BlurView>
+      </ScrollView>
+    </ImageBackground>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
-    padding: 16,
+    padding: 5,
   },
-  surface: {
-    padding: 16,
+  containerForms: {
+    padding: 15,
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    borderColor: "rgba(255,255,255,0.25)",
+    borderWidth: 1,
+    borderRadius: 10,
+  },
+  textinputs: {
+    borderRadius: 15,
+    backgroundColor: "white",
     width: "100%",
-    maxWidth: 400,
-    elevation: 4,
   },
-  title: {
-    fontSize: 24,
+  labels: {
+    marginBottom: 5,
     fontWeight: "bold",
-    marginBottom: 16,
-    alignSelf: "center",
   },
-  input: {
-    marginBottom: 8,
-    backgroundColor: "#fff",
+  formContainer: {
+    width: 350,
+    flexDirection: "column",
+    gap: 10,
   },
-  datePickerButton: {
-    marginBottom: 10,
-    borderColor: "#FFC42B",
-    borderWidth: 1,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  dropdown: {
-    marginBottom: 10,
-    borderColor: "#FFC42B",
-    borderWidth: 1,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#000",
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 10,
   },
   button: {
-    marginTop: 10,
-    backgroundColor: "#FFC42B",
+    backgroundColor: "#FFC533",
   },
-  buttonLabel: {
-    color: "black",
-    fontWeight: "bold",
-  },
-  circle: {
-    width: 100,
-    height: 100,
-    backgroundColor: "#FFC42B",
-    borderRadius: 50,
-    position: "absolute",
-    bottom: -50,
-    alignSelf: "center",
-  },
-  menuContent: {
-    width: widthPercentageToDP("80%"),
-  },
-  menuItem: {
-    color: "black",
-  },
-  passwordContainer: {
-    position: 'relative',
-  },
-  passwordInput: {
-    paddingRight: 50, // To make space for the icon
-  },
-  iconContainer: {
-    position: 'absolute',
-    right: 10,
-    top: 10,
-  },
-});
-
-const pickerSelectStyles = StyleSheet.create({
-  inputIOS: {
-    fontSize: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: "#FFC42B",
-    color: "black",
-    paddingRight: 30, // to ensure the text is never behind the icon
-    width: widthPercentageToDP("80%"),
-    marginBottom: heightPercentageToDP("2%"),
-  },
-  inputAndroid: {
-    fontSize: 16,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: "#FFC42B",
-    color: "black",
-    paddingRight: 30,
-    width: widthPercentageToDP("80%"),
-    marginBottom: heightPercentageToDP("2%"),
-  },
-  iconContainer: {
-    top: 12,
-    right: 10,
+  background: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
   },
 });
 
