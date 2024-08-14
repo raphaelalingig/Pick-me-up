@@ -16,6 +16,7 @@ import Register from "../forms/Register";
 import NearbyCustomerScreen from "../rider/pages/NearByCustomer";
 import BookingDetailsScreen from "../rider/pages/BookingDetailsScreen";
 import CustomDrawerContent from "./CustomDrawerContent";
+import AvatarRider from "../rider/avatarDropdown/AvatarRider";
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -39,10 +40,34 @@ const RiderDrawerNavigation = () => {
       initialRouteName="RiderHome"
       drawerContent={(props) => <CustomDrawerContent {...props} />}
     >
-      <Drawer.Screen name="RiderHome" component={RiderHome} />
-      <Drawer.Screen name="GetVerified" component={GetVerified} />
-      <Drawer.Screen name="RiderHistory" component={RiderHistory} />
-      <Drawer.Screen name="RiderSettings" component={RiderSettings} />
+      <Drawer.Screen
+        name="RiderHome"
+        component={RiderHome}
+        options={{
+          headerRight: () => <AvatarRider />,
+        }}
+      />
+      <Drawer.Screen
+        name="GetVerified"
+        component={GetVerified}
+        options={{
+          headerRight: () => <AvatarRider />,
+        }}
+      />
+      <Drawer.Screen
+        name="RiderHistory"
+        component={RiderHistory}
+        options={{
+          headerRight: () => <AvatarRider />,
+        }}
+      />
+      <Drawer.Screen
+        name="RiderSettings"
+        component={RiderSettings}
+        options={{
+          headerRight: () => <AvatarRider />,
+        }}
+      />
     </Drawer.Navigator>
   );
 };
@@ -59,7 +84,10 @@ const AuthStack = () => {
 const CustomerStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="CustomerDrawer" component={CustomerDrawerNavigation} />
+      <Stack.Screen
+        name="CustomerDrawer"
+        component={CustomerDrawerNavigation}
+      />
       <Stack.Screen name="NearbyCustomer" component={NearbyCustomerScreen} />
       <Stack.Screen name="BookingDetails" component={BookingDetailsScreen} />
     </Stack.Navigator>
@@ -79,7 +107,7 @@ const RiderStack = () => {
 const RootStack = () => {
   const { isAuthenticated, userRole, loading } = useAuth();
 
-  console.log('RootStack render:', { isAuthenticated, userRole, loading });
+  console.log("RootStack render:", { isAuthenticated, userRole, loading });
 
   if (loading) {
     return null; // Or a loading screen
