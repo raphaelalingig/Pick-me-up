@@ -1,20 +1,19 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ImageBackground,
+} from "react-native";
+import { Button } from "react-native-paper";
 
-const DeliveryConfirmationScreen = () => {
+const DeliveryConfirmationScreen = ({navigation}) => {
   return (
     <ImageBackground
-      source={{ uri: 'https://your-map-image-url.com' }} // Replace with your map image URL or local asset
+      source={{ uri: "https://your-map-image-url.com" }} // Replace with your map image URL or local asset
       style={styles.background}
     >
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton}>
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuButton}>
-          <Text style={styles.menuButtonText}>☰</Text>
-        </TouchableOpacity>
-      </View>
       <View style={styles.container}>
         <Text style={styles.title}>Delivery</Text>
         <View style={styles.messageContainer}>
@@ -25,6 +24,13 @@ const DeliveryConfirmationScreen = () => {
           <Text style={styles.detailText}>0978-345-1234</Text>
           <Text style={styles.detailText}>Motor: Yamaha Sniper 150</Text>
         </View>
+        <View>
+          <TouchableOpacity onPress={() => navigation.navigate("Home")}>
+            <Button style={styles.returnHomeButton}>
+              <Text style={{ color: "white" }}>Return Home</Text>
+            </Button>
+          </TouchableOpacity>
+        </View>
       </View>
     </ImageBackground>
   );
@@ -33,16 +39,16 @@ const DeliveryConfirmationScreen = () => {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    resizeMode: 'cover',
-    justifyContent: 'center',
+    resizeMode: "cover",
+    justifyContent: "center",
   },
   header: {
-    position: 'absolute',
+    position: "absolute",
     top: 40,
     left: 10,
     right: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   backButton: {
     padding: 10,
@@ -57,23 +63,23 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
   container: {
-    backgroundColor: '#FFD700',
+    backgroundColor: "#FFD700",
     margin: 20,
     borderRadius: 10,
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 20,
   },
   messageContainer: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   successMessage: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 10,
   },
   statusMessage: {
@@ -82,15 +88,19 @@ const styles = StyleSheet.create({
   },
   subTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 10,
   },
   detailText: {
     fontSize: 14,
     marginBottom: 5,
   },
+  returnHomeButton: {
+    marginTop: 20,
+    backgroundColor: "#140F1F",
+    borderRadius: 5,
+    justifyContent: "flex-end",
+  },
 });
 
 export default DeliveryConfirmationScreen;
-
-

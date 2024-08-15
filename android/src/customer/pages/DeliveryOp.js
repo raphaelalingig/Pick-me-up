@@ -42,7 +42,10 @@ const DeliveryOptionScreen = ({ navigation }) => {
               Cancel
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.confirmButton}>
+          <TouchableOpacity
+            style={styles.confirmButton}
+            onPress={() => navigation.navigate("Tracking Rider")}
+          >
             <Text style={styles.confirmButtonText}>Confirm</Text>
           </TouchableOpacity>
         </View>
