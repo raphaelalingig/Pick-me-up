@@ -14,14 +14,6 @@ const BookingDetailsScreen = ({ navigation }) => {
       source={{ uri: "https://your-map-image-url.com" }} // Replace with your map image URL or local asset
       style={styles.background}
     >
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton}>
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuButton}>
-          <Text style={styles.menuButtonText}>☰</Text>
-        </TouchableOpacity>
-      </View>
       <View style={styles.container}>
         <Text style={styles.title}>Booking Details</Text>
         <View style={styles.inputContainer}>
@@ -68,6 +60,7 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
     resizeMode: "cover",
+    justifyContent: "center",
   },
   header: {
     position: "absolute",

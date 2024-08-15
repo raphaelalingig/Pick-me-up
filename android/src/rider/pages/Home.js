@@ -14,7 +14,7 @@ const Home = ({ navigation }) => {
       <Button
         mode="contained"
         style={styles.button}
-        onPress={() => navigation.navigate("NearbyCustomer")}
+        onPress={() => navigation.navigate("Nearby Customer")}
       >
         START FINDING CUSTOMER
       </Button>

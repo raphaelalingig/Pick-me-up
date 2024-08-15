@@ -6,9 +6,10 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { TextInput, Button, Text, Dialog, Portal } from "react-native-paper";
-import Icon from 'react-native-vector-icons/MaterialIcons'; // Ensure you have this package installed
+import Icon from "react-native-vector-icons/MaterialIcons"; // Ensure you have this package installed
 import { useAuth } from "../services/useAuth";
 import userService from "../services/auth&services";
+import Feather from "@expo/vector-icons/Feather";
 
 const Login = ({ navigation }) => {
   const [user_name, setUsername] = useState("");
@@ -23,18 +24,21 @@ const Login = ({ navigation }) => {
 
   const handleLogin = async () => {
     setError("");
-  
+
     if (!user_name || !password) {
       setError("Please input required credentials");
       return;
     }
-  
+
     setIsLoading(true);
-  
+
     try {
-      const { token: receivedToken, role } = await userService.login(user_name, password);
+      const { token: receivedToken, role } = await userService.login(
+        user_name,
+        password
+      );
       setToken(receivedToken);
-  
+
       if (role === 3) {
         setSelectedRole(role);
         setShowDialog(true);
@@ -51,7 +55,9 @@ const Login = ({ navigation }) => {
         } else if (err.response.status === 404) {
           setError("Username and Password do not match");
         } else {
-          setError(err.response.data?.message || "An error occurred during login");
+          setError(
+            err.response.data?.message || "An error occurred during login"
+          );
         }
       } else if (err.request) {
         setError("Network error, please try again later");
@@ -62,8 +68,7 @@ const Login = ({ navigation }) => {
       setIsLoading(false);
     }
   };
-  
-  
+
   const handleRoleSelection = async (role) => {
     await login(token, role);
     setShowDialog(false);
@@ -84,56 +89,90 @@ const Login = ({ navigation }) => {
           <Text style={styles.title}>PICKME UP</Text>
           <Text style={styles.subtitle}>Pick you up wherever you are</Text>
         </View>
-
-        <TextInput
-          style={styles.input}
-          label="Username"
-          value={user_name}
-          onChangeText={setUsername}
-          mode="outlined"
-        />
-        <View style={styles.passwordContainer}>
+        <View style={{ marginTop: "50%" }}>
           <TextInput
-            label="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={hideEntry}
+            style={styles.input}
+            placeholder="Username"
+            value={user_name}
+            onChangeText={setUsername}
             mode="outlined"
-            style={[styles.input, styles.passwordInput]}
+            theme={{
+              colors: {
+                primary: "black",
+                outline: "black",
+              },
+            }}
           />
-          <TouchableOpacity onPress={toggleSecureEntry} style={styles.iconContainer}>
-            <Icon name={hideEntry ? "visibility-off" : "visibility"} size={24} color="#000" />
-          </TouchableOpacity>
-        </View>
+          <View style={styles.passwordContainer}>
+            <TextInput
+              placeholder="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={hideEntry}
+              mode="outlined"
+              style={[styles.input, styles.passwordInput]}
+              theme={{
+                colors: {
+                  primary: "black",
+                  outline: "black",
+                },
+              }}
+              right={
+                <TextInput.Icon
+                  icon={() => (
+                    <Feather
+                      name={hideEntry ? "eye-off" : "eye"}
+                      size={24}
+                      color="#000"
+                    />
+                  )}
+                  onPress={toggleSecureEntry}
+                />
+              }
+            />
+          </View>
 
-        {error && <Text style={styles.error}>{error}</Text>}
+          {error && <Text style={styles.error}>{error}</Text>}
 
-        <Button
-          mode="contained"
-          style={styles.button}
-          labelStyle={styles.buttonText}
-          onPress={handleLogin}
-          loading={isLoading}
-          disabled={isLoading}
-        >
-          {isLoading ? 'Logging in...' : 'Login'}
-        </Button>
+          <Button
+            mode="contained"
+            style={styles.button}
+            labelStyle={styles.buttonText}
+            onPress={handleLogin}
+            loading={isLoading}
+            disabled={isLoading}
+          >
+            {isLoading ? "Logging in..." : "Login"}
+          </Button>
 
-        <View style={styles.registerContainer}>
-          <Text style={styles.registerText}>Don't have an account? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-            <Text style={styles.registerLink}>Register Here</Text>
-          </TouchableOpacity>
+          <View style={styles.registerContainer}>
+            <Text style={styles.registerText}>Don't have an account? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+              <Text style={styles.registerLink}>Register Here</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <Portal>
-          <Dialog visible={showDialog} onDismiss={() => setShowDialog(false)} style={styles.dialog}>
+          <Dialog
+            visible={showDialog}
+            onDismiss={() => setShowDialog(false)}
+            style={styles.dialog}
+          >
             <Dialog.Title style={styles.dialogTitle}>Select Role</Dialog.Title>
             <Dialog.Content>
-              <Button mode="contained" style={styles.dialogButton} onPress={() => handleRoleSelection(3)}>
+              <Button
+                mode="contained"
+                style={styles.dialogButton}
+                onPress={() => handleRoleSelection(3)}
+              >
                 Rider
               </Button>
-              <Button mode="contained" style={styles.dialogButton} onPress={() => handleRoleSelection(4)}>
+              <Button
+                mode="contained"
+                style={styles.dialogButton}
+                onPress={() => handleRoleSelection(4)}
+              >
                 Customer
               </Button>
             </Dialog.Content>
@@ -202,15 +241,15 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 20,
   },
   passwordInput: {
     flex: 1,
   },
   iconContainer: {
-    position: 'absolute',
+    position: "absolute",
     right: 0,
     padding: 25,
   },

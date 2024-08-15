@@ -1,20 +1,19 @@
-import React from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ImageBackground } from 'react-native';
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  ImageBackground,
+} from "react-native";
 
-const DeliveryOptionScreen = () => {
+const DeliveryOptionScreen = ({ navigation }) => {
   return (
     <ImageBackground
-      source={{ uri: 'https://your-map-image-url.com' }} // Replace with your map image URL or local asset
+      source={{ uri: "https://your-map-image-url.com" }} // Replace with your map image URL or local asset
       style={styles.background}
     >
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton}>
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuButton}>
-          <Text style={styles.menuButtonText}>☰</Text>
-        </TouchableOpacity>
-      </View>
       <View style={styles.container}>
         <Text style={styles.title}>Delivery</Text>
         <TextInput
@@ -36,7 +35,12 @@ const DeliveryOptionScreen = () => {
         />
         <View style={styles.actionContainer}>
           <TouchableOpacity style={styles.cancelButton}>
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text
+              style={styles.cancelButtonText}
+              onPress={() => navigation.goBack()}
+            >
+              Cancel
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.confirmButton}>
             <Text style={styles.confirmButtonText}>Confirm</Text>
@@ -50,16 +54,16 @@ const DeliveryOptionScreen = () => {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    resizeMode: 'cover',
-    justifyContent: 'center',
+    resizeMode: "cover",
+    justifyContent: "center",
   },
   header: {
-    position: 'absolute',
+    position: "absolute",
     top: 40,
     left: 10,
     right: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   backButton: {
     padding: 10,
@@ -74,54 +78,52 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
   container: {
-    backgroundColor: '#FFD700',
+    backgroundColor: "#FFD700",
     margin: 20,
     borderRadius: 10,
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 20,
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 10,
     borderRadius: 5,
     marginBottom: 10,
-    width: '100%',
+    width: "100%",
   },
   actionContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
     marginTop: 20,
   },
   cancelButton: {
-    backgroundColor: '#FF0000',
+    backgroundColor: "#FF0000",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
   },
   cancelButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   confirmButton: {
-    backgroundColor: '#00FF00',
+    backgroundColor: "#00FF00",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
   },
   confirmButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
 
 export default DeliveryOptionScreen;
-
-

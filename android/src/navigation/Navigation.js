@@ -17,6 +17,9 @@ import NearbyCustomerScreen from "../rider/pages/NearByCustomer";
 import BookingDetailsScreen from "../rider/pages/BookingDetailsScreen";
 import CustomDrawerContent from "./CustomDrawerContent";
 import AvatarRider from "../rider/avatarDropdown/AvatarRider";
+import MotorTaxiOptionScreen from "../customer/pages/MotorTaxiOp";
+import PakyawOptionScreen from "../customer/pages/PakyawOp";
+import DeliveryOptionScreen from "../customer/pages/DeliveryOp";
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -24,10 +27,10 @@ const Stack = createNativeStackNavigator();
 const CustomerDrawerNavigation = () => {
   return (
     <Drawer.Navigator
-      initialRouteName="CustomerHome"
+      initialRouteName="Home"
       drawerContent={(props) => <CustomDrawerContent {...props} />}
     >
-      <Drawer.Screen name="CustomerHome" component={Home} />
+      <Drawer.Screen name="Home" component={Home} />
       <Drawer.Screen name="History" component={History} />
       <Drawer.Screen name="Settings" component={Settings} />
     </Drawer.Navigator>
@@ -37,32 +40,32 @@ const CustomerDrawerNavigation = () => {
 const RiderDrawerNavigation = () => {
   return (
     <Drawer.Navigator
-      initialRouteName="RiderHome"
+      initialRouteName="Home"
       drawerContent={(props) => <CustomDrawerContent {...props} />}
     >
       <Drawer.Screen
-        name="RiderHome"
+        name="Home"
         component={RiderHome}
         options={{
           headerRight: () => <AvatarRider />,
         }}
       />
       <Drawer.Screen
-        name="GetVerified"
+        name="Get Verified"
         component={GetVerified}
         options={{
           headerRight: () => <AvatarRider />,
         }}
       />
       <Drawer.Screen
-        name="RiderHistory"
+        name="Booking History"
         component={RiderHistory}
         options={{
           headerRight: () => <AvatarRider />,
         }}
       />
       <Drawer.Screen
-        name="RiderSettings"
+        name="Settings"
         component={RiderSettings}
         options={{
           headerRight: () => <AvatarRider />,
@@ -83,22 +86,30 @@ const AuthStack = () => {
 
 const CustomerStack = () => {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator>
       <Stack.Screen
         name="CustomerDrawer"
         component={CustomerDrawerNavigation}
+        options={{ headerShown: false }}
       />
       <Stack.Screen name="NearbyCustomer" component={NearbyCustomerScreen} />
       <Stack.Screen name="BookingDetails" component={BookingDetailsScreen} />
+      <Stack.Screen name="Motor Taxi" component={MotorTaxiOptionScreen} />
+      <Stack.Screen name="Pakyaw" component={PakyawOptionScreen} />
+      <Stack.Screen name="Delivery" component={DeliveryOptionScreen} />
     </Stack.Navigator>
   );
 };
 
 const RiderStack = () => {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="RiderDrawer" component={RiderDrawerNavigation} />
-      <Stack.Screen name="NearbyCustomer" component={NearbyCustomerScreen} />
+    <Stack.Navigator>
+      <Stack.Screen
+        name="RiderDrawer"
+        component={RiderDrawerNavigation}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen name="Nearby Customer" component={NearbyCustomerScreen} />
       <Stack.Screen name="BookingDetails" component={BookingDetailsScreen} />
     </Stack.Navigator>
   );
