@@ -41,7 +41,7 @@ const History = () => {
       <View>
         <DataTable>
           <DataTable.Header>
-            <DataTable.Title style={{ width: "20%" }}>Date</DataTable.Title>
+            <DataTable.Title style={{ width: "20%" }}>Rider</DataTable.Title>
             <DataTable.Title style={{ width: "20%" }}>
               Drop Place
             </DataTable.Title>
