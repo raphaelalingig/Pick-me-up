@@ -21,6 +21,7 @@ import MotorTaxiOptionScreen from "../customer/pages/MotorTaxiOp";
 import PakyawOptionScreen from "../customer/pages/PakyawOp";
 import DeliveryOptionScreen from "../customer/pages/DeliveryOp";
 import DeliveryConfirmationScreen from "../customer/pages/TrackingRider";
+import AccountSettingsScreen from "../customer/pages/Settings";
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -98,6 +99,7 @@ const CustomerStack = () => {
       <Stack.Screen name="Motor Taxi" component={MotorTaxiOptionScreen} />
       <Stack.Screen name="Pakyaw" component={PakyawOptionScreen} />
       <Stack.Screen name="Delivery" component={DeliveryOptionScreen} />
+      <Stack.Screen name="Settings" component={AccountSettingsScreen} />
       <Stack.Screen
         name="Tracking Rider"
         component={DeliveryConfirmationScreen}
