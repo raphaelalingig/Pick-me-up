@@ -6,15 +6,19 @@ import Navigation from "./src/navigation/Navigation";
 import { SafeAreaView } from "react-native-safe-area-context";
 import "react-native-gesture-handler";
 import { AuthProvider } from "./src/services/AuthContext";
-
-
+import { RiderProvider } from "./src/context/riderContext";
+import { CustomerProvider } from "./src/context/customerContext";
 
 export default function App() {
   return (
     <AuthProvider>
       <PaperProvider style={styles.container}>
         <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
-          <Navigation />
+          <RiderProvider>
+            <CustomerProvider>
+              <Navigation />
+            </CustomerProvider>
+          </RiderProvider>
         </SafeAreaView>
       </PaperProvider>
     </AuthProvider>

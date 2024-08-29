@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useContext } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ImageBackground,
 } from "react-native";
+import { Button } from "react-native-paper";
 
 const BookingDetailsScreen = ({ navigation }) => {
   return (
@@ -40,6 +41,11 @@ const BookingDetailsScreen = ({ navigation }) => {
           <Text>Fee:</Text>
           <TextInput style={styles.input} value="100" editable={false} />
         </View>
+        <View>
+          <Button onPress={() => navigation.navigate("Booked Location")}>
+            <Text style={styles.viewLocationButtonText}>View Location</Text>
+          </Button>
+        </View>
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.cancelButton}
@@ -47,7 +53,10 @@ const BookingDetailsScreen = ({ navigation }) => {
           >
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.acceptButton}>
+          <TouchableOpacity
+            style={styles.acceptButton}
+            onPress={() => navigation.navigate("Submit Report")}
+          >
             <Text style={styles.acceptButtonText}>Accept</Text>
           </TouchableOpacity>
         </View>
@@ -119,13 +128,19 @@ const styles = StyleSheet.create({
     color: "#FFF",
   },
   acceptButton: {
-    backgroundColor: "#00FF00",
+    backgroundColor: "#158D01",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
   },
   acceptButtonText: {
     color: "#FFF",
+  },
+  viewLocationButtonText: {
+    color: "black",
+    padding: 5,
+    textDecorationLine: "underline",
+    border: 2,
   },
 });
 

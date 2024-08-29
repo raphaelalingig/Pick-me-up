@@ -1,13 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   View,
   StyleSheet,
   TouchableOpacity,
   ImageBackground,
 } from "react-native";
-import { Text } from "react-native-paper";
+import { Text, Button } from "react-native-paper";
+import { CustomerContext } from "../../context/customerContext";
+import * as Location from "expo-location";
 
-const BookNow = ({ setCurrentForm }) => (
+const BookNow = ({ setCurrentForm, navigation }) => (
   <View style={styles.contentContainer}>
     <View style={styles.titleContainer}>
       <Text variant="titleLarge" style={styles.titleText}>
@@ -25,6 +27,11 @@ const BookNow = ({ setCurrentForm }) => (
       <View style={{ padding: 15, backgroundColor: "black", borderRadius: 10 }}>
         <Text variant="titleMedium" style={styles.titleText}>
           Book Now
+        </Text>
+      </View>
+      <View>
+        <Text onPress={() => navigation.navigate("Location")}>
+          View Location
         </Text>
       </View>
     </TouchableOpacity>
@@ -90,11 +97,55 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
 
 const MainComponent = ({ navigation }) => {
   const [currentForm, setCurrentForm] = useState("BookNow");
+  const [location, setLocation] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const { customerCoords, setCustomerCoords } = useContext(CustomerContext);
+
+  useEffect(() => {
+    const getLocation = async () => {
+      setLoading(true);
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setErrorMsg("Permission to access location was denied");
+        setLoading(false); // Stop loading if permission is denied
+        return;
+      }
+
+      try {
+        let location = await Location.getCurrentPositionAsync({});
+        setLocation(location);
+
+        // Update riderCoords in context
+        setCustomerCoords({
+          accuracy: location.coords.accuracy,
+          longitude: location.coords.longitude,
+          latitude: location.coords.latitude,
+          altitude: location.coords.altitude,
+          altitudeAccuracy: location.coords.altitudeAccuracy,
+          timestamp: location.timestamp,
+        });
+      } catch (error) {
+        setErrorMsg("Error fetching location");
+      } finally {
+        setLoading(false); // Stop loading after fetching location
+      }
+    };
+
+    getLocation();
+  }, [setCustomerCoords]);
+
+  let text = "Waiting..";
+  if (errorMsg) {
+    text = errorMsg;
+  } else if (location) {
+    text = JSON.stringify(location);
+  }
 
   return (
     <View style={{ flex: 1 }}>
       {currentForm === "BookNow" ? (
-        <BookNow setCurrentForm={setCurrentForm} />
+        <BookNow setCurrentForm={setCurrentForm} navigation={navigation} />
       ) : (
         <ChooseServiceScreen
           setCurrentForm={setCurrentForm}

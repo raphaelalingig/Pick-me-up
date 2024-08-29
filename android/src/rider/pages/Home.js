@@ -1,8 +1,55 @@
-import React from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { View, StyleSheet, Image } from "react-native";
-import { Button } from "react-native-paper";
+import { Button, Text } from "react-native-paper";
+import * as Location from "expo-location";
+import { RiderContext } from "../../context/riderContext";
 
 const Home = ({ navigation }) => {
+  const [location, setLocation] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const { riderCoords, setRiderCoords } = useContext(RiderContext);
+
+  useEffect(() => {
+    const getLocation = async () => {
+      setLoading(true);
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setErrorMsg("Permission to access location was denied");
+        setLoading(false); // Stop loading if permission is denied
+        return;
+      }
+
+      try {
+        let location = await Location.getCurrentPositionAsync({});
+        setLocation(location);
+
+        // Update riderCoords in context
+        setRiderCoords({
+          accuracy: location.coords.accuracy,
+          longitude: location.coords.longitude,
+          latitude: location.coords.latitude,
+          altitude: location.coords.altitude,
+          altitudeAccuracy: location.coords.altitudeAccuracy,
+          timestamp: location.timestamp,
+        });
+      } catch (error) {
+        setErrorMsg("Error fetching location");
+      } finally {
+        setLoading(false); // Stop loading after fetching location
+      }
+    };
+
+    getLocation();
+  }, []);
+
+  let text = "Waiting..";
+  if (errorMsg) {
+    text = errorMsg;
+  } else if (location) {
+    text = JSON.stringify(location);
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.logoContainer}>
@@ -17,6 +64,21 @@ const Home = ({ navigation }) => {
         onPress={() => navigation.navigate("Nearby Customer")}
       >
         START FINDING CUSTOMER
+      </Button>
+      <Button
+        disabled={loading}
+        onPress={() => navigation.navigate("Current Location")}
+      >
+        <Text
+          style={{
+            color: "black",
+            padding: 5,
+            textDecorationLine: "underline",
+          }}
+        >
+          View Map
+        </Text>
+        <Text style={styles.paragraph}>{text}</Text>
       </Button>
     </View>
   );
@@ -47,6 +109,10 @@ const styles = StyleSheet.create({
   },
   buttonLabel: {
     color: "#000", // Button text color
+  },
+  paragraph: {
+    fontSize: 18,
+    textAlign: "center",
   },
 });
 

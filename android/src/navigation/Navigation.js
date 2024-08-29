@@ -22,6 +22,10 @@ import PakyawOptionScreen from "../customer/pages/PakyawOp";
 import DeliveryOptionScreen from "../customer/pages/DeliveryOp";
 import DeliveryConfirmationScreen from "../customer/pages/TrackingRider";
 import AccountSettingsScreen from "../customer/pages/Settings";
+import SubmitReport from "../rider/pages/SubmitReport";
+import Map from "../rider/pages/Map";
+import CustomerMap from "../customer/pages/CustomerMap";
+import BookedMap from "../rider/pages/BookedMap";
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -104,6 +108,7 @@ const CustomerStack = () => {
         name="Tracking Rider"
         component={DeliveryConfirmationScreen}
       />
+      <Stack.Screen name="Location" component={CustomerMap} />
     </Stack.Navigator>
   );
 };
@@ -118,6 +123,9 @@ const RiderStack = () => {
       />
       <Stack.Screen name="Nearby Customer" component={NearbyCustomerScreen} />
       <Stack.Screen name="BookingDetails" component={BookingDetailsScreen} />
+      <Stack.Screen name="Submit Report" component={SubmitReport} />
+      <Stack.Screen name="Current Location" component={Map} />
+      <Stack.Screen name="Booked Location" component={BookedMap} />
     </Stack.Navigator>
   );
 };
