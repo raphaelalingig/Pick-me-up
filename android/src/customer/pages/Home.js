@@ -30,9 +30,14 @@ const BookNow = ({ setCurrentForm, navigation }) => (
         </Text>
       </View>
       <View>
-        <Text onPress={() => navigation.navigate("Location")}>
-          View Location
-        </Text>
+        <Button>
+          <Text
+            style={{ textDecorationLine: "underline" }}
+            onPress={() => navigation.navigate("Location")}
+          >
+            View Location
+          </Text>
+        </Button>
       </View>
     </TouchableOpacity>
   </View>

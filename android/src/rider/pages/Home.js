@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { View, StyleSheet, Image } from "react-native";
-import { Button, Text } from "react-native-paper";
+import { Button, Text, ActivityIndicator, MD2Colors } from "react-native-paper";
 import * as Location from "expo-location";
 import { RiderContext } from "../../context/riderContext";
 
@@ -69,15 +69,29 @@ const Home = ({ navigation }) => {
         disabled={loading}
         onPress={() => navigation.navigate("Current Location")}
       >
-        <Text
+        <View
           style={{
-            color: "black",
-            padding: 5,
-            textDecorationLine: "underline",
+            flexDirection: "row",
+            alignItems: "center",
           }}
         >
-          View Map
-        </Text>
+          {loading ? (
+            <>
+              <ActivityIndicator animating={true} color={MD2Colors.red800} />
+              <Text style={{ marginLeft: 5 }}>Fetching coordinates...</Text>
+            </>
+          ) : (
+            <Text
+              style={{
+                color: "black",
+                padding: 5,
+                textDecorationLine: "underline",
+              }}
+            >
+              View Map
+            </Text>
+          )}
+        </View>
       </Button>
     </View>
   );
