@@ -78,7 +78,6 @@ const Home = ({ navigation }) => {
         >
           View Map
         </Text>
-        <Text style={styles.paragraph}>{text}</Text>
       </Button>
     </View>
   );
