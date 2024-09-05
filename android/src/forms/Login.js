@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { TextInput, Button, Text, Dialog, Portal } from "react-native-paper";
-import Icon from "react-native-vector-icons/MaterialIcons"; // Ensure you have this package installed
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from "../services/useAuth";
 import userService from "../services/auth&services";
 import Feather from "@expo/vector-icons/Feather";
@@ -39,10 +39,10 @@ const Login = ({ navigation }) => {
       );
       setToken(receivedToken);
 
-      if (role === 3) {
+      if (role === 3 || role === 1 || role === 2) {
         setSelectedRole(role);
         setShowDialog(true);
-      } else if (role === 4 || role === 1 || role === 2) {
+      } else if (role === 4) {
         await login(receivedToken, role);
         navigation.replace(role === 3 ? "RiderStack" : "CustomerStack");
       } else {

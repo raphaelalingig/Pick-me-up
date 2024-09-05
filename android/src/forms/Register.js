@@ -22,11 +22,8 @@ const FirstForm = memo(
     setLastName,
     user_name,
     setUsername,
-    selectedUserType,
-    setSelectedUserType,
     setCurrentForm,
     date_of_birth,
-    setDateOfBirth,
     showDatePicker,
     setShowDatePicker,
     onDateChange,
@@ -117,8 +114,8 @@ const FirstForm = memo(
           onValueChange={(itemValue) => setUserType(itemValue)}
         >
           <Picker.Item label="Select User Type" disabled />
-          <Picker.Item label="Customer" value="customer" />
-          <Picker.Item label="Rider" value="rider" />
+          <Picker.Item label="Customer" value="Customer" />
+          <Picker.Item label="Rider" value="Rider" />
         </Picker>
       </View>
       <View style={styles.buttonContainer}>
