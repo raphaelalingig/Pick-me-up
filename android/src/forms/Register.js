@@ -314,7 +314,7 @@ const Register = ({ navigation }) => {
       }
 
       setTimeout(() => {
-        navigation.replace("Login");
+        navigation.replace("Confirmation");
       }, 1000);
 
       resetForm();
