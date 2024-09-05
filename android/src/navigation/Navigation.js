@@ -13,6 +13,7 @@ import RiderSettings from "../rider/sidebarContents/Settings";
 import GetVerified from "../rider/sidebarContents/GetVerified";
 import RiderHome from "../rider/pages/Home";
 import Register from "../forms/Register";
+import Confirmation from "../forms/Confirmation";
 import NearbyCustomerScreen from "../rider/pages/NearByCustomer";
 import BookingDetailsScreen from "../rider/pages/BookingDetailsScreen";
 import CustomDrawerContent from "./CustomDrawerContent";
@@ -26,6 +27,7 @@ import SubmitReport from "../rider/pages/SubmitReport";
 import Map from "../rider/pages/Map";
 import CustomerMap from "../customer/pages/CustomerMap";
 import BookedMap from "../rider/pages/BookedMap";
+
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -85,6 +87,7 @@ const AuthStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Login" component={Login} />
+      <Stack.Screen name="Confirmation" component={Confirmation} />
       <Stack.Screen name="Register" component={Register} />
     </Stack.Navigator>
   );
