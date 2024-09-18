@@ -31,10 +31,11 @@ const Settings = ({ navigation }) => {
         return (
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Personal Information</Text>
-            {/* Add your personal info fields here */}
             <TextInput placeholder="Name" style={styles.input} />
             <TextInput placeholder="Email" style={styles.input} />
-            <Button title="Save" onPress={closeModal} />
+            <TouchableOpacity style={styles.saveButton} onPress={closeModal}>
+              <Text style={styles.buttonText}>Save</Text>
+            </TouchableOpacity>
           </View>
         );
       case 'Change Password':
@@ -43,31 +44,39 @@ const Settings = ({ navigation }) => {
             <Text style={styles.modalTitle}>Change Password</Text>
             <TextInput placeholder="New Password" style={styles.input} secureTextEntry />
             <TextInput placeholder="Confirm Password" style={styles.input} secureTextEntry />
-            <Button title="Change" onPress={closeModal} />
+            <TouchableOpacity style={styles.saveButton} onPress={closeModal}>
+              <Text style={styles.buttonText}>Change</Text>
+            </TouchableOpacity>
           </View>
         );
       case 'About PickMeUp':
         return (
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>About PickMeUp</Text>
-            <Text>This app connects riders with customers for quick transportation services.</Text>
-            <Button title="Close" onPress={closeModal} />
+            <Text style={styles.modalText}>This app connects riders with customers for quick transportation services.</Text>
+            <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+              <Text style={styles.buttonText}>Close</Text>
+            </TouchableOpacity>
           </View>
         );
       case 'Help and Support':
         return (
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Help and Support</Text>
-            <Text>If you need assistance, please contact support@pickmeup.com</Text>
-            <Button title="Close" onPress={closeModal} />
+            <Text style={styles.modalText}>If you need assistance, please contact support@pickmeup.com</Text>
+            <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+              <Text style={styles.buttonText}>Close</Text>
+            </TouchableOpacity>
           </View>
         );
       case 'App Version':
         return (
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>App Version</Text>
-            <Text>Version 1.1.00.1</Text>
-            <Button title="Close" onPress={closeModal} />
+            <Text style={styles.modalText}>Version 1.1.00.1</Text>
+            <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+              <Text style={styles.buttonText}>Close</Text>
+            </TouchableOpacity>
           </View>
         );
       default:
@@ -108,8 +117,10 @@ const Settings = ({ navigation }) => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalView}>
+            <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+              <Text style={styles.closeButtonText}>✖</Text>
+            </TouchableOpacity>
             {renderModalContent()}
-            <Button title="Close" onPress={closeModal} />
           </View>
         </View>
       </Modal>
@@ -129,6 +140,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 30,
     alignItems: 'center',
+
   },
   profileIcon: {
     width: 80,
@@ -160,10 +172,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    
   },
   optionText: {
     fontSize: 16,
+    color: '#333', // Darker text for better readability
   },
   modalOverlay: {
     flex: 1,
@@ -173,7 +185,7 @@ const styles = StyleSheet.create({
   },
   modalView: {
     width: '80%',
-    backgroundColor: 'white',
+    backgroundColor: '#fff',
     borderRadius: 20,
     padding: 35,
     alignItems: 'center',
@@ -183,6 +195,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 20,
+    color: '#FBC635', // Match title color with theme
+  },
+  modalText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+    color: '#555', // Darker gray for better readability
   },
   input: {
     width: '100%',
@@ -191,6 +210,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 5,
     marginBottom: 20,
+  },
+  saveButton: {
+    backgroundColor: '#008000',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  closeButton: {
+    backgroundColor: 'transparent',
+    position: 'absolute',
+    top: 10,
+    right: 10,
+  },
+  closeButtonText: {
+    fontSize: 24,
+    color: '#FF0000', // Red color for visibility
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 
