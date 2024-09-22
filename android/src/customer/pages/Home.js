@@ -5,9 +5,10 @@ import {
   TouchableOpacity,
   ImageBackground,
 } from "react-native";
-import { Text, Button } from "react-native-paper";
+import { Text } from "react-native-paper";
 import { CustomerContext } from "../../context/customerContext";
 import * as Location from "expo-location";
+import { MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons'; // For icons
 
 const BookNow = ({ setCurrentForm, navigation }) => (
   <View style={styles.contentContainer}>
@@ -30,14 +31,12 @@ const BookNow = ({ setCurrentForm, navigation }) => (
         </Text>
       </View>
       <View>
-        <Button>
-          <Text
-            style={{ textDecorationLine: "underline" }}
-            onPress={() => navigation.navigate("Location")}
-          >
-            View Location
-          </Text>
-        </Button>
+        <Text
+          style={{ textDecorationLine: "underline", color: "#FBC635", marginTop: 10, textAlign: 'center' }}
+          onPress={() => navigation.navigate("Location")}
+        >
+          View Location
+        </Text>
       </View>
     </TouchableOpacity>
   </View>
@@ -64,25 +63,68 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
       <View style={styles.container}>
         <Text style={styles.title}>CHOOSE RIDER SERVICES</Text>
         <View style={styles.buttonContainer}>
-          {["Delivery", "Pakyaw", "Motor Taxi"].map((service) => (
-            <TouchableOpacity
-              key={service}
+          <TouchableOpacity
+            style={[
+              styles.serviceButton,
+              selectedService === "Delivery" && styles.selectedButton,
+            ]}
+            onPress={() => handleServiceSelect("Delivery")}
+          >
+            <MaterialCommunityIcons name="bike" size={24} color="black" />
+            <Text
               style={[
-                styles.serviceButton,
-                selectedService === service && styles.selectedButton, // Apply selected style
+                styles.serviceButtonText,
+                selectedService === "Delivery" && { color: "black" },
               ]}
-              onPress={() => handleServiceSelect(service)}
             >
-              <Text
-                style={[
-                  styles.serviceButtonText,
-                  selectedService === service && { color: "black" }, // Change text color on selection
-                ]}
-              >
-                {service}
-              </Text>
-            </TouchableOpacity>
-          ))}
+              Delivery
+            </Text>
+            <Text style={styles.serviceDescription}>
+              We deliver what you need
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.serviceButton,
+              selectedService === "Pakyaw" && styles.selectedButton,
+            ]}
+            onPress={() => handleServiceSelect("Pakyaw")}
+          >
+            <FontAwesome5 name="users" size={24} color="black" />
+            <Text
+              style={[
+                styles.serviceButtonText,
+                selectedService === "Pakyaw" && { color: "black" },
+              ]}
+            >
+              Pakyaw
+            </Text>
+            <Text style={styles.serviceDescription}>
+              Ride with friend & family
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.serviceButton,
+              selectedService === "Motor Taxi" && styles.selectedButton,
+            ]}
+            onPress={() => handleServiceSelect("Motor Taxi")}
+          >
+            <MaterialCommunityIcons name="motorbike" size={24} color="black" />
+            <Text
+              style={[
+                styles.serviceButtonText,
+                selectedService === "Motor Taxi" && { color: "black" },
+              ]}
+            >
+              Motor-Taxi
+            </Text>
+            <Text style={styles.serviceDescription}>
+              Bring you where ever you want
+            </Text>
+          </TouchableOpacity>
         </View>
         <View style={styles.actionContainer}>
           <TouchableOpacity
@@ -113,15 +155,13 @@ const MainComponent = ({ navigation }) => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         setErrorMsg("Permission to access location was denied");
-        setLoading(false); // Stop loading if permission is denied
+        setLoading(false);
         return;
       }
 
       try {
         let location = await Location.getCurrentPositionAsync({});
         setLocation(location);
-
-        // Update riderCoords in context
         setCustomerCoords({
           accuracy: location.coords.accuracy,
           longitude: location.coords.longitude,
@@ -133,7 +173,7 @@ const MainComponent = ({ navigation }) => {
       } catch (error) {
         setErrorMsg("Error fetching location");
       } finally {
-        setLoading(false); // Stop loading after fetching location
+        setLoading(false);
       }
     };
 
@@ -180,27 +220,7 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
     resizeMode: "cover",
-    justifyContent: "center",
-  },
-  header: {
-    position: "absolute",
-    top: 40,
-    left: 10,
-    right: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  backButton: {
-    padding: 10,
-  },
-  backButtonText: {
-    fontSize: 24,
-  },
-  menuButton: {
-    padding: 10,
-  },
-  menuButtonText: {
-    fontSize: 24,
+    justifyContent: "space-evenly",
   },
   container: {
     backgroundColor: "#FFD700",
@@ -212,7 +232,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
-  
   },
   title: {
     fontSize: 20,
@@ -220,25 +239,32 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "space-around",
     marginBottom: 20,
   },
   serviceButton: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#fff",
     paddingVertical: 10,
     paddingHorizontal: 20,
-    marginHorizontal: 5,
+    marginVertical: 10,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: "transparent", // Default border color
+    borderColor: "transparent",
   },
   serviceButtonText: {
     fontSize: 16,
     fontWeight: "bold",
+    marginLeft: 10,
+  },
+  serviceDescription: {
+    fontSize: 12,
+    marginLeft: 15,
+    color: "#555",
   },
   selectedButton: {
-    borderColor: "black", // Black border when selected
+    borderColor: "black",
   },
   actionContainer: {
     flexDirection: "row",

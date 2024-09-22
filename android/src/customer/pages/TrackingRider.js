@@ -4,106 +4,133 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ImageBackground,
 } from "react-native";
+import { MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons'; // For icons
 import { Button } from "react-native-paper";
 
+// Pa help dari nga ang pakyaw nga title kay maalisdan kung unsa nga service ki kuha sa customer
 const DeliveryConfirmationScreen = ({navigation}) => {
   return (
-    <ImageBackground
-      source={{ uri: "https://your-map-image-url.com" }} // Replace with your map image URL or local asset
-      style={styles.background}
-    >
-      <View style={styles.container}>
-        <Text style={styles.title}>Delivery</Text>
-        <View style={styles.messageContainer}>
-          <Text style={styles.successMessage}>Ride Successfully Booked</Text>
-          <Text style={styles.statusMessage}>Rider is on the way...</Text>
-          <Text style={styles.subTitle}>Rider Details</Text>
-          <Text style={styles.detailText}>Martzel Amalberrt Arroyo</Text>
-          <Text style={styles.detailText}>0978-345-1234</Text>
-          <Text style={styles.detailText}>Motor: Yamaha Sniper 150</Text>
-        </View>
-        <View>
-          <TouchableOpacity onPress={() => navigation.navigate("Home")}>
-            <Button style={styles.returnHomeButton}>
-              <Text style={{ color: "white" }}>Return Home</Text>
-            </Button>
-          </TouchableOpacity>
+    <View style={styles.container}>
+      {/* Service Title Section */}
+      <View style={styles.header}>
+        <FontAwesome5 name="users" size={40} color="black" />
+        <Text style={styles.serviceTitle}>Pakyaw</Text>
+      </View>
+
+      {/* Booking Confirmation Message */}
+      <View style={styles.messageContainer}>
+        <View style={styles.successBox}>
+          <MaterialCommunityIcons name="motorbike" size={32} color="black" />
+          <View style={styles.successTextContainer}>
+            <Text style={styles.successMessage}>Ride Successfully Booked</Text>
+            <Text style={styles.statusMessage}>Rider is on the way...</Text>
+          </View>
         </View>
       </View>
-    </ImageBackground>
+
+      {/* Rider Details Section */}
+      <View style={styles.detailsContainer}>
+        <Text style={styles.subTitle}>Rider Details</Text>
+        <View style={styles.detailRow}>
+          <MaterialCommunityIcons name="account" size={24} color="black" />
+          <Text style={styles.detailText}>Martzel Amalberrt Arroyo</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <MaterialCommunityIcons name="phone" size={24} color="black" />
+          <Text style={styles.detailText}>0978-345-1234</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <MaterialCommunityIcons name="motorbike" size={24} color="black" />
+          <Text style={styles.detailText}>Motor: Yamaha Sniper 150</Text>
+        </View>
+      </View>
+
+      {/* Go Back Button */}
+      <TouchableOpacity onPress={() => navigation.goBack()}>
+        <View style={styles.goBackButton}>
+          <Text style={styles.goBackButtonText}>Go Back</Text>
+        </View>
+      </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  background: {
+  container: {
     flex: 1,
-    resizeMode: "cover",
+    backgroundColor: "#ffd700", // Yellow background color
+    padding: 20,
+    alignItems: "center",
     justifyContent: "center",
   },
   header: {
-    position: "absolute",
-    top: 40,
-    left: 10,
-    right: 10,
     flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  backButton: {
-    padding: 10,
-  },
-  backButtonText: {
-    fontSize: 24,
-  },
-  menuButton: {
-    padding: 10,
-  },
-  menuButtonText: {
-    fontSize: 24,
-  },
-  container: {
-    backgroundColor: "#FFD700",
-    margin: 20,
-    borderRadius: 10,
-    padding: 20,
     alignItems: "center",
-    elevation: 5, // For Android shadow
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
     marginBottom: 20,
   },
+  serviceTitle: {
+    fontSize: 28,
+    fontWeight: "bold",
+    marginLeft: 10,
+    color: "#FFF",
+    textDecorationLine: 'underline',
+  },
   messageContainer: {
+    width: "100%",
+    marginBottom: 20,
+  },
+  successBox: {
+    flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "#FFF",
+    padding: 10,
+    borderRadius: 10,
+    elevation: 2,
+  },
+  successTextContainer: {
+    marginLeft: 10,
   },
   successMessage: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 10,
   },
   statusMessage: {
-    fontSize: 16,
+    fontSize: 14,
+    color: "gray",
+  },
+  detailsContainer: {
+    backgroundColor: "#FFF",
+    padding: 15,
+    borderRadius: 10,
+    width: "100%",
     marginBottom: 20,
+    elevation: 2,
   },
   subTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
     marginBottom: 10,
   },
-  detailText: {
-    fontSize: 14,
-    marginBottom: 5,
+  detailRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
   },
-  returnHomeButton: {
-    marginTop: 20,
-    backgroundColor: "#140F1F",
+  detailText: {
+    fontSize: 16,
+    marginLeft: 10,
+  },
+  goBackButton: {
+    backgroundColor: "#28a745",
+    paddingVertical: 10,
+    paddingHorizontal: 30,
     borderRadius: 5,
-    justifyContent: "flex-end",
+  },
+  goBackButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 
