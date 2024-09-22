@@ -37,7 +37,7 @@ const BookedMap = ({ navigation }) => {
 
   const fetchDirections = async () => {
     try {
-      const apiKey = "//";
+      const apiKey = "";
       const origin = `${riderLocation.latitude},${riderLocation.longitude}`;
       const destination = `${customerLocation.latitude},${customerLocation.longitude}`;
       const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${apiKey}`;
@@ -142,9 +142,7 @@ const BookedMap = ({ navigation }) => {
           <Text style={styles.distanceText}>
             Total Distance: {totalDistanceRide} km
           </Text>
-          <Text style={styles.totalFare}>
-            Total Fare: ₱{totalFare}
-          </Text>
+          <Text style={styles.totalFare}>Total Fare: ₱{totalFare}</Text>
         </View>
       )}
       <View style={styles.nextButtonContainer}>

@@ -12,15 +12,13 @@ export const CustomerProvider = ({ children }) => {
     timestamp: null,
   });
 
-  const [totalDistanceRide, setTotalDistanceRide] = useState(null);
 
   return (
     <CustomerContext.Provider
       value={{
         customerCoords,
         setCustomerCoords,
-        totalDistanceRide,
-        setTotalDistanceRide,
+        
       }}
     >
       {children}
