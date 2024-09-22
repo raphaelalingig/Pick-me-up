@@ -41,11 +41,7 @@ const BookingDetailsScreen = ({ navigation }) => {
           <Text>Fee:</Text>
           <TextInput style={styles.input} value="100" editable={false} />
         </View>
-        <View>
-          <Button onPress={() => navigation.navigate("Booked Location")}>
-            <Text style={styles.viewLocationButtonText}>View Location</Text>
-          </Button>
-        </View>
+
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.cancelButton}
@@ -55,7 +51,7 @@ const BookingDetailsScreen = ({ navigation }) => {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.acceptButton}
-            onPress={() => navigation.navigate("Submit Report")}
+            onPress={() => navigation.navigate("Booked Location")}
           >
             <Text style={styles.acceptButtonText}>Accept</Text>
           </TouchableOpacity>

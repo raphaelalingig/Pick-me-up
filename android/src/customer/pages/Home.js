@@ -162,6 +162,7 @@ const MainComponent = ({ navigation }) => {
       try {
         let location = await Location.getCurrentPositionAsync({});
         setLocation(location);
+        console.log("Location:", location); 
         setCustomerCoords({
           accuracy: location.coords.accuracy,
           longitude: location.coords.longitude,

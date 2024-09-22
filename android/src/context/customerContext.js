@@ -12,8 +12,15 @@ export const CustomerProvider = ({ children }) => {
     timestamp: null,
   });
 
+
   return (
-    <CustomerContext.Provider value={{ customerCoords, setCustomerCoords }}>
+    <CustomerContext.Provider
+      value={{
+        customerCoords,
+        setCustomerCoords,
+        
+      }}
+    >
       {children}
     </CustomerContext.Provider>
   );

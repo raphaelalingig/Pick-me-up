@@ -12,8 +12,17 @@ export const RiderProvider = ({ children }) => {
     timestamp: null,
   });
 
+  const [totalDistanceRide, setTotalDistanceRide] = useState(null);
+
   return (
-    <RiderContext.Provider value={{ riderCoords, setRiderCoords }}>
+    <RiderContext.Provider
+      value={{
+        riderCoords,
+        setRiderCoords,
+        totalDistanceRide,
+        setTotalDistanceRide,
+      }}
+    >
       {children}
     </RiderContext.Provider>
   );
