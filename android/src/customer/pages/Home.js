@@ -29,16 +29,6 @@ const BookNow = ({ setCurrentForm, navigation }) => (
           Book Now
         </Text>
       </View>
-      <View>
-        <Button>
-          <Text
-            style={{ textDecorationLine: "underline" }}
-            onPress={() => navigation.navigate("Location")}
-          >
-            View Location
-          </Text>
-        </Button>
-      </View>
     </TouchableOpacity>
   </View>
 );
@@ -120,6 +110,7 @@ const MainComponent = ({ navigation }) => {
       try {
         let location = await Location.getCurrentPositionAsync({});
         setLocation(location);
+        console.log("Location:", location); 
 
         // Update riderCoords in context
         setCustomerCoords({
@@ -212,7 +203,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
-  
   },
   title: {
     fontSize: 20,
