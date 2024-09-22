@@ -7,7 +7,7 @@ import Login from "../forms/Login";
 import Home from "../customer/pages/Home";
 import History from "../customer/pages/History";
 import Settings from "../customer/pages/Settings";
-
+import Icon from 'react-native-vector-icons/Ionicons';
 import RiderHistory from "../rider/sidebarContents/History";
 import RiderSettings from "../rider/sidebarContents/Settings";
 import GetVerified from "../rider/sidebarContents/GetVerified";
@@ -38,9 +38,33 @@ const CustomerDrawerNavigation = () => {
       initialRouteName="Home"
       drawerContent={(props) => <CustomDrawerContent {...props} />}
     >
-      <Drawer.Screen name="Home" component={Home} />
-      <Drawer.Screen name="History" component={History} />
-      <Drawer.Screen name="Settings" component={Settings} />
+      <Drawer.Screen
+        name="Home"
+        component={Home}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <Icon name="home-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="History"
+        component={History}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <Icon name="time-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="Settings"
+        component={Settings}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <Icon name="settings-outline" color={color} size={size} />
+          ),
+        }}
+      />
     </Drawer.Navigator>
   );
 };
@@ -50,11 +74,15 @@ const RiderDrawerNavigation = () => {
     <Drawer.Navigator
       initialRouteName="Home"
       drawerContent={(props) => <CustomDrawerContent {...props} />}
+     
     >
       <Drawer.Screen
         name="Home"
         component={RiderHome}
         options={{
+          drawerIcon: ({ color, size }) => (
+            <Icon name="home-outline" color={color} size={size} />
+          ),
           headerRight: () => <AvatarRider />,
         }}
       />
@@ -62,6 +90,9 @@ const RiderDrawerNavigation = () => {
         name="Get Verified"
         component={GetVerified}
         options={{
+          drawerIcon: ({ color, size }) => (
+            <Icon name="checkmark-circle-outline" color={color} size={size} />
+          ),
           headerRight: () => <AvatarRider />,
         }}
       />
@@ -69,6 +100,9 @@ const RiderDrawerNavigation = () => {
         name="Booking History"
         component={RiderHistory}
         options={{
+          drawerIcon: ({ color, size }) => (
+            <Icon name="time-outline" color={color} size={size} />
+          ),
           headerRight: () => <AvatarRider />,
         }}
       />
@@ -76,6 +110,9 @@ const RiderDrawerNavigation = () => {
         name="Settings"
         component={RiderSettings}
         options={{
+          drawerIcon: ({ color, size }) => (
+            <Icon name="settings-outline" color={color} size={size} />
+          ),
           headerRight: () => <AvatarRider />,
         }}
       />
