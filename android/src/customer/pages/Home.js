@@ -57,7 +57,7 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
 
   return (
     <ImageBackground
-      source={{ uri: "https://your-map-image-url.com" }} // Replace with your map image URL or local asset
+      source={require("../../pictures/3.png")} // Replace with your map image URL or local asset
       style={styles.background}
     >
       <View style={styles.container}>
