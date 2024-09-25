@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,8 +7,64 @@ import {
   TouchableOpacity,
   ImageBackground,
 } from "react-native";
+import userService from "../../services/auth&services";
 
 const MotorTaxiOptionScreen = ({ navigation }) => {
+  const [pickupLocation, setPickupLocation] = useState("");
+  const [dropoffLocation, setDropoffLocation] = useState("");
+  const [fare, setFare] = useState("50.00");
+  const [userId, setUserId] = useState(null); // Changed to userId
+
+  useEffect(() => {
+    const fetchUserId = async () => {
+      const response = await userService.getUserId();
+      const id = parseInt(response, 10)
+      setUserId(id);
+      
+    };
+
+    fetchUserId();
+  }, []);
+
+  const currentDate = new Date();
+
+  const year = currentDate.getFullYear();
+  const month = String(currentDate.getMonth() + 1).padStart(2, '0'); // Add 1 because months are zero-based
+  const day = String(currentDate.getDate()).padStart(2, '0');
+  const hours = String(currentDate.getHours()).padStart(2, '0');
+  const minutes = String(currentDate.getMinutes()).padStart(2, '0');
+  const seconds = String(currentDate.getSeconds()).padStart(2, '0');
+
+  // Format the date as YYYY-MM-DD HH:mm:ss
+  const formattedCurrentDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+
+console.log(formattedCurrentDate); 
+ 
+  const handleConfirm = async () => {
+    
+    const bookDetails = {
+      user_id: userId, // Logged-in user's ID
+      ride_date: formattedCurrentDate,
+      ride_type: "Motor Taxi",
+      pickup_location: pickupLocation,
+      dropoff_location: dropoffLocation,
+      fare: parseFloat(fare),
+      status: "Available",
+    };
+
+    console.log("Array:", bookDetails);
+    console.log("Type:", typeof bookDetails);
+    console.log(JSON.stringify(bookDetails, null, 2));
+
+    try {
+      const response = await userService.book(bookDetails);
+      console.log("Booked Successfully:", response.data);
+      navigation.navigate("WaitingForRider", { bookDetails });
+    } catch (error) {
+      console.error("Failed to add ride history:", error);
+    }
+  };
+
   return (
     <ImageBackground
       source={{ uri: "https://your-map-image-url.com" }} // Replace with your map image URL or local asset
@@ -20,12 +76,14 @@ const MotorTaxiOptionScreen = ({ navigation }) => {
           <TextInput
             style={styles.input}
             placeholder="Pick me up from"
-            // Add onChangeText functionality
+            value={pickupLocation}
+            onChangeText={setPickupLocation}
           />
           <TextInput
             style={styles.input}
             placeholder="Destination"
-            // Add onChangeText functionality
+            value={dropoffLocation}
+            onChangeText={setDropoffLocation}
           />
         </View>
         <TouchableOpacity style={styles.locationButton}>
@@ -34,10 +92,11 @@ const MotorTaxiOptionScreen = ({ navigation }) => {
         <View style={styles.fareContainer}>
           <Text style={styles.fareLabel}>Fare :</Text>
           <TextInput
-            style={styles.fareInput}
-            placeholder="50.00"
+            style={styles.input}
+            placeholder="Fare"
             keyboardType="numeric"
-            // Add onChangeText functionality
+            value={fare}
+            onChangeText={setFare}
           />
           <Text style={styles.fareHint}>Edit fare to desired amount</Text>
         </View>
@@ -52,7 +111,7 @@ const MotorTaxiOptionScreen = ({ navigation }) => {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.confirmButton}
-            onPress={() => navigation.navigate("Tracking Rider")}
+            onPress={handleConfirm}
           >
             <Text style={styles.confirmButtonText}>Confirm</Text>
           </TouchableOpacity>

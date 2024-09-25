@@ -255,7 +255,7 @@ const Register = ({ navigation }) => {
   const handleRegistration = async () => {
     try {
       setLoading(true);
-  
+
       // Check if all required fields are filled
       if (
         user_name === "" ||
@@ -273,7 +273,7 @@ const Register = ({ navigation }) => {
         setLoading(false);
         return;
       }
-  
+
       // Check if passwords match
       if (password !== repassword) {
         showToast("Passwords do not match");
@@ -281,38 +281,50 @@ const Register = ({ navigation }) => {
         setLoading(false);
         return;
       }
-  
-      // Request OTP
-      const otpResponse = await userService.requestOtp({ email, mobile_number });
-  
-      if (otpResponse.status !== 200) {
-        showToast("Failed to send OTP");
-        setLoading(false);
-        return;
-      }
-  
-      // Proceed to OTP confirmation page with necessary data
-      navigation.navigate("Confirmation", {
-        email,
-        mobile_number,
+
+      // Convert userType to role_id
+      const roleId = userType === "Customer" ? 4 : 3; // Customer = 4, Rider = 3
+
+      const userData = {
         user_name,
         first_name,
         last_name,
         gender,
         date_of_birth: date_of_birth.toISOString().split("T")[0],
+        email,
         password,
-        repassword,
-        userType
-      });
-  
-      setLoading(false);
+        password_confirmation: repassword,
+        role_id: roleId,
+        mobile_number,
+      };
+
+      console.log("Request Payload:", userData); // Debugging
+
+      const response = await userService.signup(userData);
+
+      console.log("Response:", response); // Debugging
+
+      showToast("Registration successful");
+
+      if (Keyboard && Keyboard.dismiss) {
+        Keyboard.dismiss();
+      }
+
+      setTimeout(() => {
+        navigation.replace("Login");
+      }, 1000);
+
+      resetForm();
     } catch (error) {
-      console.error("Registration error:", error.response?.data || error.message);
+      console.error(
+        "Registration error:",
+        error.response?.data || error.message
+      );
       showToast("An error occurred during registration.");
+    } finally {
       setLoading(false);
     }
   };
-  
   const resetForm = () => {
     setUsername("");
     setFirstName("");

@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -6,87 +7,98 @@ import {
   TouchableOpacity,
   ScrollView,
   ImageBackground,
+  RefreshControl
 } from "react-native";
 import FindingCustomerSpinner from "../spinner/FindingCustomerSpinner";
+import userService from "../../services/auth&services"; // Adjust the import path as needed
 
 const NearbyCustomerScreen = ({ navigation }) => {
   const [showSpinner, setShowSpinner] = useState(true);
+  const [availableRides, setAvailableRides] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  
 
-  useEffect(() => {
-    // Set a timeout to hide the spinner after 2 seconds
-    const timer = setTimeout(() => {
+  const fetchAvailableRides = useCallback(async () => {
+    try {
+      const response = await userService.getAvailableRides();
+
+      // Sort the rides by date in descending order (oldest to latest)
+      const sortedRides = response.data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+      setAvailableRides(sortedRides);
       setShowSpinner(false);
-    }, 2000);
+    } catch (error) {
+      console.error("Failed to fetch available rides:", error);
+      setShowSpinner(false);
+    }
+  });
 
-    // Clear the timeout if the component is unmounted
-    return () => clearTimeout(timer);
-  }, []);
+  const onRefresh = useCallback(async () => {
+    await setRefreshing(true);
+    setShowSpinner(true);
+    await fetchAvailableRides();
+    setRefreshing(false);
+  }, [fetchAvailableRides]);
 
-  const customers = [
-    {
-      name: "Ibarra, Ray Anthony",
-      pickup: "Ibarra",
-      dropoff: "USTP",
-      offer: 100,
-    },
-    {
-      name: "Buwanding, Aladdin",
-      pickup: "Singapore",
-      dropoff: "USTP",
-      offer: 70,
-    },
-    {
-      name: "Ratunil, John Carlo",
-      pickup: "Singapore",
-      dropoff: "USTP",
-      offer: 40,
-    },
-    {
-      name: "Juaton, Mark Jundy",
-      pickup: "Singapore",
-      dropoff: "USTP",
-      offer: 120,
-    },
-  ];
+  // Automatically refresh when the screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      fetchAvailableRides();
+    }, [fetchAvailableRides])
+  );
 
-  const handleDetailsButtonPress = () => {
-    console.log("Details button pressed");
-    navigation.navigate("BookingDetails");
+  const handleDetailsButtonPress = (ride) => {
+    console.log("Details button pressed for ride:", ride.ride_id);
+    navigation.navigate("BookingDetails", { ride });
   };
 
   return (
-    <ImageBackground
-      source={{ uri: "https://your-map-image-url.com" }} // Replace with your map image URL or local asset
-      style={styles.background}
+    <ScrollView
+      contentContainerStyle={{ flexGrow: 1 }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
     >
-      {showSpinner && (
-        <View style={styles.spinnerContainer} pointerEvents="none">
-          <FindingCustomerSpinner />
-        </View>
-      )}
-      <ScrollView contentContainerStyle={styles.container}>
-        {customers.map((customer, index) => (
-          <View key={index} style={styles.customerCard}>
-            <View style={styles.customerInfo}>
-              <Text style={styles.customerText}>Name: {customer.name}</Text>
-              <Text style={styles.customerText}>Pickup: {customer.pickup}</Text>
-              <Text style={styles.customerText}>
-                Drop-off: {customer.dropoff}
-              </Text>
-              <Text style={styles.customerText}>Offer: {customer.offer}</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.detailsButton}
-              onPress={handleDetailsButtonPress}
-            >
-              <Text style={styles.detailsButtonText}>
-                Click for more details
-              </Text>
-            </TouchableOpacity>
+      <ImageBackground
+        source={{ uri: "https://your-map-image-url.com" }}
+        style={styles.background}
+      >
+        {showSpinner && (
+          <View style={styles.spinnerContainer}>
+            <FindingCustomerSpinner />
           </View>
-        ))}
-      </ScrollView>
-    </ImageBackground>
+        )}
+        
+        {!showSpinner && availableRides.length === 0 && (
+          <View style={styles.noRidesContainer}>
+            <Text style={styles.noRidesText}>No rides available at the moment.</Text>
+          </View>
+        )}
+        
+        <ScrollView contentContainerStyle={styles.container}>
+          {availableRides.map((ride) => (
+            <View key={ride.id} style={styles.customerCard}>
+              <View style={styles.customerInfo}>
+                <Text style={styles.customerText}>
+                  Name: {`${ride.first_name} ${ride.last_name}`}
+                </Text>
+                <Text style={styles.customerText}>Pickup: {ride.pickup_location}</Text>
+                <Text style={styles.customerText}>Drop-off: {ride.dropoff_location}</Text>
+                <Text style={styles.customerText}>Fare: {ride.fare}</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.detailsButton}
+                onPress={() => handleDetailsButtonPress(ride)}
+              >
+                <Text style={styles.detailsButtonText}>
+                  Click for more details
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </ScrollView>
+      </ImageBackground>
+    </ScrollView>
   );
 };
 
@@ -102,7 +114,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   customerCard: {
-    backgroundColor: "#FFC107",
+    backgroundColor: "#FFD700", // Updated to yellow
     padding: 15,
     borderRadius: 10,
     marginBottom: 10,
@@ -110,6 +122,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 5,
   },
   customerInfo: {
     flex: 1,
@@ -117,16 +134,24 @@ const styles = StyleSheet.create({
   customerText: {
     color: "#000",
     marginBottom: 5,
+    fontSize: 16,
+    fontWeight: "bold",
   },
   detailsButton: {
     backgroundColor: "#000",
-    paddingVertical: 5,
-    paddingHorizontal: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderRadius: 5,
+    shadowColor: "#FFD700",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 5,
   },
   detailsButtonText: {
-    color: "#FFF",
-    fontSize: 12,
+    color: "#FFD700", // Updated to yellow
+    fontSize: 14,
+    fontWeight: "bold",
   },
   spinnerContainer: {
     position: "absolute",
@@ -138,6 +163,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(255, 255, 255, 0.8)",
     zIndex: 999,
+  },
+  noRidesContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  noRidesText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#FFD700", // Yellow text
   },
 });
 

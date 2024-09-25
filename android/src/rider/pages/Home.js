@@ -1,47 +1,81 @@
-import React, { useState, useEffect, useContext } from "react";
-import { View, StyleSheet, Image } from "react-native";
+import React, { useState, useEffect, useContext, useCallback } from "react";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  ImageBackground,
+  Image,
+  ScrollView,
+  RefreshControl,
+} from "react-native";
 import { Button, Text, ActivityIndicator, MD2Colors } from "react-native-paper";
 import * as Location from "expo-location";
 import { RiderContext } from "../../context/riderContext";
+import userService from "../../services/auth&services";
 
-const Home = ({ navigation }) => {
+const Home = ({ navigation, route }) => {
+  const ride = route?.params?.ride || null;
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
   const { riderCoords, setRiderCoords } = useContext(RiderContext);
 
-  useEffect(() => {
-    const getLocation = async () => {
-      setLoading(true);
+  const checkRideAndLocation = useCallback(async () => {
+    try {
+      // Check for existing booking or ride
+      const response = await userService.checkActiveRide();
+      
+      if (response && response.hasActiveRide) {
+        
+        const { status } = response.rideDetails;
+        console.log("obdasddas",response.rideDetails)
+        switch (status) {
+          case 'Occupied':
+            navigation.navigate("Tracking Customer", {ride});
+            return "existing_ride";
+          case 'InTransit':
+            navigation.navigate("Tracking Destination");
+            return "in_transit";
+        }
+      }
+
+      // Get location if no existing ride
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         setErrorMsg("Permission to access location was denied");
-        setLoading(false); // Stop loading if permission is denied
-        return;
+        return "location_denied";
       }
 
-      try {
-        let location = await Location.getCurrentPositionAsync({});
-        setLocation(location);
+      let location = await Location.getCurrentPositionAsync({});
+      setLocation(location);
 
-        // Update riderCoords in context
-        setRiderCoords({
-          accuracy: location.coords.accuracy,
-          longitude: location.coords.longitude,
-          latitude: location.coords.latitude,
-          altitude: location.coords.altitude,
-          altitudeAccuracy: location.coords.altitudeAccuracy,
-          timestamp: location.timestamp,
-        });
-      } catch (error) {
-        setErrorMsg("Error fetching location");
+      setRiderCoords({
+        accuracy: location.coords.accuracy,
+        longitude: location.coords.longitude,
+        latitude: location.coords.latitude,
+        altitude: location.coords.altitude,
+        altitudeAccuracy: location.coords.altitudeAccuracy,
+        timestamp: location.timestamp,
+      });
+
+      return "proceed";
+    } catch (error) {
+      setErrorMsg("Error fetching location or ride status");
       } finally {
         setLoading(false); // Stop loading after fetching location
       }
-    };
+    }, [navigation, setRiderCoords]);
 
-    getLocation();
-  }, []);
+    const onRefresh = useCallback(async () => {
+      setRefreshing(true);
+      await checkRideAndLocation();
+      setRefreshing(false);
+    }, [checkRideAndLocation]);
+  
+    useEffect(() => {
+      checkRideAndLocation();
+    }, [checkRideAndLocation]);
 
   let text = "Waiting..";
   if (errorMsg) {
@@ -51,6 +85,12 @@ const Home = ({ navigation }) => {
   }
 
   return (
+    <ScrollView
+      contentContainerStyle={{ flexGrow: 1 }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
     <View style={styles.container}>
       <View style={styles.logoContainer}>
         <Image
@@ -94,6 +134,7 @@ const Home = ({ navigation }) => {
         </View>
       </Button>
     </View>
+    </ScrollView>
   );
 };
 

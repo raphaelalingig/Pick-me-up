@@ -21,29 +21,33 @@ const Login = ({ navigation }) => {
   const [token, setToken] = useState(""); // Token state
   const { login } = useAuth();
   const [hideEntry, setHideEntry] = useState(true);
+  const [user, setUser] = useState(""); // Token state
 
   const handleLogin = async () => {
     setError("");
-
+  
     if (!user_name || !password) {
       setError("Please input required credentials");
       return;
     }
-
+  
     setIsLoading(true);
-
+  
     try {
-      const { token: receivedToken, role } = await userService.login(
+      const { token: receivedToken, role, user_id } = await userService.login(
         user_name,
         password
       );
+      
       setToken(receivedToken);
-
+      setUser(user_id);
+      console.log(user);
+  
       if (role === 3 || role === 1 || role === 2) {
-        setSelectedRole(role);
+        setSelectedRole(role, user_id);
         setShowDialog(true);
       } else if (role === 4) {
-        await login(receivedToken, role);
+        await login(receivedToken, role, user_id);  // Pass userId to the login function
         navigation.replace(role === 3 ? "RiderStack" : "CustomerStack");
       } else {
         setError("An error occurred during login");
@@ -68,12 +72,14 @@ const Login = ({ navigation }) => {
       setIsLoading(false);
     }
   };
+  
 
   const handleRoleSelection = async (role) => {
-    await login(token, role);
+    await login(token, role, user);
     setShowDialog(false);
     navigation.replace(role === 3 ? "RiderStack" : "CustomerStack");
   };
+  
 
   const toggleSecureEntry = () => {
     setHideEntry(!hideEntry);

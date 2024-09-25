@@ -7,18 +7,17 @@ import {
   ImageBackground,
   Alert,
   ScrollView,
-  RefreshControl
+  RefreshControl,
 } from "react-native";
 import { Button } from "react-native-paper";
 import userService from '../../services/auth&services';
 
-const DeliveryConfirmationScreen = ({navigation}) => {
+const WaitingRider = ({ navigation }) => {
   const [bookDetails, setBookDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-
-  const fetchLatestAvailableRide = async () => {
+  const fetchLatestRide = async () => {
     try {
       const ride = await userService.checkActiveBook();
       setBookDetails(ride.rideDetails);
@@ -30,7 +29,7 @@ const DeliveryConfirmationScreen = ({navigation}) => {
   };
 
   useEffect(() => {
-    fetchLatestAvailableRide();
+    fetchLatestRide();
   }, []);
 
   const onRefresh = useCallback(() => {
@@ -41,7 +40,6 @@ const DeliveryConfirmationScreen = ({navigation}) => {
   }, [navigation]);
 
   const handleCancel = async () => {
-    
     console.log("Attempting to cancel ride");
     
     setIsLoading(true);
@@ -51,7 +49,7 @@ const DeliveryConfirmationScreen = ({navigation}) => {
   
       if (response.data && response.data.message) {
         Alert.alert("Success", response.data.message);
-        navigation.navigate("Home"); // Redirect to home screen or wherever appropriate
+        navigation.navigate("Home");
       } else {
         Alert.alert("Error", "Failed to cancel the ride. Please try again.");
       }
@@ -67,7 +65,6 @@ const DeliveryConfirmationScreen = ({navigation}) => {
       setIsLoading(false);
     }
   };
-  
 
   if (isLoading || !bookDetails) {
     return (
@@ -79,68 +76,47 @@ const DeliveryConfirmationScreen = ({navigation}) => {
 
   return (
     <ScrollView
-    contentContainerStyle={styles.scrollViewContent}
-    refreshControl={
-      <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-    }
-  >
-    <ImageBackground
-      source={{ uri: "https://your-map-image-url.com" }} // Replace with your map image URL or local asset
-      style={styles.background}
+      contentContainerStyle={styles.scrollViewContent}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
     >
-      <View style={styles.container}>
-        <Text style={styles.title}>{bookDetails.ride_type}</Text>
-        <View style={styles.messageContainer}>
-          <Text style={styles.successMessage}>Successfully Matched</Text>
-          <Text style={styles.statusMessage}>Rider is on the way...</Text>
-          <Text style={styles.subTitle}>Rider Details</Text>
-          <Text style={styles.detailText}>{bookDetails.rider ? `${bookDetails.rider.first_name} ${bookDetails.rider.last_name}` : 'N/A'}</Text>
-          <Text style={styles.detailText}>{bookDetails.rider.mobile_number}</Text>
-          <Text style={styles.detailText}>Motor: Yamaha Sniper 150</Text>
+      <ImageBackground
+        source={{ uri: "https://your-map-image-url.com" }}
+        style={styles.background}
+      >
+        <View style={styles.container}>
+          <Text style={styles.title}>{bookDetails.ride_type}</Text>
+          <View style={styles.messageContainer}>
+            <Text style={styles.successMessage}>Ride Successfully Booked</Text>
+            <Text style={styles.statusMessage}>Looking for Rider...</Text>
+            <Text style={styles.subTitle}>Book Details</Text>
+            <Text style={styles.detailText}>Type: {bookDetails.ride_type}</Text>
+            <Text style={styles.detailText}>Pick Up Location: {bookDetails.pickup_location}</Text>
+            <Text style={styles.detailText}>Drop Off Location: {bookDetails.dropoff_location}</Text>
+            <Text style={styles.detailText}>Fare: {bookDetails.fare}</Text>
+          </View>
+          <View>
+            <TouchableOpacity onPress={handleCancel}>
+              <Button style={styles.returnHomeButton}>
+                <Text style={{ color: "white" }}>Cancel Ride</Text>
+              </Button>
+            </TouchableOpacity>
+          </View>
         </View>
-        <View>
-        <TouchableOpacity>
-            <Button style={styles.returnHomeButton}>
-              <Text style={{ color: "white" }}>Contact Rider</Text>
-            </Button>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleCancel}>
-            <Button style={styles.returnHomeButton}>
-              <Text style={{ color: "white" }}>Cancel</Text>
-            </Button>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </ImageBackground>
+      </ImageBackground>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
+  scrollViewContent: {
+    flexGrow: 1,
+  },
   background: {
     flex: 1,
     resizeMode: "cover",
     justifyContent: "center",
-  },
-  header: {
-    position: "absolute",
-    top: 40,
-    left: 10,
-    right: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  backButton: {
-    padding: 10,
-  },
-  backButtonText: {
-    fontSize: 24,
-  },
-  menuButton: {
-    padding: 10,
-  },
-  menuButtonText: {
-    fontSize: 24,
   },
   container: {
     backgroundColor: "#FFD700",
@@ -148,10 +124,15 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 20,
     alignItems: "center",
-    elevation: 5, // For Android shadow
+    elevation: 5,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   title: {
     fontSize: 20,
@@ -187,4 +168,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DeliveryConfirmationScreen;
+export default WaitingRider;

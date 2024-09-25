@@ -1,34 +1,57 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   StyleSheet,
   TouchableOpacity,
   ImageBackground,
+  ScrollView,
+  RefreshControl,
 } from "react-native";
 import { Text, Button } from "react-native-paper";
 import { CustomerContext } from "../../context/customerContext";
 import * as Location from "expo-location";
+import userService from "../../services/auth&services";
 
-const BookNow = ({ setCurrentForm, navigation }) => (
-  <View style={styles.contentContainer}>
-    <View style={styles.titleContainer}>
-      <Text variant="titleLarge" style={styles.titleText}>
-        PICKME UP
-      </Text>
-      <Text
-        variant="titleSmall"
-        style={{ color: "#FBC635", textAlign: "center" }}
-      >
-        Pick you up wherever you are.
-      </Text>
-    </View>
+const BookNow = ({ setCurrentForm, navigation, checkRideAndLocation }) => {
+  const [loading, setLoading] = useState(false);
 
-    <TouchableOpacity onPress={() => setCurrentForm("ChooseServiceScreen")}>
-      <View style={{ padding: 15, backgroundColor: "black", borderRadius: 10 }}>
-        <Text variant="titleMedium" style={styles.titleText}>
-          Book Now
+  const handleBookNow = async () => {
+    setLoading(true);
+    try {
+      const result = await checkRideAndLocation();
+      if (result === "proceed") {
+        setCurrentForm("ChooseServiceScreen");
+      }
+    } catch (error) {
+      console.error("Error in handleBookNow:", error);
+      // You might want to show an error message to the user here
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.contentContainer}>
+      <View style={styles.titleContainer}>
+        <Text variant="titleLarge" style={styles.titleText}>
+          PICKME UP
+        </Text>
+        <Text
+          variant="titleSmall"
+          style={{ color: "#FBC635", textAlign: "center" }}
+        >
+          Pick you up wherever you are.
         </Text>
       </View>
+
+      <TouchableOpacity onPress={handleBookNow} disabled={loading}>
+        <View style={{ padding: 15, backgroundColor: "black", borderRadius: 10 }}>
+          <Text variant="titleMedium" style={styles.titleText}>
+            {loading ? "Checking..." : "Book Now"}
+          </Text>
+        </View>
+      </TouchableOpacity>
       <View>
         <Button>
           <Text
@@ -39,9 +62,9 @@ const BookNow = ({ setCurrentForm, navigation }) => (
           </Text>
         </Button>
       </View>
-    </TouchableOpacity>
-  </View>
-);
+    </View>
+  );
+};
 
 const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
   const [selectedService, setSelectedService] = useState(null);
@@ -104,60 +127,98 @@ const MainComponent = ({ navigation }) => {
   const [currentForm, setCurrentForm] = useState("BookNow");
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const { customerCoords, setCustomerCoords } = useContext(CustomerContext);
 
-  useEffect(() => {
-    const getLocation = async () => {
-      setLoading(true);
+  const checkRideAndLocation = useCallback(async () => {
+    try {
+      // Check for existing booking or ride
+      const response = await userService.checkActiveBook();
+      console.log(response)
+      if (response && response.hasActiveRide) {
+        const { status } = response.rideDetails;
+        switch (status) {
+          case 'Available':
+            navigation.navigate("WaitingForRider");
+            return "existing_booking";
+          case 'Occupied':
+            navigation.navigate("Tracking Rider");
+            return "existing_ride";
+          case 'InTransit':
+            navigation.navigate("In Transit");
+            return "in_transit";
+        }
+      }
+
+      // Get location if no existing ride
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         setErrorMsg("Permission to access location was denied");
-        setLoading(false); // Stop loading if permission is denied
-        return;
+        return "location_denied";
       }
 
-      try {
-        let location = await Location.getCurrentPositionAsync({});
-        setLocation(location);
+      let location = await Location.getCurrentPositionAsync({});
+      setLocation(location);
 
-        // Update riderCoords in context
-        setCustomerCoords({
-          accuracy: location.coords.accuracy,
-          longitude: location.coords.longitude,
-          latitude: location.coords.latitude,
-          altitude: location.coords.altitude,
-          altitudeAccuracy: location.coords.altitudeAccuracy,
-          timestamp: location.timestamp,
-        });
-      } catch (error) {
-        setErrorMsg("Error fetching location");
-      } finally {
-        setLoading(false); // Stop loading after fetching location
-      }
-    };
+      setCustomerCoords({
+        accuracy: location.coords.accuracy,
+        longitude: location.coords.longitude,
+        latitude: location.coords.latitude,
+        altitude: location.coords.altitude,
+        altitudeAccuracy: location.coords.altitudeAccuracy,
+        timestamp: location.timestamp,
+      });
 
-    getLocation();
-  }, [setCustomerCoords]);
+      return "proceed";
+    } catch (error) {
+      setErrorMsg("Error fetching location or ride status");
+      return "error";
+    }
+  }, [navigation, setCustomerCoords]);
 
-  let text = "Waiting..";
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await checkRideAndLocation();
+    setRefreshing(false);
+  }, [checkRideAndLocation]);
+
+  // Automatically refresh when the screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      checkRideAndLocation();
+    }, [checkRideAndLocation])
+  );
+
   if (errorMsg) {
-    text = errorMsg;
-  } else if (location) {
-    text = JSON.stringify(location);
+    return (
+      <View style={styles.errorContainer}>
+        <Text>{errorMsg}</Text>
+      </View>
+    );
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      {currentForm === "BookNow" ? (
-        <BookNow setCurrentForm={setCurrentForm} navigation={navigation} />
-      ) : (
-        <ChooseServiceScreen
-          setCurrentForm={setCurrentForm}
-          navigation={navigation}
-        />
-      )}
-    </View>
+    <ScrollView
+      contentContainerStyle={{ flexGrow: 1 }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
+      <View style={{ flex: 1 }}>
+        {currentForm === "BookNow" ? (
+          <BookNow 
+            setCurrentForm={setCurrentForm} 
+            navigation={navigation} 
+            checkRideAndLocation={checkRideAndLocation}
+          />
+        ) : (
+          <ChooseServiceScreen
+            setCurrentForm={setCurrentForm}
+            navigation={navigation}
+          />
+        )}
+      </View>
+    </ScrollView>
   );
 };
 
