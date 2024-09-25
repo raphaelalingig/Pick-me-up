@@ -1,51 +1,75 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   StyleSheet,
   TouchableOpacity,
   ImageBackground,
+  ScrollView,
+  RefreshControl,
 } from "react-native";
-import { Text } from "react-native-paper";
+import { Text, Button } from "react-native-paper";
 import { CustomerContext } from "../../context/customerContext";
 import * as Location from "expo-location";
+import userService from "../../services/auth&services";
 import { MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons'; // For icons
 
-const BookNow = ({ setCurrentForm, navigation }) => (
-  <ImageBackground
-  source={require("../../pictures/2.png")} // Replace with your map image URL or local asset
-  style={styles.background}
-  >
-  <View style={styles.contentContainer}>
-    <View style={styles.titleContainer}>
-      <Text variant="titleLarge" style={styles.titleText}>
-        PICKME UP
-      </Text>
-      <Text
-        variant="titleSmall"
-        style={{ color: "#FBC635", textAlign: "center" }}
-      >
-        Pick you up wherever you are.
-      </Text>
-    </View>
+const BookNow = ({ setCurrentForm, navigation, checkRideAndLocation }) => {
+  const [loading, setLoading] = useState(false);
 
-    <TouchableOpacity onPress={() => setCurrentForm("ChooseServiceScreen")}>
-      <View style={{ padding: 15, backgroundColor: "black", borderRadius: 10 }}>
-        <Text variant="titleMedium" style={styles.titleText}>
-          Book Now
+  const handleBookNow = async () => {
+    setLoading(true);
+    try {
+      const result = await checkRideAndLocation();
+      if (result === "proceed") {
+        setCurrentForm("ChooseServiceScreen");
+      }
+    } catch (error) {
+      console.error("Error in handleBookNow:", error);
+      // You might want to show an error message to the user here
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <ImageBackground
+    source={require("../../pictures/2.png")} // Replace with your map image URL or local asset
+    style={styles.background}
+    >
+    <View style={styles.contentContainer}>
+      <View style={styles.titleContainer}>
+        <Text variant="titleLarge" style={styles.titleText}>
+          PICKME UP
         </Text>
-      </View>
-      <View>
         <Text
-          style={{ textDecorationLine: "underline", color: "white", marginTop: 10, textAlign: 'center' }}
-          onPress={() => navigation.navigate("Location")}
+          variant="titleSmall"
+          style={{ color: "#FBC635", textAlign: "center" }}
         >
-          View Location
+          Pick you up wherever you are.
         </Text>
       </View>
-    </TouchableOpacity>
-  </View>
-  </ImageBackground>
-);
+
+      <TouchableOpacity onPress={handleBookNow} disabled={loading}>
+        <View style={{ padding: 15, backgroundColor: "black", borderRadius: 10 }}>
+          <Text variant="titleMedium" style={styles.titleText}>
+            {loading ? "Checking..." : "Book Now"}
+          </Text>
+        </View>
+      </TouchableOpacity>
+      <View>
+        <Button>
+          <Text
+            style={{ textDecorationLine: "underline" }}
+            onPress={() => navigation.navigate("Location")}
+          >
+            View Location
+          </Text>
+        </Button>
+      </View>
+    </View>
+    </ImageBackground>
+  );};
 
 const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
   const [selectedService, setSelectedService] = useState(null);
@@ -151,40 +175,76 @@ const MainComponent = ({ navigation }) => {
   const [currentForm, setCurrentForm] = useState("BookNow");
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
   const { customerCoords, setCustomerCoords } = useContext(CustomerContext);
 
-  useEffect(() => {
-    const getLocation = async () => {
-      setLoading(true);
+  const checkRideAndLocation = useCallback(async () => {
+    try {
+      // Check for existing booking or ride
+      const response = await userService.checkActiveBook();
+      console.log(response)
+      if (response && response.hasActiveRide) {
+        const { status } = response.rideDetails;
+        switch (status) {
+          case 'Available':
+            navigation.navigate("WaitingForRider");
+            return "existing_booking";
+          case 'Occupied':
+            navigation.navigate("Tracking Rider");
+            return "existing_ride";
+          case 'In Transit':
+            navigation.navigate("In Transit");
+            return "in_transit";
+        }
+      }
+
+      // Get location if no existing ride
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         setErrorMsg("Permission to access location was denied");
-        setLoading(false);
-        return;
+        return "location_denied";
       }
 
-      try {
-        let location = await Location.getCurrentPositionAsync({});
-        setLocation(location);
-        console.log("Location:", location); 
-        setCustomerCoords({
-          accuracy: location.coords.accuracy,
-          longitude: location.coords.longitude,
-          latitude: location.coords.latitude,
-          altitude: location.coords.altitude,
-          altitudeAccuracy: location.coords.altitudeAccuracy,
-          timestamp: location.timestamp,
-        });
-      } catch (error) {
-        setErrorMsg("Error fetching location");
-      } finally {
-        setLoading(false);
-      }
-    };
+      let location = await Location.getCurrentPositionAsync({});
+      setLocation(location);
 
-    getLocation();
-  }, [setCustomerCoords]);
+      setCustomerCoords({
+        accuracy: location.coords.accuracy,
+        longitude: location.coords.longitude,
+        latitude: location.coords.latitude,
+        altitude: location.coords.altitude,
+        altitudeAccuracy: location.coords.altitudeAccuracy,
+        timestamp: location.timestamp,
+      });
+
+      return "proceed";
+    } catch (error) {
+      setErrorMsg("Error fetching location or ride status");
+      return "error";
+    }
+  }, [navigation, setCustomerCoords]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await checkRideAndLocation();
+    setRefreshing(false);
+  }, [checkRideAndLocation]);
+
+  // Automatically refresh when the screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      checkRideAndLocation();
+    }, [checkRideAndLocation])
+  );
+
+  if (errorMsg) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text>{errorMsg}</Text>
+      </View>
+    );
+  }
 
   let text = "Waiting..";
   if (errorMsg) {
@@ -194,16 +254,27 @@ const MainComponent = ({ navigation }) => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      {currentForm === "BookNow" ? (
-        <BookNow setCurrentForm={setCurrentForm} navigation={navigation} />
-      ) : (
-        <ChooseServiceScreen
-          setCurrentForm={setCurrentForm}
-          navigation={navigation}
-        />
-      )}
-    </View>
+    <ScrollView
+      contentContainerStyle={{ flexGrow: 1 }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
+      <View style={{ flex: 1 }}>
+        {currentForm === "BookNow" ? (
+          <BookNow 
+            setCurrentForm={setCurrentForm} 
+            navigation={navigation} 
+            checkRideAndLocation={checkRideAndLocation}
+          />
+        ) : (
+          <ChooseServiceScreen
+            setCurrentForm={setCurrentForm}
+            navigation={navigation}
+          />
+        )}
+      </View>
+    </ScrollView>
   );
 };
 
