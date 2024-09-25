@@ -1,15 +1,24 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-} from "react-native";
+import { View, Text, StyleSheet, TextInput } from "react-native";
 import { Button } from "react-native-paper";
+import userService from "../services/auth&services"; // Import userService if not already
 
-const Confirmation = () => {
+const Confirmation = ({ route, navigation }) => {
+  // Extract the data passed from Register component
+  const { 
+    email, 
+    mobile_number, 
+    user_name, 
+    first_name, 
+    last_name, 
+    gender, 
+    date_of_birth, 
+    password, 
+    userType 
+  } = route.params;
+
   const [otp, setOtp] = useState(["", "", "", ""]);
+  const [loading, setLoading] = useState(false);
 
   const handleOtpChange = (index, value) => {
     let newOtp = [...otp];
@@ -17,21 +26,48 @@ const Confirmation = () => {
     setOtp(newOtp);
   };
 
+  const verifyOtp = async () => {
+    setLoading(true);
+    try {
+      const enteredOtp = otp.join(""); // Combine OTP digits into a single string
+      // Perform OTP verification here (e.g., validate OTP with backend)
+      const registrationData = {
+        user_name,
+        first_name,
+        last_name,
+        gender,
+        date_of_birth,
+        email,
+        password,
+        password_confirmation: password, // Confirm password
+        mobile_number,
+        role_id: userType === "Customer" ? 4 : 3, // Convert userType to role_id
+        otp: enteredOtp,
+      };
+
+      const response = await userService.signup(registrationData);
+      
+      if (response.status === 201) {
+        console.log("Registration successful");
+        navigation.replace("Login");
+      } else {
+        console.log("Registration failed");
+      }
+    } catch (error) {
+      console.error("OTP Verification error:", error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
-      {/* Icon */}
       <View style={styles.iconContainer}>
-        {/* You can use any icon library here */}
         <Text style={styles.lockIcon}>🔒</Text>
       </View>
-
-      {/* Title */}
       <Text style={styles.title}>Verification</Text>
-
-      {/* Subtitle */}
       <Text style={styles.subtitle}>Enter OTP code sent to your number</Text>
 
-      {/* OTP Input Fields */}
       <View style={styles.otpContainer}>
         {otp.map((digit, index) => (
           <TextInput
@@ -45,14 +81,12 @@ const Confirmation = () => {
         ))}
       </View>
 
-      {/* Continue Button */}
       <Button
         mode="contained"
         style={styles.continueButton}
-        onPress={() => {
-          // Add logic for verifying OTP here
-          console.log("OTP Submitted: ", otp.join(""));
-        }}
+        onPress={verifyOtp}
+        loading={loading}
+        disabled={loading}
       >
         Continue
       </Button>

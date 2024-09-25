@@ -1,59 +1,112 @@
-import React, { useEffect, useContext } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
   TouchableOpacity,
   ImageBackground,
+  Alert,
 } from "react-native";
-import { Button } from "react-native-paper";
+import userService from "../../services/auth&services"; 
 
-const BookingDetailsScreen = ({ navigation }) => {
+const BookingDetailsScreen = ({ route, navigation }) => {
+  const { ride } = route.params;
+  const [isLoading, setIsLoading] = useState(false);
+  const [userId, setUserId] = useState(null);
+
+  
+
+  useEffect(() => {
+    const fetchUserId = async () => {
+      try {
+        const response = await userService.getUserId();
+        const id = parseInt(response, 10);
+        console.log("Fetched user_id:", id);
+        setUserId(id);
+      } catch (error) {
+        console.error("Error fetching user_id:", error);
+      }
+    };
+  
+    fetchUserId();
+  }, []);
+   
+
+  const handleAccept = async (ride) => {
+    if (!userId) {
+      Alert.alert("Error", "User ID is not available.");
+      return;
+    }
+
+    console.log("Attempting to accept ride with ID:", ride.ride_id);
+    setIsLoading(true);
+    try {
+      const response = await userService.accept_ride(ride.ride_id); // Pass user_id with ride_id
+      console.log("Accept ride response:", response.data);
+      if (response.data && response.data.message) {
+        Alert.alert("Success", response.data.message);
+        navigation.navigate("Tracking Customer", { ride });
+      } else {
+        Alert.alert("Error", "Failed to accept the ride. Please try again.");
+      }
+    } catch (error) {
+      console.error("Failed to Accept Ride", error.response ? error.response.data : error.message);
+      if (error.response && error.response.status === 400) {
+        Alert.alert("Error", error.response.data.error || "This ride is no longer available.");
+        navigation.goBack(); // Go back to the previous screen
+      } else {
+        Alert.alert("Error", "An error occurred. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <ImageBackground
-      source={{ uri: "https://your-map-image-url.com" }} // Replace with your map image URL or local asset
+      source={{ uri: "https://your-map-image-url.com" }}
       style={styles.background}
     >
       <View style={styles.container}>
         <Text style={styles.title}>Booking Details</Text>
         <View style={styles.inputContainer}>
-          <Text>Name:</Text>
-          <TextInput
-            style={styles.input}
-            value="Ibarra, Ray Anthony"
-            editable={false}
-          />
+          <Text>Name: {`${ride.first_name} ${ride.last_name}`}</Text>
         </View>
         <View style={styles.inputContainer}>
-          <Text>Location:</Text>
-          <TextInput style={styles.input} value="Bulua" editable={false} />
+          <Text>Location: {ride.pickup_location}</Text>
         </View>
         <View style={styles.inputContainer}>
-          <Text>Service:</Text>
-          <TextInput style={styles.input} value="Motor-Taxi" editable={false} />
+          <Text>Service: {ride.ride_type}</Text>
         </View>
         <View style={styles.inputContainer}>
-          <Text>Drop off:</Text>
-          <TextInput style={styles.input} value="USTP" editable={false} />
+          <Text>Drop off: {ride.dropoff_location}</Text>
         </View>
         <View style={styles.inputContainer}>
-          <Text>Fee:</Text>
-          <TextInput style={styles.input} value="100" editable={false} />
+          <Text>Fee: {ride.fare}</Text>
         </View>
+        <TouchableOpacity
+          style={styles.viewLocationButton}
+          onPress={() => navigation.navigate("Booked Location", { ride })}
+        >
+          <Text style={styles.viewLocationButtonText}>View Location</Text>
+        </TouchableOpacity>
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.cancelButton}
             onPress={() => navigation.goBack()}
           >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text style={styles.cancelButtonText}>Back</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.acceptButton}
-            onPress={() => navigation.navigate("Booked Location")}
+            onPress={() => handleAccept(ride)}
+            disabled={isLoading}
+
           >
-            <Text style={styles.acceptButtonText}>Accept</Text>
+            <Text style={styles.acceptButtonText}>
+              {isLoading ? "Accepting..." : "Accept"}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -66,26 +119,6 @@ const styles = StyleSheet.create({
     flex: 1,
     resizeMode: "cover",
     justifyContent: "center",
-  },
-  header: {
-    position: "absolute",
-    top: 40,
-    left: 10,
-    right: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  backButton: {
-    padding: 10,
-  },
-  backButtonText: {
-    fontSize: 24,
-  },
-  menuButton: {
-    padding: 10,
-  },
-  menuButtonText: {
-    fontSize: 24,
   },
   container: {
     backgroundColor: "#FFD700",
@@ -102,12 +135,6 @@ const styles = StyleSheet.create({
   inputContainer: {
     width: "100%",
     marginBottom: 10,
-  },
-  input: {
-    backgroundColor: "#FFF",
-    borderRadius: 5,
-    padding: 10,
-    marginTop: 5,
   },
   buttonContainer: {
     flexDirection: "row",
@@ -132,11 +159,13 @@ const styles = StyleSheet.create({
   acceptButtonText: {
     color: "#FFF",
   },
+  viewLocationButton: {
+    marginTop: 10,
+  },
   viewLocationButtonText: {
     color: "black",
     padding: 5,
     textDecorationLine: "underline",
-    border: 2,
   },
 });
 
