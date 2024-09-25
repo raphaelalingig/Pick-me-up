@@ -1,14 +1,257 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ImageBackground,
+  Image,
+  Modal,
+  TextInput,
+  Button,
+} from "react-native";
 
-const Settings = () => {
+const Settings = ({ navigation }) => {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedOption, setSelectedOption] = useState(null);
+
+  const openModal = (option) => {
+    setSelectedOption(option);
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setSelectedOption(null);
+    setModalVisible(false);
+  };
+
+  const renderModalContent = () => {
+    switch (selectedOption) {
+      case "Personal Information":
+        return (
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Personal Information</Text>
+            <TextInput placeholder="Name" style={styles.input} />
+            <TextInput placeholder="Email" style={styles.input} />
+            <TouchableOpacity style={styles.saveButton} onPress={closeModal}>
+              <Text style={styles.buttonText}>Save</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      case "Change Password":
+        return (
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Change Password</Text>
+            <TextInput
+              placeholder="New Password"
+              style={styles.input}
+              secureTextEntry
+            />
+            <TextInput
+              placeholder="Confirm Password"
+              style={styles.input}
+              secureTextEntry
+            />
+            <TouchableOpacity style={styles.saveButton} onPress={closeModal}>
+              <Text style={styles.buttonText}>Change</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      case "About PickMeUp":
+        return (
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>About PickMeUp</Text>
+            <Text style={styles.modalText}>
+              This app connects riders with customers for quick transportation
+              services.
+            </Text>
+            <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+              <Text style={styles.buttonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      case "Help and Support":
+        return (
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Help and Support</Text>
+            <Text style={styles.modalText}>
+              If you need assistance, please contact support@pickmeup.com
+            </Text>
+            <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+              <Text style={styles.buttonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      case "App Version":
+        return (
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>App Version</Text>
+            <Text style={styles.modalText}>Version 1.1.00.1</Text>
+            <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+              <Text style={styles.buttonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <View>
-      <Text>RiderSettings</Text>
-    </View>
-  )
-}
+    <ImageBackground
+      source={{ uri: "https://your-map-image-url.com" }}
+      style={styles.background}
+    >
+      <View style={styles.container}>
+        <Image
+          source={{ uri: "https://your-profile-icon-url.com" }}
+          style={styles.profileIcon}
+        />
 
-export default Settings
+        <Text style={styles.customerName}>Rider Name</Text>
+        <Text style={styles.sectionTitle}>Account Settings</Text>
 
-const styles = StyleSheet.create({})
+        {[
+          "Personal Information",
+          "Change Password",
+          "About PickMeUp",
+          "Help and Support",
+          "App Version",
+        ].map((option) => (
+          <TouchableOpacity
+            key={option}
+            style={styles.optionContainer}
+            onPress={() => openModal(option)}
+          >
+            <Text style={styles.optionText}>{option}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={closeModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalView}>
+            <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+              <Text style={styles.closeButtonText}>✖</Text>
+            </TouchableOpacity>
+            {renderModalContent()}
+          </View>
+        </View>
+      </Modal>
+    </ImageBackground>
+  );
+};
+
+const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    resizeMode: "cover",
+    backgroundColor: "white",
+  },
+  container: {
+    backgroundColor: "rgba(250, 205, 0, 0.8)",
+    margin: 20,
+    borderRadius: 20,
+    padding: 30,
+    alignItems: "center",
+  },
+  profileIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#E0E0E0",
+    marginBottom: 10,
+  },
+  customerName: {
+    fontSize: 21,
+    fontWeight: "bold",
+    marginBottom: 30,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    alignSelf: "flex-start",
+    marginBottom: 20,
+  },
+  optionContainer: {
+    width: "100%",
+    paddingVertical: 15,
+    marginBottom: 15,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    backgroundColor: "#f5f5f5",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  optionText: {
+    fontSize: 16,
+    color: "#333", // Darker text for better readability
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalView: {
+    width: "80%",
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 20,
+    color: "#FBC635", // Match title color with theme
+  },
+  modalText: {
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 20,
+    color: "#555", // Darker gray for better readability
+  },
+  input: {
+    width: "100%",
+    padding: 10,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 5,
+    marginBottom: 20,
+  },
+  saveButton: {
+    backgroundColor: "#008000",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  closeButton: {
+    backgroundColor: "transparent",
+    position: "absolute",
+    top: 10,
+    right: 10,
+  },
+  closeButtonText: {
+    fontSize: 24,
+    color: "#FF0000", // Red color for visibility
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+});
+
+export default Settings;

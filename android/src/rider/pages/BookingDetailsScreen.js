@@ -90,6 +90,7 @@ const BookingDetailsScreen = ({ route, navigation }) => {
         >
           <Text style={styles.viewLocationButtonText}>View Location</Text>
         </TouchableOpacity>
+
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.cancelButton}
@@ -101,6 +102,7 @@ const BookingDetailsScreen = ({ route, navigation }) => {
             style={styles.acceptButton}
             onPress={() => handleAccept(ride)}
             disabled={isLoading}
+
           >
             <Text style={styles.acceptButtonText}>
               {isLoading ? "Accepting..." : "Accept"}
