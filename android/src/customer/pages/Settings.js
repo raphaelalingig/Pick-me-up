@@ -86,8 +86,8 @@ const Settings = ({ navigation }) => {
 
   return (
     <ImageBackground
-      source={{ uri: 'https://your-map-image-url.com' }}
-      style={styles.background}
+    source={require("../../pictures/3.png")} // Replace with your map image URL or local asset
+    style={styles.background}
     >
       <View style={styles.container}>
         <Image 
@@ -133,13 +133,18 @@ const styles = StyleSheet.create({
     flex: 1,
     resizeMode: 'cover',
     backgroundColor: 'white',
+    justifyContent: 'space-evenly',
   },
   container: {
-    backgroundColor: 'rgba(250, 205, 0, 0.8)',
+    backgroundColor: '#FBC635',
     margin: 20,
     borderRadius: 20,
     padding: 30,
     alignItems: 'center',
+    elevation: 5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
 
   },
   profileIcon: {
@@ -179,7 +184,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'space-evenly',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
@@ -204,7 +209,6 @@ const styles = StyleSheet.create({
     color: '#555', // Darker gray for better readability
   },
   input: {
-    width: '100%',
     padding: 10,
     borderColor: '#ccc',
     borderWidth: 1,

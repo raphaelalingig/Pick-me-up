@@ -11,6 +11,10 @@ import * as Location from "expo-location";
 import { MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons'; // For icons
 
 const BookNow = ({ setCurrentForm, navigation }) => (
+  <ImageBackground
+  source={require("../../pictures/2.png")} // Replace with your map image URL or local asset
+  style={styles.background}
+  >
   <View style={styles.contentContainer}>
     <View style={styles.titleContainer}>
       <Text variant="titleLarge" style={styles.titleText}>
@@ -32,7 +36,7 @@ const BookNow = ({ setCurrentForm, navigation }) => (
       </View>
       <View>
         <Text
-          style={{ textDecorationLine: "underline", color: "#FBC635", marginTop: 10, textAlign: 'center' }}
+          style={{ textDecorationLine: "underline", color: "white", marginTop: 10, textAlign: 'center' }}
           onPress={() => navigation.navigate("Location")}
         >
           View Location
@@ -40,6 +44,7 @@ const BookNow = ({ setCurrentForm, navigation }) => (
       </View>
     </TouchableOpacity>
   </View>
+  </ImageBackground>
 );
 
 const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
@@ -234,14 +239,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 5,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
   buttonContainer: {
     justifyContent: "space-around",
     marginBottom: 20,
+    width: '100%', // Width set to 100%
   },
   serviceButton: {
     flexDirection: "row",
@@ -253,16 +254,16 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     borderWidth: 1,
     borderColor: "transparent",
+    width: '100%', // Width set to 100%
   },
   serviceButtonText: {
-    fontSize: 16,
     fontWeight: "bold",
     marginLeft: 10,
   },
   serviceDescription: {
-    fontSize: 12,
     marginLeft: 15,
     color: "#555",
+    flexShrink: 1
   },
   selectedButton: {
     borderColor: "black",
@@ -280,7 +281,6 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: "#fff",
-    fontSize: 16,
     fontWeight: "bold",
   },
   bookButton: {
@@ -291,9 +291,9 @@ const styles = StyleSheet.create({
   },
   bookButtonText: {
     color: "#fff",
-    fontSize: 16,
     fontWeight: "bold",
   },
 });
+
 
 export default MainComponent;

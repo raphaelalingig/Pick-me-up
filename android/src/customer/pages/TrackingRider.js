@@ -109,6 +109,7 @@ const styles = StyleSheet.create({
   successMessage: {
     fontSize: 18,
     fontWeight: "bold",
+    
   },
   statusMessage: {
     fontSize: 14,
@@ -124,7 +125,7 @@ const styles = StyleSheet.create({
   },
   subTitle: {
     fontSize: 21,
-    fontWeight: "bold"
+    fontWeight: "bold",
     marginBottom: 20,
   },
   detailRow: {
