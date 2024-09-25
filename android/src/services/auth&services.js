@@ -156,65 +156,6 @@ const userService = {
     }
   },
   
-
-
-
-  checkExistingBooking: async () => {
-    try {
-      const userId = await userService.getUserId();
-      if (!userId) {
-        console.error("User ID not found");
-        return false;
-      }
-  
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        console.error("Token not found");
-        return false;
-      }
-  
-      const response = await axios.get(`${API_URL}check-existing-booking/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-  
-      return response.data.hasExistingRide;
-    } catch (error) {
-      console.error("Error checking existing ride:", error);
-      return false;
-    }
-  },
-
-
-
-  checkExistingRide: async () => {
-    try {
-      const userId = await userService.getUserId();
-      if (!userId) {
-        console.error("User ID not found");
-        return false;
-      }
-  
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        console.error("Token not found");
-        return false;
-      }
-  
-      const response = await axios.get(`${API_URL}check-existing-ride/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-  
-      return response.data.hasExistingRide;
-    } catch (error) {
-      console.error("Error checking existing ride:", error);
-      return false;
-    }
-  },
-
   cancel_ride: async (ride_id) => {
     try {
       const token = await AsyncStorage.getItem('token');
@@ -229,7 +170,22 @@ const userService = {
       throw error;
     }
   },
-  
+
+
+  getHistory: async () => {
+    try {
+      const userId = await userService.getUserId();
+      if (!userId) {
+        console.error("User ID not found");
+        return false;
+      }
+      const response = await axios.get(API_URL + 'history/' + userId);
+      return response;
+    } catch (error) {
+      console.error("Error fetching available rides:", error);
+      throw error;
+    }
+  },
 
 
   getAvailableRides: async () => {

@@ -7,10 +7,14 @@ import {
   ImageBackground,
   Alert,
   ScrollView,
-  RefreshControl
+  RefreshControl,
+  Dimensions
 } from "react-native";
 import { Button } from "react-native-paper";
 import userService from '../../services/auth&services';
+import { MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons'; // For icons
+
+const { height, width } = Dimensions.get('window'); // Get screen dimensions
 
 const DeliveryConfirmationScreen = ({navigation}) => {
   const [bookDetails, setBookDetails] = useState(null);
@@ -76,114 +80,157 @@ const DeliveryConfirmationScreen = ({navigation}) => {
       </View>
     );
   }
-
+  
   return (
     <ScrollView
     contentContainerStyle={styles.scrollViewContent}
     refreshControl={
       <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
     }
-  >
-    <ImageBackground
-      source={{ uri: "https://your-map-image-url.com" }} // Replace with your map image URL or local asset
-      style={styles.background}
     >
       <View style={styles.container}>
-        <Text style={styles.title}>{bookDetails.ride_type}</Text>
-        <View style={styles.messageContainer}>
-          <Text style={styles.successMessage}>Successfully Matched</Text>
-          <Text style={styles.statusMessage}>Rider is on the way...</Text>
-          <Text style={styles.subTitle}>Rider Details</Text>
-          <Text style={styles.detailText}>{bookDetails.rider ? `${bookDetails.rider.first_name} ${bookDetails.rider.last_name}` : 'N/A'}</Text>
-          <Text style={styles.detailText}>{bookDetails.rider.mobile_number}</Text>
-          <Text style={styles.detailText}>Motor: Yamaha Sniper 150</Text>
+        {/* Header Section covering 20% */}
+        <View style={styles.header}>
+          <FontAwesome5 name="users" size={40} color="black" />
+          <Text style={styles.serviceTitle}>{bookDetails.ride_type}</Text>
         </View>
-        <View>
-        <TouchableOpacity>
-            <Button style={styles.returnHomeButton}>
-              <Text style={{ color: "white" }}>Contact Rider</Text>
-            </Button>
+
+        {/* Content Section covering 80% */}
+        <View style={styles.content}>
+          {/* Booking Confirmation Message */}
+          <View style={styles.messageContainer}>
+            <View style={styles.successBox}>
+              <MaterialCommunityIcons name="motorbike" size={80} color="black" />
+              <View style={styles.successTextContainer}>
+                <Text style={styles.successMessage}>Matched Successfully</Text>
+                <Text style={styles.statusMessage}>Rider is on the way...</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Rider Details Section */}
+          <View style={styles.detailsContainer}>
+            <Text style={styles.subTitle}>Rider Details</Text>
+            <View style={styles.detailRow}>
+              <MaterialCommunityIcons name="account" size={24} color="black" />
+              <Text style={styles.detailText}>{bookDetails.rider ? `${bookDetails.rider.first_name} ${bookDetails.rider.last_name}` : 'N/A'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <MaterialCommunityIcons name="phone" size={24} color="black" />
+              <Text style={styles.detailText}>{bookDetails.rider ? `${bookDetails.rider.mobile_number}` : 'N/A'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <MaterialCommunityIcons name="motorbike" size={24} color="black" />
+              <Text style={styles.detailText}>Motor: Yamaha Sniper 150</Text>
+            </View>
+          </View>
+
+          {/* Go Back Button */}
+          <TouchableOpacity>
+            <View style={styles.goBackButton}>
+              <Text style={styles.goBackButtonText}>Contact Rider</Text>
+            </View>
           </TouchableOpacity>
+          
           <TouchableOpacity onPress={handleCancel}>
-            <Button style={styles.returnHomeButton}>
-              <Text style={{ color: "white" }}>Cancel</Text>
-            </Button>
+            <View style={styles.goBackButton}>
+              <Text style={styles.goBackButtonText}>Cancel</Text>
+            </View>
           </TouchableOpacity>
         </View>
       </View>
-    </ImageBackground>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  background: {
+  container: {
     flex: 1,
-    resizeMode: "cover",
-    justifyContent: "center",
+    backgroundColor: "#ffd700", // Yellow background color
   },
   header: {
-    position: "absolute",
-    top: 40,
-    left: 10,
-    right: 10,
+    flex: 2, // 20% of the screen height
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: "#ffd700", // Yellow background for the header
     flexDirection: "row",
-    justifyContent: "space-between",
   },
-  backButton: {
-    padding: 10,
-  },
-  backButtonText: {
-    fontSize: 24,
-  },
-  menuButton: {
-    padding: 10,
-  },
-  menuButtonText: {
-    fontSize: 24,
-  },
-  container: {
-    backgroundColor: "#FFD700",
-    margin: 20,
-    borderRadius: 10,
-    padding: 20,
-    alignItems: "center",
-    elevation: 5, // For Android shadow
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-  },
-  title: {
-    fontSize: 20,
+  serviceTitle: {
+    fontSize: 28,
     fontWeight: "bold",
-    marginBottom: 20,
+    marginLeft: 10,
+    color: "#FFF",
+    textDecorationLine: 'underline',
+  },
+  content: {
+    flex: 8, // 80% of the screen height
+    backgroundColor: "#f5f5f5", // Background color for content section
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    alignItems: "center",
+    justifyContent: "flex-start",
   },
   messageContainer: {
+    paddingTop: 50,
+    width: "100%",
+    marginBottom: 20,
+  },
+  successBox: {
+    flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "#FFF",
+    padding: 10,
+    borderRadius: 10,
+    elevation: 2,
+  },
+  successTextContainer: {
+    marginLeft: 0,
+    padding: 30,
   },
   successMessage: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 10,
+    
   },
   statusMessage: {
-    fontSize: 16,
+    fontSize: 14,
+    color: "gray",
+  },
+  detailsContainer: {
+    backgroundColor: "#FFF",
+    padding: 30,
+    borderRadius: 10,
+    width: "100%",
     marginBottom: 20,
+    elevation: 2,
   },
   subTitle: {
-    fontSize: 16,
+    fontSize: 21,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 20,
+  },
+  detailRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
   },
   detailText: {
-    fontSize: 14,
-    marginBottom: 5,
+    fontSize: 16,
+    marginLeft: 10,
   },
-  returnHomeButton: {
-    marginTop: 20,
-    backgroundColor: "#140F1F",
+  goBackButton: {
+    backgroundColor: "#28a745",
+    paddingVertical: 10,
+    paddingHorizontal: 30,
     borderRadius: 5,
-    justifyContent: "flex-end",
+    marginTop: 20,
+  },
+  goBackButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 

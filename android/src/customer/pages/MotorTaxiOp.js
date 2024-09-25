@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import userService from "../../services/auth&services";
 
+
 const MotorTaxiOptionScreen = ({ navigation }) => {
   const [pickupLocation, setPickupLocation] = useState("");
   const [dropoffLocation, setDropoffLocation] = useState("");
@@ -64,10 +65,9 @@ console.log(formattedCurrentDate);
       console.error("Failed to add ride history:", error);
     }
   };
-
   return (
     <ImageBackground
-      source={{ uri: "https://your-map-image-url.com" }} // Replace with your map image URL or local asset
+    source={require("../../pictures/3.png")} // Replace with your map image URL or local asset
       style={styles.background}
     >
       <View style={styles.container}>
@@ -92,8 +92,8 @@ console.log(formattedCurrentDate);
         <View style={styles.fareContainer}>
           <Text style={styles.fareLabel}>Fare :</Text>
           <TextInput
-            style={styles.input}
-            placeholder="Fare"
+            style={styles.fareInput}
+            placeholder="50.00"
             keyboardType="numeric"
             value={fare}
             onChangeText={setFare}

@@ -12,6 +12,7 @@ import { Text, Button } from "react-native-paper";
 import { CustomerContext } from "../../context/customerContext";
 import * as Location from "expo-location";
 import userService from "../../services/auth&services";
+import { MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons'; // For icons
 
 const BookNow = ({ setCurrentForm, navigation, checkRideAndLocation }) => {
   const [loading, setLoading] = useState(false);
@@ -32,6 +33,10 @@ const BookNow = ({ setCurrentForm, navigation, checkRideAndLocation }) => {
   };
 
   return (
+    <ImageBackground
+    source={require("../../pictures/2.png")} // Replace with your map image URL or local asset
+    style={styles.background}
+    >
     <View style={styles.contentContainer}>
       <View style={styles.titleContainer}>
         <Text variant="titleLarge" style={styles.titleText}>
@@ -63,8 +68,8 @@ const BookNow = ({ setCurrentForm, navigation, checkRideAndLocation }) => {
         </Button>
       </View>
     </View>
-  );
-};
+    </ImageBackground>
+  );};
 
 const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
   const [selectedService, setSelectedService] = useState(null);
@@ -81,31 +86,74 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
 
   return (
     <ImageBackground
-      source={{ uri: "https://your-map-image-url.com" }} // Replace with your map image URL or local asset
+      source={require("../../pictures/3.png")} // Replace with your map image URL or local asset
       style={styles.background}
     >
       <View style={styles.container}>
         <Text style={styles.title}>CHOOSE RIDER SERVICES</Text>
         <View style={styles.buttonContainer}>
-          {["Delivery", "Pakyaw", "Motor Taxi"].map((service) => (
-            <TouchableOpacity
-              key={service}
+          <TouchableOpacity
+            style={[
+              styles.serviceButton,
+              selectedService === "Delivery" && styles.selectedButton,
+            ]}
+            onPress={() => handleServiceSelect("Delivery")}
+          >
+            <MaterialCommunityIcons name="bike" size={24} color="black" />
+            <Text
               style={[
-                styles.serviceButton,
-                selectedService === service && styles.selectedButton, // Apply selected style
+                styles.serviceButtonText,
+                selectedService === "Delivery" && { color: "black" },
               ]}
-              onPress={() => handleServiceSelect(service)}
             >
-              <Text
-                style={[
-                  styles.serviceButtonText,
-                  selectedService === service && { color: "black" }, // Change text color on selection
-                ]}
-              >
-                {service}
-              </Text>
-            </TouchableOpacity>
-          ))}
+              Delivery
+            </Text>
+            <Text style={styles.serviceDescription}>
+              We deliver what you need
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.serviceButton,
+              selectedService === "Pakyaw" && styles.selectedButton,
+            ]}
+            onPress={() => handleServiceSelect("Pakyaw")}
+          >
+            <FontAwesome5 name="users" size={24} color="black" />
+            <Text
+              style={[
+                styles.serviceButtonText,
+                selectedService === "Pakyaw" && { color: "black" },
+              ]}
+            >
+              Pakyaw
+            </Text>
+            <Text style={styles.serviceDescription}>
+              Ride with friend & family
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.serviceButton,
+              selectedService === "Motor Taxi" && styles.selectedButton,
+            ]}
+            onPress={() => handleServiceSelect("Motor Taxi")}
+          >
+            <MaterialCommunityIcons name="motorbike" size={24} color="black" />
+            <Text
+              style={[
+                styles.serviceButtonText,
+                selectedService === "Motor Taxi" && { color: "black" },
+              ]}
+            >
+              Motor-Taxi
+            </Text>
+            <Text style={styles.serviceDescription}>
+              Bring you where ever you want
+            </Text>
+          </TouchableOpacity>
         </View>
         <View style={styles.actionContainer}>
           <TouchableOpacity
@@ -128,6 +176,7 @@ const MainComponent = ({ navigation }) => {
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { customerCoords, setCustomerCoords } = useContext(CustomerContext);
 
   const checkRideAndLocation = useCallback(async () => {
@@ -144,7 +193,7 @@ const MainComponent = ({ navigation }) => {
           case 'Occupied':
             navigation.navigate("Tracking Rider");
             return "existing_ride";
-          case 'InTransit':
+          case 'In Transit':
             navigation.navigate("In Transit");
             return "in_transit";
         }
@@ -197,6 +246,13 @@ const MainComponent = ({ navigation }) => {
     );
   }
 
+  let text = "Waiting..";
+  if (errorMsg) {
+    text = errorMsg;
+  } else if (location) {
+    text = JSON.stringify(location);
+  }
+
   return (
     <ScrollView
       contentContainerStyle={{ flexGrow: 1 }}
@@ -241,27 +297,7 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
     resizeMode: "cover",
-    justifyContent: "center",
-  },
-  header: {
-    position: "absolute",
-    top: 40,
-    left: 10,
-    right: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  backButton: {
-    padding: 10,
-  },
-  backButtonText: {
-    fontSize: 24,
-  },
-  menuButton: {
-    padding: 10,
-  },
-  menuButtonText: {
-    fontSize: 24,
+    justifyContent: "space-evenly",
   },
   container: {
     backgroundColor: "#FFD700",
@@ -273,33 +309,35 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
-  
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 20,
   },
   buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "space-around",
     marginBottom: 20,
+    width: '100%', // Width set to 100%
   },
   serviceButton: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#fff",
     paddingVertical: 10,
     paddingHorizontal: 20,
-    marginHorizontal: 5,
+    marginVertical: 10,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: "transparent", // Default border color
+    borderColor: "transparent",
+    width: '100%', // Width set to 100%
   },
   serviceButtonText: {
-    fontSize: 16,
     fontWeight: "bold",
+    marginLeft: 10,
+  },
+  serviceDescription: {
+    marginLeft: 15,
+    color: "#555",
+    flexShrink: 1
   },
   selectedButton: {
-    borderColor: "black", // Black border when selected
+    borderColor: "black",
   },
   actionContainer: {
     flexDirection: "row",
@@ -314,7 +352,6 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: "#fff",
-    fontSize: 16,
     fontWeight: "bold",
   },
   bookButton: {
@@ -325,9 +362,9 @@ const styles = StyleSheet.create({
   },
   bookButtonText: {
     color: "#fff",
-    fontSize: 16,
     fontWeight: "bold",
   },
 });
+
 
 export default MainComponent;
