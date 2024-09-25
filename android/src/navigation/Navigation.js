@@ -23,10 +23,14 @@ import PakyawOptionScreen from "../customer/pages/PakyawOp";
 import DeliveryOptionScreen from "../customer/pages/DeliveryOp";
 import DeliveryConfirmationScreen from "../customer/pages/TrackingRider";
 import AccountSettingsScreen from "../customer/pages/Settings";
+import InTransit from "../customer/pages/InTransit";
 import SubmitReport from "../rider/pages/SubmitReport";
 import Map from "../rider/pages/Map";
 import CustomerMap from "../customer/pages/CustomerMap";
 import BookedMap from "../rider/pages/BookedMap";
+import WaitingRider from "../customer/pages/WaitingForRider";
+import TrackingDestination from "../rider/pages/TrackingDestination";
+import TrackingCustomer from "../rider/pages/TrackingCustomer";
 
 
 const Drawer = createDrawerNavigator();
@@ -144,10 +148,9 @@ const CustomerStack = () => {
       <Stack.Screen name="Pakyaw" component={PakyawOptionScreen} />
       <Stack.Screen name="Delivery" component={DeliveryOptionScreen} />
       <Stack.Screen name="Settings" component={AccountSettingsScreen} />
-      <Stack.Screen
-        name="Tracking Rider"
-        component={DeliveryConfirmationScreen}
-      />
+      <Stack.Screen name="WaitingForRider" component={WaitingRider}/>
+      <Stack.Screen name="Tracking Rider" component={DeliveryConfirmationScreen}/>
+      <Stack.Screen name="In Transit" component={InTransit}/>
       <Stack.Screen name="Location" component={CustomerMap} />
     </Stack.Navigator>
   );
@@ -163,8 +166,11 @@ const RiderStack = () => {
       />
       <Stack.Screen name="Nearby Customer" component={NearbyCustomerScreen} />
       <Stack.Screen name="BookingDetails" component={BookingDetailsScreen} />
+      <Stack.Screen name="InTransit" component={InTransit} />
       <Stack.Screen name="Submit Report" component={SubmitReport} />
       <Stack.Screen name="Current Location" component={Map} />
+      <Stack.Screen name="Tracking Customer" component={TrackingCustomer} />
+      <Stack.Screen name="Tracking Destination" component={TrackingDestination} />
       <Stack.Screen name="Booked Location" component={BookedMap} />
     </Stack.Navigator>
   );
