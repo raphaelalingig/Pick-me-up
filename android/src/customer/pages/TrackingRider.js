@@ -24,7 +24,7 @@ const DeliveryConfirmationScreen = ({ navigation }) => {
         {/* Booking Confirmation Message */}
         <View style={styles.messageContainer}>
           <View style={styles.successBox}>
-            <MaterialCommunityIcons name="motorbike" size={32} color="black" />
+            <MaterialCommunityIcons name="motorbike" size={80} color="black" />
             <View style={styles.successTextContainer}>
               <Text style={styles.successMessage}>Ride Successfully Booked</Text>
               <Text style={styles.statusMessage}>Rider is on the way...</Text>
@@ -90,6 +90,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
   },
   messageContainer: {
+    paddingTop: 50,
     width: "100%",
     marginBottom: 20,
   },
@@ -102,7 +103,8 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   successTextContainer: {
-    marginLeft: 10,
+    marginLeft: 0,
+    padding: 30,
   },
   successMessage: {
     fontSize: 18,
@@ -114,21 +116,21 @@ const styles = StyleSheet.create({
   },
   detailsContainer: {
     backgroundColor: "#FFF",
-    padding: 15,
+    padding: 30,
     borderRadius: 10,
     width: "100%",
     marginBottom: 20,
     elevation: 2,
   },
   subTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
+    fontSize: 21,
+    fontWeight: "bold"
+    marginBottom: 20,
   },
   detailRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 20,
   },
   detailText: {
     fontSize: 16,
