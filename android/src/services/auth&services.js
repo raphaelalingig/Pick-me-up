@@ -76,17 +76,15 @@ const userService = {
 
   upload: async ()=> {
     try {
-      const response = await axios.post(API_URL + 'upload', {
-      });
-      const data = await response.json();
-      if (data.success) {
-        console.log("Upload successful!");
-      } else {
-        console.error("Upload failed.");
-      }
+      const response = await axios.post(API_URL + 'upload', {formData});
+      return response.data;
     } catch (error) {
       console.error("Error uploading image:", error);
     }
+  },
+
+  updateRiderInfo: (data) => {
+    return api.post('/update-rider-info', data);
   },
     
 
@@ -217,6 +215,36 @@ const userService = {
       return response;
     } catch (error) {
       console.error("Error accepting ride:", error);
+      throw error;
+    }
+  },
+
+  start_ride: async (ride_id) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await axios.put(`${API_URL}start_ride/${ride_id}`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return response;  // Return the response here
+    } catch (error) {
+      console.error("Error starting ride:", error);
+      throw error;
+    }
+  },
+
+  complete_ride: async (ride_id) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await axios.put(`${API_URL}finish_ride/${ride_id}`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return response;  // Return the response here
+    } catch (error) {
+      console.error("Error canceling ride:", error);
       throw error;
     }
   },

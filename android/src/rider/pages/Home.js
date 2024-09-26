@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   StyleSheet,
@@ -13,8 +14,7 @@ import * as Location from "expo-location";
 import { RiderContext } from "../../context/riderContext";
 import userService from "../../services/auth&services";
 
-const Home = ({ navigation, route }) => {
-  const ride = route?.params?.ride || null;
+const Home = ({ navigation }) => {
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -29,13 +29,14 @@ const Home = ({ navigation, route }) => {
       if (response && response.hasActiveRide) {
         
         const { status } = response.rideDetails;
-        console.log("obdasddas",response.rideDetails)
+        const ride = response.rideDetails;
+        console.log(ride)
         switch (status) {
           case 'Occupied':
             navigation.navigate("Tracking Customer", {ride});
             return "existing_ride";
-          case 'InTransit':
-            navigation.navigate("Tracking Destination");
+          case 'In Transit':
+            navigation.navigate("Tracking Destination", {ride});
             return "in_transit";
         }
       }
@@ -72,10 +73,12 @@ const Home = ({ navigation, route }) => {
       await checkRideAndLocation();
       setRefreshing(false);
     }, [checkRideAndLocation]);
-  
-    useEffect(() => {
-      checkRideAndLocation();
-    }, [checkRideAndLocation]);
+
+    useFocusEffect(
+      useCallback(() => {
+        checkRideAndLocation();
+      }, [checkRideAndLocation])
+    );
 
   let text = "Waiting..";
   if (errorMsg) {

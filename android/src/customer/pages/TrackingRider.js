@@ -128,7 +128,7 @@ const DeliveryConfirmationScreen = ({navigation}) => {
           {/* Go Back Button */}
           <TouchableOpacity>
             <View style={styles.goBackButton}>
-              <Text style={styles.goBackButtonText}>Contact Rider</Text>
+              <Text style={styles.goBackButtonText}>Contact</Text>
             </View>
           </TouchableOpacity>
           
