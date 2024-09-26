@@ -1,20 +1,74 @@
-import React, { useState, useEffect, useContext, useCallback } from "react";
-import { StyleSheet, TouchableOpacity, View, ImageBackground, RefreshControl, ScrollView } from "react-native";
-import { TextInput, Text } from "react-native-paper";
+import React, { useState, useEffect } from "react";
+import { StyleSheet, TouchableOpacity, View, Alert, Dimensions } from "react-native";
+import { MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { Text } from "react-native-paper";
+import MapView, { Marker, Polyline } from "react-native-maps";
+import userService from "../../services/auth&services";
 
 const TrackingCustomer = ({ route, navigation }) => {
   const { ride } = route.params;
-  const [refreshing, setRefreshing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [riderLocation, setRiderLocation] = useState({
+    latitude: 8.50356485505176,
+    longitude: 124.60255927585538, 
+  });
+  const [customerLocation, setCustomerLocation] = useState({
+    latitude: 8.4955,
+    longitude: 124.5999,
+  });
+  const [routeCoordinates, setRouteCoordinates] = useState([]);
+  const [mapRegion, setMapRegion] = useState(null);
 
-  const handleCancel = async () => {
-    
-    console.log("Attempting to cancel ride");
-    
+  useEffect(() => {
+    fetchDirections();
+    calculateMapRegion();
+  }, [riderLocation, customerLocation]);
+
+  const calculateMapRegion = () => {
+    const minLat = Math.min(riderLocation.latitude, customerLocation.latitude);
+    const maxLat = Math.max(riderLocation.latitude, customerLocation.latitude);
+    const minLng = Math.min(riderLocation.longitude, customerLocation.longitude);
+    const maxLng = Math.max(riderLocation.longitude, customerLocation.longitude);
+
+    const latDelta = (maxLat - minLat) * 1.5; // Add some padding
+    const lngDelta = (maxLng - minLng) * 1.5;
+
+    setMapRegion({
+      latitude: (minLat + maxLat) / 2,
+      longitude: (minLng + maxLng) / 2,
+      latitudeDelta: Math.max(latDelta, 0.02),
+      longitudeDelta: Math.max(lngDelta, 0.02),
+    });
+  };
+
+  const fetchDirections = async () => {
+    // Implement the fetchDirections function from BookedMap component
+    // This function should update the routeCoordinates state
+  };
+  
+
+  const startRide = async () => {
     setIsLoading(true);
     try {
-      const response = await userService.cancel_ride(bookDetails.ride_id);
-      console.log("Cancel ride response:", response.data);
-  
+      const response = await userService.start_ride(ride.ride_id);
+      if (response.data && response.data.message) {
+        Alert.alert("Success", response.data.message);
+        navigation.navigate("Home");
+      } else {
+        Alert.alert("Error", "Failed to start the ride. Please try again.");
+      }
+    } catch (error) {
+      console.error("Failed to start ride", error.response ? error.response.data : error.message);
+      Alert.alert("Error", "An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    setIsLoading(true);
+    try {
+      const response = await userService.cancel_ride(ride.ride_id);
       if (response.data && response.data.message) {
         Alert.alert("Success", response.data.message);
         navigation.navigate("Home");
@@ -23,113 +77,141 @@ const TrackingCustomer = ({ route, navigation }) => {
       }
     } catch (error) {
       console.error("Failed to Cancel Ride", error.response ? error.response.data : error.message);
-      if (error.response && error.response.status === 400) {
-        Alert.alert("Error", error.response.data.error || "This ride is no longer available.");
-        navigation.goBack(); // Go back to the previous screen
-      } else {
-        Alert.alert("Error", "An error occurred. Please try again.");
-      }
+      Alert.alert("Error", "An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    // Navigate to Home screen
-    navigation.navigate("Home", {ride});
-    setRefreshing(false);
-  }, [navigation]);
+  if (isLoading || !ride) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
-  
   return (
-    <ScrollView
-      contentContainerStyle={{ flexGrow: 1 }}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      <ImageBackground
-        source={{ uri: "https://your-map-image-url.com" }} // Replace with your map image URL
-        style={styles.background}
-      >
-        <View style={styles.overlay}>
-          <View style={styles.contentContainer}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.acceptButtonText}>Tracking Customer</Text>
-            </View>
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={styles.acceptButton}
-                onPress={() => navigation.navigate("Tracking Destination")}
-              >
-                <Text style={styles.acceptButtonText}>Begin Transit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.acceptButton}
-                onPress={() => navigation.navigate("Home")}
-              >
-                <Text style={styles.acceptButtonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
+    <View style={styles.container}>
+      <View style={styles.mapContainer}>
+        <MapView 
+          style={styles.map} 
+          region={mapRegion}
+          onMapReady={calculateMapRegion}
+        >
+          <Marker coordinate={riderLocation} title="Rider Location" />
+          <Marker coordinate={customerLocation} title="Customer Location" pinColor="blue" />
+          <Polyline coordinates={routeCoordinates} strokeColor="#FF0000" strokeWidth={3} />
+        </MapView>
+      </View>
+
+      <View style={styles.detailsContainer}>
+        <View style={styles.header}>
+          <FontAwesome5 name="users" size={24} color="black" />
+          <Text style={styles.serviceTitle}>{ride.ride_type}</Text>
+        </View>
+
+        <View style={styles.customerDetails}>
+          <Text style={styles.subTitle}>Customer Details</Text>
+          <View style={styles.detailRow}>
+            <MaterialCommunityIcons name="account" size={24} color="black" />
+            <Text style={styles.detailText}>{ride.user ? `${ride.user.first_name} ${ride.user.last_name}` : 'N/A'}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <MaterialCommunityIcons name="phone" size={24} color="black" />
+            <Text style={styles.detailText}>{ride.user ? ride.user.mobile_number : 'N/A'}</Text>
           </View>
         </View>
-      </ImageBackground>
-    </ScrollView>
+
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.button} onPress={() => {}}>
+            <Text style={styles.buttonText}>Contact</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={startRide}>
+            <Text style={styles.buttonText}>Start Ride</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={handleCancel}>
+            <Text style={styles.buttonText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
   );
 };
 
-export default TrackingCustomer;
-
 const styles = StyleSheet.create({
-  background: {
+  container: {
     flex: 1,
-    resizeMode: "cover",
-    justifyContent: "center",
   },
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(255, 255, 255, 0.7)", // Slight white overlay for better readability
-    justifyContent: "center",
-    alignItems: "center",
+  mapContainer: {
+    flex: 3,
   },
-  contentContainer: {
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  detailsContainer: {
+    flex: 2,
+    backgroundColor: "#f5f5f5",
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
     padding: 20,
-    backgroundColor: "#FFC533",
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  serviceTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginLeft: 10,
+  },
+  customerDetails: {
+    backgroundColor: "#FFF",
+    padding: 15,
     borderRadius: 10,
-    width: "90%",
-    elevation: 5,
+    marginBottom: 15,
   },
-  textinput: {
-    backgroundColor: "white",
-    width: "100%",
+  subTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
   },
-  messageInput: {
-    backgroundColor: "white",
-    height: 100,
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  row: {
+  detailRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
   },
-  halfWidth: {
-    width: "48%",
+  detailText: {
+    fontSize: 16,
+    marginLeft: 10,
   },
   buttonContainer: {
-    justifyContent: "flex-end",
-    flexDirection: "row",
-    marginTop: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
-  acceptButton: {
-    backgroundColor: "#158D01",
+  button: {
+    flex: 1,
+    backgroundColor: "#28a745",
     paddingVertical: 10,
-    paddingHorizontal: 20,
     borderRadius: 5,
+    marginHorizontal: 5,
+    alignItems: 'center',
   },
-  acceptButtonText: {
+  cancelButton: {
+    backgroundColor: "#dc3545",
+  },
+  buttonText: {
     color: "#FFF",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
+
+export default TrackingCustomer;
