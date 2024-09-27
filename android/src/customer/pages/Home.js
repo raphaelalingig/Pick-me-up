@@ -183,16 +183,14 @@ const MainComponent = ({ navigation }) => {
     try {
       // Check for existing booking or ride
       const response = await userService.checkActiveBook();
-      console.log(response)
       const ride = response.rideDetails;
-      console.log(ride)
       if (response && response.hasActiveRide) {
         const { status } = response.rideDetails;
         switch (status) {
           case 'Available':
             navigation.navigate("WaitingForRider", {ride});
             return "existing_booking";
-          case 'Occupied':
+          case 'Booked':
             navigation.navigate("Tracking Rider", {ride});
             return "existing_ride";
           case 'In Transit':

@@ -82,6 +82,7 @@ const NearbyCustomerScreen = ({ navigation }) => {
                 <Text style={styles.customerText}>
                   Name: {`${ride.first_name} ${ride.last_name}`}
                 </Text>
+                <Text style={styles.customerText}>Pickup: {ride.ride_type}</Text>
                 <Text style={styles.customerText}>Pickup: {ride.pickup_location}</Text>
                 <Text style={styles.customerText}>Drop-off: {ride.dropoff_location}</Text>
                 <Text style={styles.customerText}>Fare: {ride.fare}</Text>
@@ -91,7 +92,7 @@ const NearbyCustomerScreen = ({ navigation }) => {
                 onPress={() => handleDetailsButtonPress(ride)}
               >
                 <Text style={styles.detailsButtonText}>
-                  Click for more details
+                  Details
                 </Text>
               </TouchableOpacity>
             </View>
