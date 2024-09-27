@@ -92,6 +92,10 @@ const RiderDrawerNavigation = () => {
         name="Home"
         component={RiderHome}
         options={{
+          headerStyle: {
+            backgroundColor: "#FBC635",
+          },
+          headerTintColor: "#000000",
           drawerIcon: ({ color, size }) => (
             <Icon name="home-outline" color={color} size={size} />
           ),
@@ -102,6 +106,10 @@ const RiderDrawerNavigation = () => {
         name="Get Verified"
         component={GetVerified}
         options={{
+          headerStyle: {
+            backgroundColor: "#FBC635",
+          },
+          headerTintColor: "#000000",
           drawerIcon: ({ color, size }) => (
             <Icon name="checkmark-circle-outline" color={color} size={size} />
           ),
@@ -112,6 +120,10 @@ const RiderDrawerNavigation = () => {
         name="Booking History"
         component={RiderHistory}
         options={{
+          headerStyle: {
+            backgroundColor: "#FBC635",
+          },
+          headerTintColor: "#000000",
           drawerIcon: ({ color, size }) => (
             <Icon name="time-outline" color={color} size={size} />
           ),
@@ -122,6 +134,10 @@ const RiderDrawerNavigation = () => {
         name="Settings"
         component={RiderSettings}
         options={{
+          headerStyle: {
+            backgroundColor: "#FBC635",
+          },
+          headerTintColor: "#000000",
           drawerIcon: ({ color, size }) => (
             <Icon name="settings-outline" color={color} size={size} />
           ),
