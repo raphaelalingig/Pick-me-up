@@ -46,6 +46,10 @@ const CustomerDrawerNavigation = () => {
         name="Home"
         component={Home}
         options={{
+          headerStyle: {
+            backgroundColor: "#FBC635",
+          },
+          headerTintColor: "#000000",
           drawerIcon: ({ color, size }) => (
             <Icon name="home-outline" color={color} size={size} />
           ),
@@ -65,6 +69,10 @@ const CustomerDrawerNavigation = () => {
         name="Settings"
         component={Settings}
         options={{
+          headerStyle: {
+            backgroundColor: "#FBC635",
+          },
+          headerTintColor: "#000000",
           drawerIcon: ({ color, size }) => (
             <Icon name="settings-outline" color={color} size={size} />
           ),
@@ -135,6 +143,8 @@ const AuthStack = () => {
 };
 
 const CustomerStack = () => {
+  const { isAuthenticated, userRole, loading } = useAuth();
+
   return (
     <Stack.Navigator>
       <Stack.Screen
@@ -155,11 +165,13 @@ const CustomerStack = () => {
       />
       <Stack.Screen name="In Transit" component={InTransit} />
       <Stack.Screen name="Location" component={CustomerMap} />
-      <Stack.Screen
-        name="RiderStack"
-        component={RiderStack}
-        options={{ headerShown: false }}
-      />
+      {userRole === 3 && (
+        <Stack.Screen
+          name="RiderStack"
+          component={RiderStack}
+          options={{ headerShown: false }}
+        />
+      )}
     </Stack.Navigator>
   );
 };
