@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, ScrollView, StyleSheet, Image, ToastAndroid } from "react-native";
 import { TextInput, Button, Card, Title, Divider } from "react-native-paper";
 import * as ImagePicker from "expo-image-picker";
 import userService from "../../services/auth&services";
-
+import * as FileSystem from 'expo-file-system';
 const GetVerified = () => {
   const [image, setImage] = useState(null);
   const [licenseNumber, setLicenseNumber] = useState("");
@@ -14,7 +14,6 @@ const GetVerified = () => {
   const [tplInsurance, setTplInsurance] = useState(null);
   const [brgyClearance, setBrgyClearance] = useState(null);
   const [policeClearance, setPoliceClearance] = useState(null);
-  const [nbiClearance, setNbiClearance] = useState(null);
   const [motorPlateNumber, setMotorPlateNumber] = useState("");
   const [motorModel, setMotorModel] = useState(null);
 
@@ -22,112 +21,103 @@ const GetVerified = () => {
     ToastAndroid.show(message, 3000);
   };
 
-  const pickImage = async (setImage) => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
+  useEffect(() => {
+    (async () => {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        alert('Sorry, we need camera roll permissions to make this work!');
+      }
+    })();
+  }, []);
 
-    if (!result.canceled) {
-      setImage(result.uri);
+  const pickImage = async (setImage) => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+  
+      if (result.canceled) {
+        console.log("Image picker was cancelled");
+        return;
+      }
+  
+      let selectedImage;
+  
+      if (result.assets && result.assets.length > 0) {
+        selectedImage = result.assets[0].uri;
+      } else if (result.uri) {
+        selectedImage = result.uri;
+      }
+  
+      if (selectedImage) {
+        setImage(selectedImage);
+        console.log("Image selected:", selectedImage);
+      } else {
+        console.log("No image was selected");
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      // You can also use your showToast function here if you want to show an error message to the user
+      // showToast("Error picking image");
     }
   };
 
 
-
-//   const pickImage = async () => {
-//     try {
-//       const result = await ImagePicker.launchImageLibraryAsync({
-//         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-//         allowsEditing: true,
-//         aspect: [4, 3],
-//         quality: 1,
-//       });
-  
-//       if (result.canceled) {
-//         console.log("Image picker was cancelled");
-//         return;
-//       }
-  
-//       let selectedImage;
-  
-//       if (result.assets && result.assets.length > 0) {
-//         selectedImage = result.assets[0].uri;
-// } else if (result.uri) {
-//           selectedImage = result.uri;
-//       }
-  
-
-//       setImage(selectedImage);
-//     } catch (error) {
-//       showToast("Error picking image");
-//       console.error("Error picking image:", error);
-//     }
-//   };
-  
-
   const handleSubmit = async () => {
-    const formData = new FormData();
-    formData.append('license_number', licenseNumber);
-    formData.append('license_exp_date', licenseExpDate);
-    formData.append('or_exp_date', orExpDate);
-    formData.append('motor_plate_number', motorPlateNumber);
-    
-    if (licenseImage) {
-      formData.append('license_image', {
-        uri: licenseImage,
-        name: 'license.jpg',
-        type: 'image/jpeg',
-      });
-    }
-    if (orCr) {
-      formData.append('or_cr', {
-        uri: orCr,
-        name: 'orcr.jpg',
-        type: 'image/jpeg',
-      });
-    }
-    if (tplInsurance) {
-      formData.append('tpl_insurance', {
-        uri: tplInsurance,
-        name: 'tplinsurance.jpg',
-        type: 'image/jpeg',
-      });
-    }
-    if (brgyClearance) {
-      formData.append('brgy_clearance', {
-        uri: brgyClearance,
-        name: 'brgyclearance.jpg',
-        type: 'image/jpeg',
-      });
-    }
-    if (policeClearance) {
-      formData.append('police_clearance', {
-        uri: policeClearance,
-        name: 'policeclearance.jpg',
-        type: 'image/jpeg',
-      });
-    }
-    if (nbiClearance) {
-      formData.append('nbi_clearance', {
-        uri: nbiClearance,
-        name: 'nbiclearance.jpg',
-        type: 'image/jpeg',
-      });
-    }
-
     try {
-      const response =  await userService.upload(formData);
+      const uploadImage = async (imageUri, requirementId) => {
+        if (!imageUri) return;
+
+        const formData = new FormData();
+        formData.append('requirement_id', requirementId);
         
-      if (response) {
-        console.log("Upload successful!");
+        const fileInfo = await FileSystem.getInfoAsync(imageUri);
+        formData.append('photo', {
+          uri: imageUri,
+          type: 'image/jpeg',
+          name: `requirement_${requirementId}.jpg`,
+        });
+
+        const response = await userService.upload(formData);
+        
+        if (response && response.success) {
+          console.log(`Uploaded requirement ${requirementId} successfully`);
+        } else {
+          throw new Error(`Failed to upload requirement ${requirementId}`);
+        }
+      };
+
+      // Upload each image with its corresponding requirement ID
+      await Promise.all([
+        uploadImage(motorModel, 1),
+        uploadImage(orCr, 2),
+        uploadImage(orCr, 4),
+        uploadImage(licenseImage, 5),
+        uploadImage(tplInsurance, 8),
+        uploadImage(brgyClearance, 9),
+        uploadImage(policeClearance, 10),
+      ]);
+
+      // Handle non-image data
+      const textData = {
+        or_expiration_date: orExpDate,
+        drivers_license_number: licenseNumber,
+        license_expiration_date: licenseExpDate,
+        plate_number: motorPlateNumber,
+      };
+      const updateResponse = await userService.updateRiderInfo(textData);
+
+      if (updateResponse && updateResponse.success) {
+        showToast("All documents uploaded and information updated successfully");
       } else {
-        console.error("Upload failed.");
+        throw new Error("Failed to update rider information");
       }
     } catch (error) {
-      console.error("Error uploading image:", error);
+      console.error("Error uploading documents or updating information:", error.message);
+      showToast("Error uploading documents or updating information. Please try again.");
     }
   };
 
@@ -218,15 +208,6 @@ const GetVerified = () => {
         {policeClearance && <Image source={{ uri: policeClearance }} style={styles.imagePreview} />}
         <Button
           mode="outlined"
-          onPress={() => pickImage(setNbiClearance)}
-          style={styles.uploadButton}
-          labelStyle={styles.buttonText}
-        >
-          {nbiClearance ? "NBI Clearance Added" : "Add NBI Clearance"}
-        </Button>
-        {nbiClearance && <Image source={{ uri: nbiClearance }} style={styles.imagePreview} />}
-        <Button
-          mode="outlined"
           onPress={() => pickImage(setTplInsurance)}
           style={styles.uploadButton}
           labelStyle={styles.buttonText}
@@ -280,8 +261,10 @@ const styles = StyleSheet.create({
     backgroundColor: "black",
   },
   input: {
-    marginVertical: 10,
+    marginVertical: 2,
+    height: 55, // Adjust this value to change the height of the input field
   },
+
   uploadButton: {
     marginVertical: 10,
     borderColor: "black",

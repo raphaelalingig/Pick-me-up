@@ -44,17 +44,6 @@ const userService = {
     }
   },
 
-  // getRiderId: async () => {
-  //   try {
-  //     const riderId = await AsyncStorage.getItem("user_id");
-  //     console.log("Retrieved user_id:", userId); // Debug log
-  //     return riderId;
-  //   } catch (error) {
-  //     console.error("Error retrieving user_id:", error);
-  //     return null;
-  //   }
-  // },
-
   requestOtp: async (userData) => {
     try {
       await axios.post(API_URL + 'send-otp', userData);
@@ -73,20 +62,53 @@ const userService = {
     }
   },
 
-
-  upload: async ()=> {
+  upload: async (formData) => {
     try {
-      const response = await axios.post(API_URL + 'upload', {formData});
+      const token = await AsyncStorage.getItem('token');
+      const userId = await userService.getUserId();
+      
+      if (!userId) {
+        throw new Error('User ID not found');
+      }
+
+      formData.append('user_id', userId);
+
+      const response = await axios.post(`${API_URL}upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       return response.data;
     } catch (error) {
-      console.error("Error uploading image:", error);
+      console.error("Error uploading image:", error.response ? error.response.data : error.message);
+      throw error;
     }
   },
 
-  updateRiderInfo: (data) => {
-    return api.post('/update-rider-info', data);
+  updateRiderInfo: async (data) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const userId = await userService.getUserId();
+      
+      if (!userId) {
+        throw new Error('User ID not found');
+      }
+
+      const response = await axios.post(`${API_URL}update-rider-info`, {
+        ...data,
+        user_id: userId
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error updating rider info:", error.response ? error.response.data : error.message);
+      throw error;
+    }
   },
-    
 
 
 

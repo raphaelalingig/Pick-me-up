@@ -61,7 +61,7 @@ const TrackingDestination = ({ route, navigation }) => {
 
   const fetchDirections = async () => {
     try {
-      const apiKey = "YOUR_GOOGLE_MAPS_API_KEY";
+      const apiKey = "AIzaSyAekXSq_b4GaHneUKEBVsl4UTGlaskobFo";
       const origin = `${riderLocation.latitude},${riderLocation.longitude}`;
       const destination = `${destinationLocation.latitude},${destinationLocation.longitude}`;
       const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${apiKey}`;

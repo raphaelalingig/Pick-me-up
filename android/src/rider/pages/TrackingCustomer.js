@@ -42,8 +42,104 @@ const TrackingCustomer = ({ route, navigation }) => {
   };
 
   const fetchDirections = async () => {
-    // Implement the fetchDirections function from BookedMap component
-    // This function should update the routeCoordinates state
+    try {
+      const apiKey = "AIzaSyAekXSq_b4GaHneUKEBVsl4UTGlaskobFo";
+      const origin = `${riderLocation.latitude},${riderLocation.longitude}`;
+      const destination = `${customerLocation.latitude},${customerLocation.longitude}`;
+      const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${apiKey}`;
+
+      const response = await fetch(url);
+      const result = await response.json();
+
+      if (result.routes.length) {
+        const points = result.routes[0].overview_polyline.points;
+        const decodedPoints = decodePolyline(points);
+        setRouteCoordinates(decodedPoints);
+
+        const totalDistanceMeters = result.routes[0].legs.reduce(
+          (sum, leg) => sum + leg.distance.value,
+          0
+        );
+        const totalDistanceKm = (totalDistanceMeters / 1000).toFixed(2);
+        setTotalDistanceRide(totalDistanceKm);
+      }
+    } catch (error) {
+      console.error("Error fetching directions:", error);
+    }
+  };
+
+  const calculateFare = (distance) => {
+    const baseFare = 40;
+    const additionalFareRate = 10;
+    const thresholdKm = 2;
+
+    let fare;
+    if (distance <= thresholdKm) {
+      fare = baseFare;
+    } else {
+      const exceedingDistance = distance - thresholdKm;
+      fare = baseFare + exceedingDistance * additionalFareRate;
+    }
+
+    setTotalFare(fare.toFixed(2));
+  };
+
+  const completeRide = async () => {
+    setIsLoading(true);
+    try {
+      const response = await userService.complete_ride(ride.ride_id);
+      if (response.data && response.data.message) {
+        Alert.alert("Success", response.data.message);
+        navigation.navigate("Home");
+      } else {
+        Alert.alert("Error", "Failed to finish the ride. Please try again.");
+      }
+    } catch (error) {
+      console.error("Failed to finish ride", error.response ? error.response.data : error.message);
+      Alert.alert("Error", "An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const decodePolyline = (encoded) => {
+    const poly = [];
+    let index = 0,
+      len = encoded.length;
+    let lat = 0,
+      lng = 0;
+
+    while (index < len) {
+      let b,
+        shift = 0,
+        result = 0;
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+
+      const dlat = result & 1 ? ~(result >> 1) : result >> 1;
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+
+      const dlng = result & 1 ? ~(result >> 1) : result >> 1;
+      lng += dlng;
+
+      const point = {
+        latitude: lat / 1e5,
+        longitude: lng / 1e5,
+      };
+      poly.push(point);
+    }
+    return poly;
   };
   
 

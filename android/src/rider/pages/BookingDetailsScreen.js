@@ -45,7 +45,7 @@ const BookingDetailsScreen = ({ route, navigation }) => {
       console.log("Accept ride response:", response.data);
       if (response.data && response.data.message) {
         Alert.alert("Success", response.data.message);
-        navigation.navigate("Tracking Customer", { ride });
+        navigation.navigate("Home", { ride });
       } else {
         Alert.alert("Error", "Failed to accept the ride. Please try again.");
       }

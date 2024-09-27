@@ -3,7 +3,6 @@ import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   StyleSheet,
-  TouchableOpacity,
   ImageBackground,
   Image,
   ScrollView,
@@ -22,7 +21,46 @@ const Home = ({ navigation }) => {
   const { riderCoords, setRiderCoords } = useContext(RiderContext);
 
   const checkRideAndLocation = useCallback(async () => {
-    // ... (rest of the function remains the same)
+    try {
+      const response = await userService.checkActiveRide();
+      
+      if (response && response.hasActiveRide) {
+        const { status } = response.rideDetails;
+        const ride = response.rideDetails; 
+        switch (status) {
+          case 'Booked':
+            navigation.navigate("Tracking Customer", {ride});
+            return "existing_ride";
+          case 'In Transit':
+            navigation.navigate("Tracking Destination", {ride});
+            return "in_transit";
+        }
+      }
+
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setErrorMsg("Permission to access location was denied");
+        return "location_denied";
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      setLocation(location);
+
+      setRiderCoords({
+        accuracy: location.coords.accuracy,
+        longitude: location.coords.longitude,
+        latitude: location.coords.latitude,
+        altitude: location.coords.altitude,
+        altitudeAccuracy: location.coords.altitudeAccuracy,
+        timestamp: location.timestamp,
+      });
+
+      return "proceed";
+    } catch (error) {
+      setErrorMsg("Error fetching location or ride status");
+      } finally {
+        setLoading(false);
+      }
   }, [navigation, setRiderCoords]);
 
   const onRefresh = useCallback(async () => {
