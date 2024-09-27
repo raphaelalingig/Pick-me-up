@@ -7,7 +7,7 @@ import Login from "../forms/Login";
 import Home from "../customer/pages/Home";
 import History from "../customer/pages/History";
 import Settings from "../customer/pages/Settings";
-import Icon from 'react-native-vector-icons/Ionicons';
+import Icon from "react-native-vector-icons/Ionicons";
 import RiderHistory from "../rider/sidebarContents/History";
 import RiderSettings from "../rider/sidebarContents/Settings";
 import GetVerified from "../rider/sidebarContents/GetVerified";
@@ -31,7 +31,7 @@ import BookedMap from "../rider/pages/BookedMap";
 import WaitingRider from "../customer/pages/WaitingForRider";
 import TrackingDestination from "../rider/pages/TrackingDestination";
 import TrackingCustomer from "../rider/pages/TrackingCustomer";
-
+import AvatarCustomer from "../customer/pages/AvatarCustomer";
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -49,6 +49,7 @@ const CustomerDrawerNavigation = () => {
           drawerIcon: ({ color, size }) => (
             <Icon name="home-outline" color={color} size={size} />
           ),
+          headerRight: () => <AvatarCustomer />,
         }}
       />
       <Drawer.Screen
@@ -78,7 +79,6 @@ const RiderDrawerNavigation = () => {
     <Drawer.Navigator
       initialRouteName="Home"
       drawerContent={(props) => <CustomDrawerContent {...props} />}
-     
     >
       <Drawer.Screen
         name="Home"
@@ -148,10 +148,18 @@ const CustomerStack = () => {
       <Stack.Screen name="Pakyaw" component={PakyawOptionScreen} />
       <Stack.Screen name="Delivery" component={DeliveryOptionScreen} />
       <Stack.Screen name="Settings" component={AccountSettingsScreen} />
-      <Stack.Screen name="WaitingForRider" component={WaitingRider}/>
-      <Stack.Screen name="Tracking Rider" component={DeliveryConfirmationScreen}/>
-      <Stack.Screen name="In Transit" component={InTransit}/>
+      <Stack.Screen name="WaitingForRider" component={WaitingRider} />
+      <Stack.Screen
+        name="Tracking Rider"
+        component={DeliveryConfirmationScreen}
+      />
+      <Stack.Screen name="In Transit" component={InTransit} />
       <Stack.Screen name="Location" component={CustomerMap} />
+      <Stack.Screen
+        name="RiderStack"
+        component={RiderStack}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 };
@@ -170,8 +178,16 @@ const RiderStack = () => {
       <Stack.Screen name="Submit Report" component={SubmitReport} />
       <Stack.Screen name="Current Location" component={Map} />
       <Stack.Screen name="Tracking Customer" component={TrackingCustomer} />
-      <Stack.Screen name="Tracking Destination" component={TrackingDestination} />
+      <Stack.Screen
+        name="Tracking Destination"
+        component={TrackingDestination}
+      />
       <Stack.Screen name="Booked Location" component={BookedMap} />
+      <Stack.Screen
+        name="CustomerStack"
+        component={CustomerStack}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 };

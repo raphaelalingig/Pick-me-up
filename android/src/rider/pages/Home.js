@@ -25,18 +25,17 @@ const Home = ({ navigation }) => {
     try {
       // Check for existing booking or ride
       const response = await userService.checkActiveRide();
-      
+
       if (response && response.hasActiveRide) {
-        
         const { status } = response.rideDetails;
         const ride = response.rideDetails;
-        console.log(ride)
+        console.log(ride);
         switch (status) {
-          case 'Occupied':
-            navigation.navigate("Tracking Customer", {ride});
+          case "Occupied":
+            navigation.navigate("Tracking Customer", { ride });
             return "existing_ride";
-          case 'In Transit':
-            navigation.navigate("Tracking Destination", {ride});
+          case "In Transit":
+            navigation.navigate("Tracking Destination", { ride });
             return "in_transit";
         }
       }
@@ -63,22 +62,22 @@ const Home = ({ navigation }) => {
       return "proceed";
     } catch (error) {
       setErrorMsg("Error fetching location or ride status");
-      } finally {
-        setLoading(false); // Stop loading after fetching location
-      }
-    }, [navigation, setRiderCoords]);
+    } finally {
+      setLoading(false); // Stop loading after fetching location
+    }
+  }, [navigation, setRiderCoords]);
 
-    const onRefresh = useCallback(async () => {
-      setRefreshing(true);
-      await checkRideAndLocation();
-      setRefreshing(false);
-    }, [checkRideAndLocation]);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await checkRideAndLocation();
+    setRefreshing(false);
+  }, [checkRideAndLocation]);
 
-    useFocusEffect(
-      useCallback(() => {
-        checkRideAndLocation();
-      }, [checkRideAndLocation])
-    );
+  useFocusEffect(
+    useCallback(() => {
+      checkRideAndLocation();
+    }, [checkRideAndLocation])
+  );
 
   let text = "Waiting..";
   if (errorMsg) {
@@ -94,49 +93,49 @@ const Home = ({ navigation }) => {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-    <View style={styles.container}>
-      <View style={styles.logoContainer}>
-        <Image
-          source={require("../../pictures/Pick-Me-Up-Logo.png")} // Replace with the correct path to your logo image
-          style={styles.logo}
-        />
-      </View>
-      <Button
-        mode="contained"
-        style={styles.button}
-        onPress={() => navigation.navigate("Nearby Customer")}
-      >
-        START FINDING CUSTOMER
-      </Button>
-      <Button
-        disabled={loading}
-        onPress={() => navigation.navigate("Current Location")}
-      >
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
-          {loading ? (
-            <>
-              <ActivityIndicator animating={true} color={MD2Colors.red800} />
-              <Text style={{ marginLeft: 5 }}>Fetching coordinates...</Text>
-            </>
-          ) : (
-            <Text
-              style={{
-                color: "black",
-                padding: 5,
-                textDecorationLine: "underline",
-              }}
-            >
-              View Map
-            </Text>
-          )}
+      <View style={styles.container}>
+        <View style={styles.logoContainer}>
+          <Image
+            source={require("../../pictures/Pick-Me-Up-Logo.png")} // Replace with the correct path to your logo image
+            style={styles.logo}
+          />
         </View>
-      </Button>
-    </View>
+        <Button
+          mode="contained"
+          style={styles.button}
+          onPress={() => navigation.navigate("Nearby Customer")}
+        >
+          START FINDING CUSTOMER
+        </Button>
+        <Button
+          disabled={loading}
+          onPress={() => navigation.navigate("Current Location")}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+          >
+            {loading ? (
+              <>
+                <ActivityIndicator animating={true} color={MD2Colors.red800} />
+                <Text style={{ marginLeft: 5 }}>Fetching coordinates...</Text>
+              </>
+            ) : (
+              <Text
+                style={{
+                  color: "black",
+                  padding: 5,
+                  textDecorationLine: "underline",
+                }}
+              >
+                View Map
+              </Text>
+            )}
+          </View>
+        </Button>
+      </View>
     </ScrollView>
   );
 };
@@ -162,10 +161,11 @@ const styles = StyleSheet.create({
   button: {
     marginTop: 20,
     backgroundColor: "#FFD700", // Button background color
+    color: "#000000", // Button text color
     padding: 10,
   },
   buttonLabel: {
-    color: "#000", // Button text color
+    color: "#000000", // Button text color
   },
   paragraph: {
     fontSize: 18,

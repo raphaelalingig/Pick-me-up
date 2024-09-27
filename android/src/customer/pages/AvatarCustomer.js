@@ -4,7 +4,7 @@ import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { Menu, Divider, IconButton, Text } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 
-const AvatarRider = ({}) => {
+const AvatarCustomer = ({}) => {
   const [visible, setVisible] = useState(false);
   const navigation = useNavigation();
 
@@ -27,7 +27,7 @@ const AvatarRider = ({}) => {
     >
       <Menu.Item
         onPress={() => {
-          navigation.navigate("CustomerStack");
+          navigation.navigate("RiderStack");
         }}
         title="Change UserType"
         titleStyle={styles.avatarDropdown}
@@ -36,7 +36,7 @@ const AvatarRider = ({}) => {
   );
 };
 
-export default AvatarRider;
+export default AvatarCustomer;
 
 const styles = StyleSheet.create({
   avatarDropdown: {
