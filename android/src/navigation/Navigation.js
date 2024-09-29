@@ -24,6 +24,7 @@ import DeliveryOptionScreen from "../customer/pages/DeliveryOp";
 import DeliveryConfirmationScreen from "../customer/pages/TrackingRider";
 import AccountSettingsScreen from "../customer/pages/Settings";
 import InTransit from "../customer/pages/InTransit";
+import CompleteRide from "../customer/pages/Complete Ride";
 import SubmitReport from "../rider/pages/SubmitReport";
 import Map from "../rider/pages/Map";
 import CustomerMap from "../customer/pages/CustomerMap";
@@ -180,6 +181,7 @@ const CustomerStack = () => {
         component={DeliveryConfirmationScreen}
       />
       <Stack.Screen name="In Transit" component={InTransit} />
+      <Stack.Screen name="To Review" component={CompleteRide} />
       <Stack.Screen name="Location" component={CustomerMap} />
       {userRole === 3 && (
         <Stack.Screen

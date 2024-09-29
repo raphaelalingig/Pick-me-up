@@ -1,21 +1,24 @@
 import React, { useState, useEffect } from "react";
-import { View, ScrollView, StyleSheet, Image, ToastAndroid } from "react-native";
+import { View, ScrollView, StyleSheet, Image, ToastAndroid, TouchableOpacity } from "react-native";
 import { TextInput, Button, Card, Title, Divider } from "react-native-paper";
 import * as ImagePicker from "expo-image-picker";
 import userService from "../../services/auth&services";
 import * as FileSystem from 'expo-file-system';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+
 const GetVerified = () => {
-  const [image, setImage] = useState(null);
   const [licenseNumber, setLicenseNumber] = useState("");
   const [licenseExpDate, setLicenseExpDate] = useState("");
   const [orExpDate, setOrExpDate] = useState("");
+  const [motorPlateNumber, setMotorPlateNumber] = useState("");
+  
   const [licenseImage, setLicenseImage] = useState(null);
   const [orCr, setOrCr] = useState(null);
+  const [COR, setCOR] = useState(null);
+  const [motorModel, setMotorModel] = useState(null);
   const [tplInsurance, setTplInsurance] = useState(null);
   const [brgyClearance, setBrgyClearance] = useState(null);
   const [policeClearance, setPoliceClearance] = useState(null);
-  const [motorPlateNumber, setMotorPlateNumber] = useState("");
-  const [motorModel, setMotorModel] = useState(null);
 
   const showToast = (message = "Something went wrong") => {
     ToastAndroid.show(message, 3000);
@@ -26,6 +29,30 @@ const GetVerified = () => {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
         alert('Sorry, we need camera roll permissions to make this work!');
+        return; // Early return if permissions are not granted
+      }
+  
+      // Fetch uploaded images from the database
+      try {
+        console.log("Fetching uploaded images...");
+        const uploadedImages = await userService.getUploadedImages();
+        console.log("Uploaded images response:", uploadedImages);
+        
+        
+        // Map the fetched data to the respective states (if available)
+        if (uploadedImages && uploadedImages.success) {
+          const { data } = uploadedImages; // Extract the data
+          setLicenseImage(data.license_image_url);
+          setOrCr(data.or_cr_image_url);
+          setCOR(data.cor_image_url);
+          setMotorModel(data.motor_model_image_url);
+          setTplInsurance(data.tpl_insurance_image_url);
+          setBrgyClearance(data.brgy_clearance_image_url);
+          setPoliceClearance(data.police_clearance_image_url);
+        }
+      } catch (error) {
+        console.error("Error fetching uploaded images:", error);
+        showToast("Error fetching uploaded images");
       }
     })();
   }, []);
@@ -39,32 +66,14 @@ const GetVerified = () => {
         quality: 1,
       });
   
-      if (result.canceled) {
-        console.log("Image picker was cancelled");
-        return;
-      }
-  
-      let selectedImage;
-  
-      if (result.assets && result.assets.length > 0) {
-        selectedImage = result.assets[0].uri;
-      } else if (result.uri) {
-        selectedImage = result.uri;
-      }
-  
-      if (selectedImage) {
-        setImage(selectedImage);
-        console.log("Image selected:", selectedImage);
-      } else {
-        console.log("No image was selected");
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setImage(result.assets[0].uri);
       }
     } catch (error) {
       console.error("Error picking image:", error);
-      // You can also use your showToast function here if you want to show an error message to the user
-      // showToast("Error picking image");
+      showToast("Error picking image");
     }
   };
-
 
   const handleSubmit = async () => {
     try {
@@ -73,8 +82,6 @@ const GetVerified = () => {
 
         const formData = new FormData();
         formData.append('requirement_id', requirementId);
-        
-        const fileInfo = await FileSystem.getInfoAsync(imageUri);
         formData.append('photo', {
           uri: imageUri,
           type: 'image/jpeg',
@@ -82,7 +89,8 @@ const GetVerified = () => {
         });
 
         const response = await userService.upload(formData);
-        
+        console.log(`Upload response for requirement ${requirementId}:`, response);
+
         if (response && response.success) {
           console.log(`Uploaded requirement ${requirementId} successfully`);
         } else {
@@ -90,24 +98,32 @@ const GetVerified = () => {
         }
       };
 
-      // Upload each image with its corresponding requirement ID
-      await Promise.all([
-        uploadImage(motorModel, 1),
-        uploadImage(orCr, 2),
-        uploadImage(orCr, 4),
-        uploadImage(licenseImage, 5),
-        uploadImage(tplInsurance, 8),
-        uploadImage(brgyClearance, 9),
-        uploadImage(policeClearance, 10),
-      ]);
+      // await Promise.all([
+      //   uploadImage(motorModel, 1),
+      //   uploadImage(orCr, 2),
+      //   uploadImage(COR, 4),
+      //   uploadImage(licenseImage, 5),
+      //   uploadImage(tplInsurance, 8),
+      //   uploadImage(brgyClearance, 9),
+      //   uploadImage(policeClearance, 10),
+      // ]);
+
+      await uploadImage(motorModel, 1);
+      await uploadImage(orCr, 2);
+      await uploadImage(COR, 4);
+      await uploadImage(licenseImage, 5),
+      await uploadImage(tplInsurance, 8),
+      await uploadImage(brgyClearance, 9),
+      await uploadImage(policeClearance, 10)
 
       // Handle non-image data
-      const textData = {
-        or_expiration_date: orExpDate,
-        drivers_license_number: licenseNumber,
-        license_expiration_date: licenseExpDate,
-        plate_number: motorPlateNumber,
-      };
+      const textData = new FormData(); // Instantiate as FormData
+      textData.append('or_expiration_date', orExpDate);
+      textData.append('drivers_license_number', licenseNumber);
+      textData.append('license_expiration_date', licenseExpDate);
+      textData.append('plate_number', motorPlateNumber);
+
+
       const updateResponse = await userService.updateRiderInfo(textData);
 
       if (updateResponse && updateResponse.success) {
@@ -121,6 +137,19 @@ const GetVerified = () => {
     }
   };
 
+  const renderImageOrIcon = (image, onPress, label) => (
+    <TouchableOpacity onPress={onPress} style={styles.imageContainer}>
+      <View style={styles.uploadButton}>
+        {image ? (
+          <Image source={{ uri: image }} style={styles.imagePreview} />
+        ) : (
+          <MaterialCommunityIcons name="file-document-outline" size={50} color="black" />
+        )}
+      </View>
+      <Title style={styles.imageLabel}>{label}</Title>
+    </TouchableOpacity>
+  );
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Card style={styles.card}>
@@ -129,92 +158,47 @@ const GetVerified = () => {
         {/* Section: License Details */}
         <Title style={styles.sectionTitle}>License Details</Title>
         <Divider style={styles.divider} />
-        <Button
-          mode="outlined"
-          onPress={() => pickImage(setLicenseImage)}
-          style={styles.uploadButton}
-          labelStyle={styles.buttonText}
-        >
-          {licenseImage ? "License Image Added" : "Add License Image"}
-        </Button>
-        {licenseImage && <Image source={{ uri: licenseImage }} style={styles.imagePreview} />}
+        {renderImageOrIcon(licenseImage, () => pickImage(setLicenseImage), "License Image")}
         <TextInput
           label="License Number"
           value={licenseNumber}
-          onChangeText={(text) => setLicenseNumber(text)}
+          onChangeText={setLicenseNumber}
           style={styles.input}
         />
         <TextInput
           label="License Expiration Date"
           value={licenseExpDate}
-          onChangeText={(text) => setLicenseExpDate(text)}
+          onChangeText={setLicenseExpDate}
           style={styles.input}
         />
+
 
         {/* Section: Vehicle Information */}
         <Title style={styles.sectionTitle}>Vehicle Information</Title>
         <Divider style={styles.divider} />
-        <Button
-          mode="outlined"
-          onPress={() => pickImage(setOrCr)}
-          style={styles.uploadButton}
-          labelStyle={styles.buttonText}
-        >
-          {orCr ? "OR CR Image Added" : "Add OR CR"}
-        </Button>
-        {orCr && <Image source={{ uri: orCr }} style={styles.imagePreview} />}
-        <Button
-          mode="outlined"
-          onPress={() => pickImage(setMotorModel)}
-          style={styles.uploadButton}
-          labelStyle={styles.buttonText}
-        >
-          {motorModel ? "Motor Model Image Added" : "Add Motor Model"}
-        </Button>
-        {motorModel && <Image source={{ uri: motorModel }} style={styles.imagePreview} />}
+        {renderImageOrIcon(motorModel, () => pickImage(setMotorModel), "Motor Model Image")}
+        {renderImageOrIcon(orCr, () => pickImage(setOrCr), "OR/CR Image")}
+        {renderImageOrIcon(COR, () => pickImage(setCOR), "COR Image")}
+        
         <TextInput
           label="OR Expiration Date"
           value={orExpDate}
-          onChangeText={(text) => setOrExpDate(text)}
+          onChangeText={setOrExpDate}
           style={styles.input}
         />
         <TextInput
           label="Motor Plate Number"
           value={motorPlateNumber}
-          onChangeText={(text) => setMotorPlateNumber(text)}
+          onChangeText={setMotorPlateNumber}
           style={styles.input}
         />
 
         {/* Section: Clearances */}
         <Title style={styles.sectionTitle}>Clearances</Title>
         <Divider style={styles.divider} />
-        <Button
-          mode="outlined"
-          onPress={() => pickImage(setBrgyClearance)}
-          style={styles.uploadButton}
-          labelStyle={styles.buttonText}
-        >
-          {brgyClearance ? "Barangay Clearance Added" : "Add Brgy Clearance"}
-        </Button>
-        {brgyClearance && <Image source={{ uri: brgyClearance }} style={styles.imagePreview} />}
-        <Button
-          mode="outlined"
-          onPress={() => pickImage(setPoliceClearance)}
-          style={styles.uploadButton}
-          labelStyle={styles.buttonText}
-        >
-          {policeClearance ? "Police Clearance Added" : "Add Police Clearance"}
-        </Button>
-        {policeClearance && <Image source={{ uri: policeClearance }} style={styles.imagePreview} />}
-        <Button
-          mode="outlined"
-          onPress={() => pickImage(setTplInsurance)}
-          style={styles.uploadButton}
-          labelStyle={styles.buttonText}
-        >
-          {tplInsurance ? "TPL Insurance Added" : "Add TPL Insurance"}
-        </Button>
-        {tplInsurance && <Image source={{ uri: tplInsurance }} style={styles.imagePreview} />}
+        {renderImageOrIcon(brgyClearance, () => pickImage(setBrgyClearance), "Barangay Clearance")}
+        {renderImageOrIcon(policeClearance, () => pickImage(setPoliceClearance), "Police Clearance")}
+        {renderImageOrIcon(tplInsurance, () => pickImage(setTplInsurance), "TPL Insurance")}
         
         {/* Cancel and Confirm Buttons */}
         <View style={styles.buttonContainer}>
@@ -262,12 +246,16 @@ const styles = StyleSheet.create({
   },
   input: {
     marginVertical: 2,
-    height: 55, // Adjust this value to change the height of the input field
+    height: 55,
+    backgroundColor: 'white',
   },
-
   uploadButton: {
     marginVertical: 10,
     borderColor: "black",
+    width: 100,
+    height: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   buttonText: {
     color: "black",
@@ -276,7 +264,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 20,
- 
   },
   button: {
     flex: 1,
@@ -289,9 +276,31 @@ const styles = StyleSheet.create({
     backgroundColor: "green",
   },
   imagePreview: {
+    width: 90,
+    height: 90,
+  },
+  imageContainer: {
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  imageLabel: {
+    fontSize: 14,
+    marginTop: 5,
+  },
+  imageContainer: {
+    alignItems: 'center',
+    marginBottom: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: 'black',
+    borderRadius: 5,
+  },
+  uploadButton: {
     width: 100,
     height: 100,
-    marginVertical: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
   },
 });
 

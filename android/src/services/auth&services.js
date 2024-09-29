@@ -66,46 +66,57 @@ const userService = {
     try {
       const token = await AsyncStorage.getItem('token');
       const userId = await userService.getUserId();
-      
-      if (!userId) {
-        throw new Error('User ID not found');
-      }
-
-      formData.append('user_id', userId);
-
+      formData.append('user_id', userId); // Add rider_id to the form data
+  
       const response = await axios.post(`${API_URL}upload`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
         },
       });
+  
       return response.data;
     } catch (error) {
-      console.error("Error uploading image:", error.response ? error.response.data : error.message);
+      console.error("Error uploading documents:", error.response.data || error.message);
       throw error;
     }
   },
 
-  updateRiderInfo: async (data) => {
+  updateRiderInfo: async (textData) => {
     try {
       const token = await AsyncStorage.getItem('token');
       const userId = await userService.getUserId();
-      
+      textData.append('user_id', userId); // Add rider_id to the form data
+  
       if (!userId) {
         throw new Error('User ID not found');
       }
-
-      const response = await axios.post(`${API_URL}update-rider-info`, {
-        ...data,
-        user_id: userId
-      }, {
+  
+      const response = await axios.post(`${API_URL}update-rider-info`, textData, {
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
         },
       });
       return response.data;
     } catch (error) {
-      console.error("Error updating rider info:", error.response ? error.response.data : error.message);
+      if (error.response) {
+        console.error("Error updating rider info:", error.response.data);
+      } else {
+        console.error("Error updating rider info:", error.message);
+      }
+      throw error;
+    }
+  },
+  
+
+  getUploadedImages: async () => {
+    try {
+      const userId = await userService.getUserId();
+      const response = await axios.get(API_URL + `requirement_photos/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching fucking uploaded images:", error);
       throw error;
     }
   },
@@ -192,14 +203,29 @@ const userService = {
   },
 
 
-  getHistory: async () => {
+  getCusHistory: async () => {
     try {
       const userId = await userService.getUserId();
       if (!userId) {
         console.error("User ID not found");
         return false;
       }
-      const response = await axios.get(API_URL + 'history/' + userId);
+      const response = await axios.get(API_URL + 'cus_history/' + userId);
+      return response;
+    } catch (error) {
+      console.error("Error fetching available rides:", error);
+      throw error;
+    }
+  },
+
+  getRiderHistory: async () => {
+    try {
+      const userId = await userService.getUserId();
+      if (!userId) {
+        console.error("User ID not found");
+        return false;
+      }
+      const response = await axios.get(API_URL + 'rider_history/' + userId);
       return response;
     } catch (error) {
       console.error("Error fetching available rides:", error);
