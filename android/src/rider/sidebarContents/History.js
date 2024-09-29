@@ -1,11 +1,62 @@
-import { StyleSheet, Text, View } from "react-native";
-import React from "react";
+import { StyleSheet, Text, View, FlatList, Alert, RefreshControl, Modal, Button } from "react-native";
+import React, { useState, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import { DataTable, TextInput } from "react-native-paper";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import EvilIcons from "@expo/vector-icons/EvilIcons";
+import userService from "../../services/auth&services";
 
-const History = () => {
+const History = ({ navigation }) => {
+  const [rideHistory, setRideHistory] = useState([]);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedHistory, setSelectedHistory] = useState(null); // Modal state
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
+  const getHistory = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await userService.getRiderHistory();
+      if (response && response.data) {
+        setRideHistory(response.data);
+      } else {
+        console.error("No ride history data found.");
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to retrieve ride history.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await getHistory();
+    setRefreshing(false);
+  }, [getHistory]);
+
+  useFocusEffect(
+    useCallback(() => {
+      getHistory();
+    }, [getHistory])
+  );
+
+  const filteredHistory = rideHistory.filter((item) =>
+    item.dropoff_location.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const openModal = (item) => {
+    setSelectedHistory(item);
+    setIsModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setIsModalVisible(false);
+    setSelectedHistory(null);
+  };
+
   return (
     <View style={styles.container}>
       <View
@@ -20,6 +71,8 @@ const History = () => {
           mode="outlined"
           style={{ width: "90%" }}
           selectionColor="red"
+          value={search}
+          onChangeText={setSearch}
           left={
             <TextInput.Icon
               icon={() => <EvilIcons name="search" size={24} color="black" />}
@@ -38,20 +91,60 @@ const History = () => {
           <AntDesign name="filter" size={24} color="black" />
         </TouchableOpacity>
       </View>
-      <View>
-        <DataTable>
-          <DataTable.Header>
-            <DataTable.Title style={{ width: "20%" }}>Date</DataTable.Title>
-            <DataTable.Title style={{ width: "20%" }}>Drop Place</DataTable.Title>
-            <DataTable.Title style={{ width: "20%" }}>Date</DataTable.Title>
-          </DataTable.Header>
-          <DataTable.Row>
-            <DataTable.Cell>1</DataTable.Cell>
-            <DataTable.Cell>2</DataTable.Cell>
-            <DataTable.Cell>3</DataTable.Cell>
-          </DataTable.Row>
-        </DataTable>
-      </View>
+
+      <DataTable>
+        <DataTable.Header>
+          <DataTable.Title style={{ width: "30%" }}>Pickup</DataTable.Title>
+          <DataTable.Title style={{ width: "30%" }}>Drop Place</DataTable.Title>
+          <DataTable.Title style={{ width: "20%" }}>Date</DataTable.Title>
+          <DataTable.Title style={{ width: "20%" }}>Fare</DataTable.Title>
+        </DataTable.Header>
+
+        <FlatList
+          data={filteredHistory}
+          keyExtractor={(item) => item.ride_id.toString()}
+          renderItem={({ item }) => (
+            <TouchableOpacity onPress={() => openModal(item)}>
+              <DataTable.Row>
+                <DataTable.Cell>{item.pickup_location}</DataTable.Cell>
+                <DataTable.Cell>{item.dropoff_location}</DataTable.Cell>
+                <DataTable.Cell>{new Date(item.ride_date).toLocaleDateString()}</DataTable.Cell>
+                <DataTable.Cell>{item.fare}</DataTable.Cell>
+              </DataTable.Row>
+            </TouchableOpacity>
+          )}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        />
+      </DataTable>
+
+      {/* Modal for showing detailed information */}
+      <Modal
+        visible={isModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={closeModal}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Ride Details</Text>
+            {selectedHistory && (
+              <>
+                <Text>Customer: {selectedHistory.user ? `${selectedHistory.user.first_name} ${selectedHistory.user.last_name}` : 'No Rider     '}</Text>
+                <Text>Pickup: {selectedHistory.pickup_location}</Text>
+                <Text>Dropoff: {selectedHistory.dropoff_location}</Text>
+                <Text>Ride Date: {new Date(selectedHistory.ride_date).toLocaleDateString()}</Text>
+                <Text>Fare: {selectedHistory.fare}</Text>
+                <Text>Status: {selectedHistory.ride_type}</Text>
+                <Text>Status: {selectedHistory.status}</Text>
+                {/* Add more details as needed */}
+              </>
+            )}
+            <Button title="Close" onPress={closeModal} />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -64,5 +157,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     borderRadius: 5,
     height: "100%",
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 10,
+    width: "80%",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
   },
 });

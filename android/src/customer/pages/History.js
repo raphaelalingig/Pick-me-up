@@ -18,7 +18,7 @@ const History = ({ navigation }) => {
   const getHistory = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await userService.getHistory();
+      const response = await userService.getCusHistory();
       if (response && response.data) {
         setRideHistory(response.data);
       } else {
