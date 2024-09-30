@@ -23,9 +23,10 @@ const Home = ({ navigation }) => {
   const checkRideAndLocation = useCallback(async () => {
     try {
       const response = await userService.checkActiveRide();
-      
+      console.log(response) 
       if (response && response.hasActiveRide) {
         const { status } = response.rideDetails;
+        console.log(status)
         const ride = response.rideDetails; 
         switch (status) {
           case 'Booked':

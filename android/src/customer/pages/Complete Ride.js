@@ -1,8 +1,28 @@
-import { StyleSheet, TouchableOpacity, View, ImageBackground } from "react-native";
-import React from "react";
+import { StyleSheet, TouchableOpacity, View, ImageBackground, Alert } from "react-native";
+import React, { useEffect, useState, useCallback } from "react";
+import userService from "../../services/auth&services";
 import { Text } from "react-native-paper";
 
-const CompleteRide = ({ navigation }) => {
+const CompleteRide = ({ navigation, route }) => {
+  const { ride } = route.params;
+  const [isLoading, setIsLoading] = useState(true);
+  const completeRide = async () => {
+    setIsLoading(true);
+    try {
+      const response = await userService.review_ride(ride.ride_id);
+      if (response.data && response.data.message) {
+        Alert.alert("Ride Complete", response.data.message);
+        navigation.navigate("Home");
+      } else {
+        Alert.alert("Error", "Failed to finish the ride. Please try again.");
+      }
+    } catch (error) {
+      console.error("Failed to finish ride", error.response ? error.response.data : error.message);
+      Alert.alert("Error", "An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <ImageBackground
       source={{ uri: "https://your-map-image-url.com" }} // Replace with your map image URL
@@ -22,7 +42,7 @@ const CompleteRide = ({ navigation }) => {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.acceptButton}
-              onPress={() => navigation.navigate("Home")}
+              onPress={completeRide}
             >
               <Text style={styles.acceptButtonText}>Return Home</Text>
             </TouchableOpacity>
