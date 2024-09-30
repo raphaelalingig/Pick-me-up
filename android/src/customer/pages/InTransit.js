@@ -1,29 +1,64 @@
-import { StyleSheet, TouchableOpacity, View, ImageBackground } from "react-native";
-import React from "react";
+import { StyleSheet, TouchableOpacity, View, ImageBackground, ScrollView, RefreshControl } from "react-native";
+import React, { useEffect, useState, useCallback } from "react";
 import { TextInput, Text } from "react-native-paper";
+import { MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons'; // For icons
 
-const InTransit = ({ navigation }) => {
+
+const InTransit = ({ route, navigation }) => {
+  const { ride } = route.params;
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    // Navigate to Home screen
+    navigation.navigate("Home");
+    setRefreshing(false);
+  }, [navigation]);
+
   return (
-    <ImageBackground
-      source={{ uri: "https://your-map-image-url.com" }} // Replace with your map image URL
-      style={styles.background}
+    <ScrollView
+      contentContainerStyle={styles.scrollViewContent}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
     >
-      <View style={styles.overlay}>
-        <View style={styles.contentContainer}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.acceptButtonText}>Rider has arrived. Now in transit. Please do not use your phone!</Text>
-          </View>
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.acceptButton}
-              onPress={() => navigation.navigate("Submit Report")}
-            >
-              <Text style={styles.acceptButtonText}>Report</Text>
-            </TouchableOpacity>
+      <ImageBackground
+        source={{ uri: "https://your-map-image-url.com" }} // Replace with your map image URL
+        style={styles.background}
+      >
+        <View style={styles.overlay}>
+          <View style={styles.contentContainer}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.acceptButtonText}>Rider has arrived. Now in transit. Please do not use your phone!</Text>
+            </View>
+            {/* Rider Details Section */}
+            <View style={styles.detailsContainer}>
+              <Text style={styles.subTitle}>Rider Details</Text>
+              <View style={styles.detailRow}>
+                <MaterialCommunityIcons name="account" size={24} color="black" />
+                <Text style={styles.detailText}>{ride.rider ? `${ride.rider.first_name} ${ride.rider.last_name}` : 'N/A'}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <MaterialCommunityIcons name="phone" size={24} color="black" />
+                <Text style={styles.detailText}>{ride.rider ? `${ride.rider.mobile_number}` : 'N/A'}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <MaterialCommunityIcons name="motorbike" size={24} color="black" />
+                <Text style={styles.detailText}>Motor: Yamaha Sniper 150</Text>
+              </View>
+            </View>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={styles.acceptButton}
+                onPress={() => navigation.navigate("Submit Report")}
+              >
+                <Text style={styles.acceptButtonText}>Report</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      </View>
-    </ImageBackground>
+      </ImageBackground>
+    </ScrollView>
   );
 };
 

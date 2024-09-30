@@ -196,6 +196,9 @@ const MainComponent = ({ navigation }) => {
           case 'In Transit':
             navigation.navigate("In Transit", {ride});
             return "in_transit";
+          case 'Review':
+            navigation.navigate("To Review", {ride});
+            return "review";
         }
       }
 

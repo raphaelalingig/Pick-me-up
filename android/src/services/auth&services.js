@@ -297,6 +297,21 @@ const userService = {
     }
   },
 
+  review_ride: async (ride_id) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await axios.put(`${API_URL}complete_ride/${ride_id}`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return response;  // Return the response here
+    } catch (error) {
+      console.error("Error canceling ride:", error);
+      throw error;
+    }
+  },
+
 
 }
 
