@@ -312,6 +312,11 @@ const userService = {
     }
   },
 
+  saveRideLocation: async (rideDetails) => {
+    return await axios.post(API_URL + 'ride-location', rideDetails);
+  },
+  
+
 
 }
 
