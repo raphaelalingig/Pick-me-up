@@ -84,24 +84,6 @@ const TrackingCustomer = ({ route, navigation }) => {
     setTotalFare(fare.toFixed(2));
   };
 
-  const completeRide = async () => {
-    setIsLoading(true);
-    try {
-      const response = await userService.complete_ride(ride.ride_id);
-      if (response.data && response.data.message) {
-        Alert.alert("Success", response.data.message);
-        navigation.navigate("Home");
-      } else {
-        Alert.alert("Error", "Failed to finish the ride. Please try again.");
-      }
-    } catch (error) {
-      console.error("Failed to finish ride", error.response ? error.response.data : error.message);
-      Alert.alert("Error", "An error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const decodePolyline = (encoded) => {
     const poly = [];
     let index = 0,
