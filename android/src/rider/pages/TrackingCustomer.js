@@ -230,10 +230,11 @@ const styles = StyleSheet.create({
   },
   detailsContainer: {
     flex: 2,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#ffd700",
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     padding: 20,
+
   },
   header: {
     flexDirection: 'row',

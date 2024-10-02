@@ -238,13 +238,13 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
-    backgroundColor: "#158D01",
+    backgroundColor: "#b22222",
     paddingVertical: 15,
     borderRadius: 10,
     marginHorizontal: 5,
   },
   arrivedButton: {
-    backgroundColor: "#0066cc",
+    backgroundColor: "#228b22",
   },
   buttonText: {
     color: "#FFF",
@@ -256,6 +256,16 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  infoContainer: {
+    justifyContent: "center",
+    backgroundColor: 'white',
+    padding: 5,
+    borderRadius: 8,
+  },
+  infoText: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

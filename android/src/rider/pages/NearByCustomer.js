@@ -83,8 +83,6 @@ const NearbyCustomerScreen = ({ navigation }) => {
                   Name: {`${ride.first_name} ${ride.last_name}`}
                 </Text>
                 <Text style={styles.customerText}>Pickup: {ride.ride_type}</Text>
-                <Text style={styles.customerText}>Pickup: {ride.pickup_location}</Text>
-                <Text style={styles.customerText}>Drop-off: {ride.dropoff_location}</Text>
                 <Text style={styles.customerText}>Fare: {ride.fare}</Text>
               </View>
               <TouchableOpacity
@@ -137,6 +135,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     fontSize: 16,
     fontWeight: "bold",
+    paddingLeft: 15,
   },
   detailsButton: {
     backgroundColor: "#000",
