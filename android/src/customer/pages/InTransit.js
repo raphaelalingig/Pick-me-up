@@ -1,19 +1,76 @@
-import { StyleSheet, TouchableOpacity, View, ImageBackground, ScrollView, RefreshControl } from "react-native";
 import React, { useEffect, useState, useCallback } from "react";
-import { TextInput, Text } from "react-native-paper";
-import { MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons'; // For icons
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ImageBackground,
+  Alert,
+  ScrollView,
+  RefreshControl,
+} from "react-native";
+import { Button } from "react-native-paper";
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';  // Importing icons
+import userService from '../../services/auth&services';
 
-
-const InTransit = ({ route, navigation }) => {
-  const { ride } = route.params;
+// There some changes here please check if it is right
+const Intransit = ({ navigation }) => {
+  const [bookDetails, setBookDetails] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  const fetchLatestRide = async () => {
+    try {
+      const ride = await userService.checkActiveBook();
+      setBookDetails(ride.rideDetails);
+    } catch (error) {
+      Alert.alert("Error", "Failed to retrieve the latest available ride.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLatestRide();
+  }, []);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    // Navigate to Home screen
     navigation.navigate("Home");
     setRefreshing(false);
   }, [navigation]);
+
+  const handleCancel = async () => {
+    setIsLoading(true);
+    try {
+      const response = await userService.cancel_ride(bookDetails.ride_id);
+  
+      if (response.data && response.data.message) {
+        Alert.alert("Success", response.data.message);
+        navigation.navigate("Home");
+      } else {
+        Alert.alert("Error", "Failed to cancel the ride. Please try again.");
+      }
+    } catch (error) {
+      if (error.response && error.response.status === 400) {
+        Alert.alert("Error", error.response.data.error || "This ride is no longer available.");
+        navigation.goBack();
+      } else {
+        Alert.alert("Error", "An error occurred. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  // End of changes to the cons
+  
+  if (isLoading || !bookDetails) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView
@@ -22,97 +79,118 @@ const InTransit = ({ route, navigation }) => {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-      <ImageBackground
-        source={{ uri: "https://your-map-image-url.com" }} // Replace with your map image URL
-        style={styles.background}
-      >
-        <View style={styles.overlay}>
-          <View style={styles.contentContainer}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.acceptButtonText}>Rider has arrived. Now in transit. Please do not use your phone!</Text>
-            </View>
-            {/* Rider Details Section */}
-            <View style={styles.detailsContainer}>
-              <Text style={styles.subTitle}>Rider Details</Text>
-              <View style={styles.detailRow}>
-                <MaterialCommunityIcons name="account" size={24} color="black" />
-                <Text style={styles.detailText}>{ride.rider ? `${ride.rider.first_name} ${ride.rider.last_name}` : 'N/A'}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <MaterialCommunityIcons name="phone" size={24} color="black" />
-                <Text style={styles.detailText}>{ride.rider ? `${ride.rider.mobile_number}` : 'N/A'}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <MaterialCommunityIcons name="motorbike" size={24} color="black" />
-                <Text style={styles.detailText}>Motor: Yamaha Sniper 150</Text>
-              </View>
-            </View>
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={styles.acceptButton}
-                onPress={() => navigation.navigate("Submit Report")}
-              >
-                <Text style={styles.acceptButtonText}>Report</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+      {/* Header with menu icon */}
+      <View style={styles.header}>
+        <MaterialCommunityIcons
+          name="menu"
+          size={30}
+          color="#333"
+        />
+      </View>
+
+      {/* Ride Type Section */}
+      <View style={styles.rideTypeContainer}>
+        <View style={styles.rideTypeIconContainer}>
+          <MaterialCommunityIcons
+            name="motorbike"
+            size={40}
+            color="#333" // Icon color
+          />
         </View>
-      </ImageBackground>
+        <Text style={styles.rideTypeText}>MOTOR TAXI</Text>
+      </View>
+
+      {/* Image Section */}
+      <View style={styles.imagePlaceholder}>
+        <Text>Image</Text>
+      </View>
+
+      {/* Message Section */}
+      <View style={styles.messageContainer}>
+        <Text style={styles.messageText}>
+          Let us not use our phone during the ride to avoid unnecessary accident in the road.
+        </Text>
+      </View>
+
+      {/* Report Button */}
+      <TouchableOpacity onPress={handleCancel}>
+        <Button mode="contained" style={styles.reportButton}>
+          REPORT
+        </Button>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
 
-export default InTransit;
-
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    resizeMode: "cover",
-    justifyContent: "center",
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(255, 255, 255, 0.7)", // Slight white overlay for better readability
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  contentContainer: {
+  scrollViewContent: {
+    flexGrow: 1,
     padding: 20,
-    backgroundColor: "#FFC533",
-    borderRadius: 10,
-    width: "90%",
-    elevation: 5,
+    backgroundColor: '#fff',
   },
-  textinput: {
-    backgroundColor: "white",
-    width: "100%",
-  },
-  messageInput: {
-    backgroundColor: "white",
-    height: 100,
-  },
-  inputContainer: {
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
     marginBottom: 20,
   },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  // Ride type section
+  rideTypeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 30,
+    justifyContent: 'center',
   },
-  halfWidth: {
-    width: "48%",
+  rideTypeIconContainer: {
+    backgroundColor: '#f5f5f5',
+    padding: 10,
+    borderRadius: 8,
+    marginRight: 10,
+    elevation: 2,  // Adds a slight shadow to the icon container
   },
-  buttonContainer: {
-    justifyContent: "flex-end",
-    flexDirection: "row",
-    marginTop: 20,
+  rideTypeText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFD700',  // Yellow color for the title
   },
-  acceptButton: {
-    backgroundColor: "#158D01",
-    paddingVertical: 10,
+  // Image placeholder
+  imagePlaceholder: {
+    width: 200,
+    height: 200,
+    backgroundColor: '#FFD700',
+    borderRadius: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginBottom: 30,
+  },
+  // Message section
+  messageContainer: {
     paddingHorizontal: 20,
-    borderRadius: 5,
+    marginBottom: 30,
   },
-  acceptButtonText: {
-    color: "#FFF",
+  messageText: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#333',
+  },
+  // Report button
+  reportButton: {
+    backgroundColor: '#FF0000',  // Red color for the report button
+    padding: 10,
+    borderRadius: 8,
+    elevation: 3,
+    alignSelf: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#333",
   },
 });
+
+export default Intransit;

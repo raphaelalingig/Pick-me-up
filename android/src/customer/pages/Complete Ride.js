@@ -1,11 +1,13 @@
 import { StyleSheet, TouchableOpacity, View, ImageBackground, Alert } from "react-native";
-import React, { useEffect, useState, useCallback } from "react";
-import userService from "../../services/auth&services";
+import React, { useState } from "react";
 import { Text } from "react-native-paper";
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'; // Importing icons
+import userService from "../../services/auth&services";
 
 const CompleteRide = ({ navigation, route }) => {
   const { ride } = route.params;
   const [isLoading, setIsLoading] = useState(true);
+
   const completeRide = async () => {
     setIsLoading(true);
     try {
@@ -23,30 +25,46 @@ const CompleteRide = ({ navigation, route }) => {
       setIsLoading(false);
     }
   };
+
   return (
     <ImageBackground
       source={{ uri: "https://your-map-image-url.com" }} // Replace with your map image URL
       style={styles.background}
     >
       <View style={styles.overlay}>
-        <View style={styles.contentContainer}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.acceptButtonText}>You have arrived at your Destination! Thanks for using Pick Me Up!</Text>
+        {/* Icon and MOTOR TAXI text */}
+        <View style={styles.rideTypeContainer}>
+          <View style={styles.rideTypeIconContainer}>
+            <MaterialCommunityIcons name="motorbike" size={40} color="#333" />
           </View>
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.acceptButton}
-              onPress={() => navigation.navigate("Submit Report")}
-            >
-              <Text style={styles.acceptButtonText}>Report</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.acceptButton}
-              onPress={completeRide}
-            >
-              <Text style={styles.acceptButtonText}>Return Home</Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.rideTypeText}>MOTOR TAXI</Text>
+        </View>
+
+        {/* Circular Image Placeholder */}
+        <View style={styles.imagePlaceholder}>
+          <Text>Image</Text>
+        </View>
+
+        {/* Arrival Message */}
+        <View style={styles.messageContainer}>
+          <Text style={styles.messageText}>You have Arrived</Text>
+          <Text style={styles.subMessageText}>Thank you for using our services.</Text>
+        </View>
+
+        {/* Buttons: Report and Return Home */}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.reportButton}
+            onPress={() => navigation.navigate("Submit Report")}
+          >
+            <Text style={styles.buttonText}>Report</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.returnHomeButton}
+            onPress={completeRide}
+          >
+            <Text style={styles.buttonText}>Return Home</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </ImageBackground>
@@ -63,47 +81,77 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(255, 255, 255, 0.7)", // Slight white overlay for better readability
+    backgroundColor: "rgba(255, 255, 255, 0.7)", // Slight white overlay for readability
     justifyContent: "center",
     alignItems: "center",
   },
-  contentContainer: {
-    padding: 20,
-    backgroundColor: "#FFC533",
-    borderRadius: 10,
-    width: "90%",
-    elevation: 5,
-  },
-  textinput: {
-    backgroundColor: "white",
-    width: "100%",
-  },
-  messageInput: {
-    backgroundColor: "white",
-    height: 100,
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  row: {
+  // Ride type section
+  rideTypeContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 30,
+    justifyContent: "center",
   },
-  halfWidth: {
-    width: "48%",
+  rideTypeIconContainer: {
+    backgroundColor: '#f5f5f5',
+    padding: 10,
+    borderRadius: 8,
+    marginRight: 10,
+    elevation: 2,  // Slight shadow under the icon
   },
+  rideTypeText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFD700',  // Yellow color for the title
+  },
+  // Image placeholder
+  imagePlaceholder: {
+    width: 200,
+    height: 200,
+    backgroundColor: '#FFD700',
+    borderRadius: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  // Arrival message section
+  messageContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 30,
+    alignItems: 'center',
+  },
+  messageText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 5,
+  },
+  subMessageText: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#333',
+  },
+  // Button section
   buttonContainer: {
-    justifyContent: "flex-end",
-    flexDirection: "row",
-    marginTop: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '80%',
   },
-  acceptButton: {
-    backgroundColor: "#158D01",
+  reportButton: {
+    backgroundColor: '#FF0000',  // Red for Report
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  returnHomeButton: {
+    backgroundColor: '#158D01',  // Green for Return Home
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
   },
-  acceptButtonText: {
-    color: "#FFF",
+  buttonText: {
+    color: '#FFF',
+    fontSize: 16,
   },
 });

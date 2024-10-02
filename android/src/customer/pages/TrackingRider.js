@@ -126,11 +126,6 @@ const DeliveryConfirmationScreen = ({navigation}) => {
           </View>
 
           {/* Go Back Button */}
-          <TouchableOpacity>
-            <View style={styles.goBackButton}>
-              <Text style={styles.goBackButtonText}>Contact</Text>
-            </View>
-          </TouchableOpacity>
           
           <TouchableOpacity onPress={handleCancel}>
             <View style={styles.goBackButton}>
@@ -160,6 +155,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginLeft: 10,
     color: "#FFF",
+    paddingBottom: 30,
+    paddingTop: 30,
     textDecorationLine: 'underline',
   },
   content: {
@@ -221,7 +218,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   goBackButton: {
-    backgroundColor: "#28a745",
+    backgroundColor: "#b22222",
     paddingVertical: 10,
     paddingHorizontal: 30,
     borderRadius: 5,
