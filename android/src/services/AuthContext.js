@@ -1,3 +1,4 @@
+// AuthContext.js
 import React, { createContext, useState, useEffect } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -6,6 +7,7 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [userStatus, setUserStatus] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -13,11 +15,14 @@ export const AuthProvider = ({ children }) => {
       try {
         const token = await AsyncStorage.getItem("token");
         const role = await AsyncStorage.getItem("role");
-        console.log("Retrieved token:", token); // Debug log
-        console.log("Retrieved role:", role); // Debug log
+        const status = await AsyncStorage.getItem("status");
+        console.log("Retrieved token:", token);
+        console.log("Retrieved role:", role);
+        console.log("Retrieved status:", status);
         if (token && role) {
           setIsAuthenticated(true);
           setUserRole(parseInt(role));
+          setUserStatus(status);
         } else {
           setIsAuthenticated(false);
         }
@@ -33,7 +38,16 @@ export const AuthProvider = ({ children }) => {
   }, []);
   
   return (
-    <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated, userRole, setUserRole, loading, setLoading }}>
+    <AuthContext.Provider value={{ 
+      isAuthenticated, 
+      setIsAuthenticated, 
+      userRole, 
+      setUserRole, 
+      userStatus, 
+      setUserStatus, 
+      loading, 
+      setLoading 
+    }}>
       {children}
     </AuthContext.Provider>
   );

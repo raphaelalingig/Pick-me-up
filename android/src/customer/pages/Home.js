@@ -20,6 +20,12 @@ const BookNow = ({ setCurrentForm, navigation, checkRideAndLocation }) => {
   const handleBookNow = async () => {
     setLoading(true);
     try {
+      const user_status = await userService.getUserStatus();
+      if (user_status === 'Disabled') {
+        alert("Your Account has been Disabled, Contact Admin for more Info.");
+        return "Can not Book";
+      }
+      
       const result = await checkRideAndLocation();
       if (result === "proceed") {
         setCurrentForm("ChooseServiceScreen");
@@ -92,6 +98,28 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
       <View style={styles.container}>
         <Text style={styles.title}>CHOOSE RIDER SERVICES</Text>
         <View style={styles.buttonContainer}>
+
+        <TouchableOpacity
+            style={[
+              styles.serviceButton,
+              selectedService === "Motor Taxi" && styles.selectedButton,
+            ]}
+            onPress={() => handleServiceSelect("Motor Taxi")}
+          >
+            <MaterialCommunityIcons name="motorbike" size={24} color="black" />
+            <Text
+              style={[
+                styles.serviceButtonText,
+                selectedService === "Motor Taxi" && { color: "black" },
+              ]}
+            >
+              Moto-Taxi
+            </Text>
+            <Text style={styles.serviceDescription}>
+              Bring you where ever you want
+            </Text>
+          </TouchableOpacity>
+          
           <TouchableOpacity
             style={[
               styles.serviceButton,
@@ -134,26 +162,6 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[
-              styles.serviceButton,
-              selectedService === "Motor Taxi" && styles.selectedButton,
-            ]}
-            onPress={() => handleServiceSelect("Motor Taxi")}
-          >
-            <MaterialCommunityIcons name="motorbike" size={24} color="black" />
-            <Text
-              style={[
-                styles.serviceButtonText,
-                selectedService === "Motor Taxi" && { color: "black" },
-              ]}
-            >
-              Motor-Taxi
-            </Text>
-            <Text style={styles.serviceDescription}>
-              Bring you where ever you want
-            </Text>
-          </TouchableOpacity>
         </View>
         <View style={styles.actionContainer}>
           <TouchableOpacity
@@ -182,6 +190,7 @@ const MainComponent = ({ navigation }) => {
   const checkRideAndLocation = useCallback(async () => {
     try {
       // Check for existing booking or ride
+      
       const response = await userService.checkActiveBook();
       const ride = response.rideDetails;
       if (response && response.hasActiveRide) {

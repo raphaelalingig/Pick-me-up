@@ -43,6 +43,16 @@ const userService = {
       return null;
     }
   },
+  getUserStatus: async () => {
+    try {
+      const userStatus = await AsyncStorage.getItem("status");
+      console.log("Retrieved user_id:", userStatus); // Debug log
+      return userStatus;
+    } catch (error) {
+      console.error("Error retrieving user_id:", error);
+      return null;
+    }
+  },
 
   requestOtp: async (userData) => {
     try {
@@ -82,30 +92,48 @@ const userService = {
     }
   },
 
+
   updateRiderInfo: async (textData) => {
     try {
       const token = await AsyncStorage.getItem('token');
       const userId = await userService.getUserId();
-      textData.append('user_id', userId); // Add rider_id to the form data
-  
+      
       if (!userId) {
         throw new Error('User ID not found');
       }
+      
+      const dataToSend = {
+        ...textData,
+        user_id: userId
+      };
   
-      const response = await axios.post(`${API_URL}update-rider-info`, textData, {
+      console.log('Sending update request with data:', dataToSend);
+  
+      const response = await axios.post(`${API_URL}update-rider-info`, dataToSend, {
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'application/json',
         },
       });
-      return response.data;
+  
+      console.log('Update rider info response:', response.data);
+  
+      if (response && response.data) {
+        return response.data;
+      } else {
+        throw new Error('Invalid response from server');
+      }
     } catch (error) {
       if (error.response) {
-        console.error("Error updating rider info:", error.response.data);
+        console.error("Server responded with error:", error.response.status, error.response.data);
+        throw new Error(`Server error: ${error.response.status}`);
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+        throw new Error('No response from server');
       } else {
         console.error("Error updating rider info:", error.message);
+        throw error;
       }
-      throw error;
     }
   },
   
@@ -316,7 +344,9 @@ const userService = {
     return await axios.post(API_URL + 'ride-location', rideDetails);
   },
   
-
+  saveRiderLocation: async (rideDetails) => {
+    return await axios.post(API_URL + 'ride-location', rideDetails);
+  },
 
 }
 

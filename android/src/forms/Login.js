@@ -1,15 +1,10 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  StyleSheet,
-  ImageBackground,
-  TouchableOpacity,
-} from "react-native";
-import { TextInput, Button, Text, Dialog, Portal } from "react-native-paper";
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+// Login.js (updated)
+import React, { useState } from "react";
+import { View, StyleSheet, ImageBackground, TouchableOpacity } from "react-native";
+import { Button, Text, Dialog, Portal } from "react-native-paper";
 import { useAuth } from "../services/useAuth";
 import userService from "../services/auth&services";
-import Feather from "@expo/vector-icons/Feather";
+import CustomIconInput from "./CustomIconInput";
 
 const Login = ({ navigation }) => {
   const [user_name, setUsername] = useState("");
@@ -18,10 +13,11 @@ const Login = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
-  const [token, setToken] = useState(""); // Token state
+  const [token, setToken] = useState("");
   const { login } = useAuth();
   const [hideEntry, setHideEntry] = useState(true);
-  const [user, setUser] = useState(""); // Token state
+  const [user, setUser] = useState("");
+  const [status, setStatus] = useState(null);
 
   const handleLogin = async () => {
     setError("");
@@ -34,20 +30,24 @@ const Login = ({ navigation }) => {
     setIsLoading(true);
   
     try {
-      const { token: receivedToken, role, user_id } = await userService.login(
+      const { token: receivedToken, role, user_id, status: userStatus } = await userService.login(
         user_name,
         password
       );
       
       setToken(receivedToken);
       setUser(user_id);
-      console.log(user);
+      setStatus(userStatus);
+      console.log(user, userStatus);
   
       if (role === 3 || role === 1 || role === 2) {
-        setSelectedRole(role, user_id);
-        setShowDialog(true);
+        // setSelectedRole(role);
+        // setShowDialog(true);
+        await login(receivedToken, role, user_id, userStatus);
+        navigation.replace(role === 3 ? "RiderStack" : "CustomerStack");
       } else if (role === 4) {
-        await login(receivedToken, role, user_id);  // Pass userId to the login function
+        await login(receivedToken, role, user_id, userStatus);
+        // Replace this line with the correct navigation call
         navigation.replace(role === 3 ? "RiderStack" : "CustomerStack");
       } else {
         setError("An error occurred during login");
@@ -75,7 +75,7 @@ const Login = ({ navigation }) => {
   
 
   const handleRoleSelection = async (role) => {
-    await login(token, role, user);
+    await login(token, role, user, status);
     setShowDialog(false);
     navigation.replace(role === 3 ? "RiderStack" : "CustomerStack");
   };
@@ -96,12 +96,10 @@ const Login = ({ navigation }) => {
           <Text style={styles.subtitle}>Pick you up wherever you are</Text>
         </View>
         <View style={{ marginTop: "50%" }}>
-          <TextInput
-            style={styles.input}
+          <CustomIconInput
             placeholder="Username"
             value={user_name}
             onChangeText={setUsername}
-            mode="outlined"
             theme={{
               colors: {
                 primary: "black",
@@ -109,34 +107,20 @@ const Login = ({ navigation }) => {
               },
             }}
           />
-          <View style={styles.passwordContainer}>
-            <TextInput
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={hideEntry}
-              mode="outlined"
-              style={[styles.input, styles.passwordInput]}
-              theme={{
-                colors: {
-                  primary: "black",
-                  outline: "black",
-                },
-              }}
-              right={
-                <TextInput.Icon
-                  icon={() => (
-                    <Feather
-                      name={hideEntry ? "eye-off" : "eye"}
-                      size={24}
-                      color="#000"
-                    />
-                  )}
-                  onPress={toggleSecureEntry}
-                />
-              }
-            />
-          </View>
+          <CustomIconInput
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={hideEntry}
+            iconName={hideEntry ? "eye-off" : "eye"}
+            onIconPress={toggleSecureEntry}
+            theme={{
+              colors: {
+                primary: "black",
+                outline: "black",
+              },
+            }}
+          />
 
           {error && <Text style={styles.error}>{error}</Text>}
 
