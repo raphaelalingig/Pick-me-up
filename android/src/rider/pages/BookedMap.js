@@ -37,7 +37,8 @@ const BookedMap = ({ navigation }) => {
 
   const fetchDirections = async () => {
     try {
-      const apiKey = "AIzaSyAekXSq_b4GaHneUKEBVsl4UTGlaskobFo";
+      // AIzaSyAekXSq_b4GaHneUKEBVsl4UTGlaskobFo
+      const apiKey = "";
       const origin = `${riderLocation.latitude},${riderLocation.longitude}`;
       const destination = `${customerLocation.latitude},${customerLocation.longitude}`;
       const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${apiKey}`;
