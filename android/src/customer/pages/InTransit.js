@@ -39,29 +39,6 @@ const Intransit = ({ navigation }) => {
     navigation.navigate("Home");
     setRefreshing(false);
   }, [navigation]);
-
-  const handleCancel = async () => {
-    setIsLoading(true);
-    try {
-      const response = await userService.cancel_ride(bookDetails.ride_id);
-  
-      if (response.data && response.data.message) {
-        Alert.alert("Success", response.data.message);
-        navigation.navigate("Home");
-      } else {
-        Alert.alert("Error", "Failed to cancel the ride. Please try again.");
-      }
-    } catch (error) {
-      if (error.response && error.response.status === 400) {
-        Alert.alert("Error", error.response.data.error || "This ride is no longer available.");
-        navigation.goBack();
-      } else {
-        Alert.alert("Error", "An error occurred. Please try again.");
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
   
   if (isLoading || !bookDetails) {
     return (
@@ -116,7 +93,7 @@ const Intransit = ({ navigation }) => {
       </View>
 
       {/* Report Button */}
-      <TouchableOpacity onPress={handleCancel}>
+      <TouchableOpacity>
         <Button mode="contained" style={styles.reportButton}>
           REPORT
         </Button>

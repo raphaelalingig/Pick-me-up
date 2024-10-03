@@ -3,34 +3,89 @@ import { StyleSheet, TouchableOpacity, View, Alert, Dimensions } from "react-nat
 import { MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 import { Text } from "react-native-paper";
 import MapView, { Marker, Polyline } from "react-native-maps";
+import * as Location from 'expo-location';
 import userService from "../../services/auth&services";
 
 const TrackingCustomer = ({ route, navigation }) => {
   const { ride } = route.params;
-  const [isLoading, setIsLoading] = useState(false);
-  const [riderLocation, setRiderLocation] = useState({
-    latitude: 8.50356485505176,
-    longitude: 124.60255927585538, 
-  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [riderLocation, setRiderLocation] = useState(null);
   const [customerLocation, setCustomerLocation] = useState({
     latitude: 8.4955,
     longitude: 124.5999,
   });
   const [routeCoordinates, setRouteCoordinates] = useState([]);
+  const [totalFare, setTotalFare] = useState(0);
   const [mapRegion, setMapRegion] = useState(null);
+  const [totalDistanceRide, setTotalDistanceRide] = useState(null);
 
   useEffect(() => {
-    fetchDirections();
-    calculateMapRegion();
+    let locationSubscription;
+
+    const setupLocation = async () => {
+      try {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission to access location was denied');
+          return;
+        }
+
+        let location = await Location.getCurrentPositionAsync({});
+        setRiderLocation({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+
+        locationSubscription = await Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.High,
+            distanceInterval: 10, // Update every 10 meters
+          },
+          (newLocation) => {
+            setRiderLocation({
+              latitude: newLocation.coords.latitude,
+              longitude: newLocation.coords.longitude,
+            });
+          }
+        );
+      } catch (error) {
+        console.error("Error setting up location:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    setupLocation();
+
+    return () => {
+      if (locationSubscription) {
+        locationSubscription.remove();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (riderLocation && customerLocation) {
+      fetchDirections();
+      calculateMapRegion();
+    }
   }, [riderLocation, customerLocation]);
 
+  useEffect(() => {
+    if (totalDistanceRide) {
+      calculateFare(totalDistanceRide);
+    }
+  }, [totalDistanceRide]);
+
   const calculateMapRegion = () => {
+    if (!riderLocation) return;
+
     const minLat = Math.min(riderLocation.latitude, customerLocation.latitude);
     const maxLat = Math.max(riderLocation.latitude, customerLocation.latitude);
     const minLng = Math.min(riderLocation.longitude, customerLocation.longitude);
     const maxLng = Math.max(riderLocation.longitude, customerLocation.longitude);
 
-    const latDelta = (maxLat - minLat) * 1.5; // Add some padding
+    const latDelta = (maxLat - minLat) * 1.5;
     const lngDelta = (maxLng - minLng) * 1.5;
 
     setMapRegion({
@@ -43,7 +98,7 @@ const TrackingCustomer = ({ route, navigation }) => {
 
   const fetchDirections = async () => {
     try {
-      const apiKey = "AIzaSyAekXSq_b4GaHneUKEBVsl4UTGlaskobFo";
+      const apiKey = "YOUR_GOOGLE_MAPS_API_KEY";
       const origin = `${riderLocation.latitude},${riderLocation.longitude}`;
       const destination = `${customerLocation.latitude},${customerLocation.longitude}`;
       const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${apiKey}`;
@@ -67,6 +122,7 @@ const TrackingCustomer = ({ route, navigation }) => {
       console.error("Error fetching directions:", error);
     }
   };
+
 
   const calculateFare = (distance) => {
     const baseFare = 40;
@@ -161,7 +217,7 @@ const TrackingCustomer = ({ route, navigation }) => {
     }
   };
 
-  if (isLoading || !ride) {
+  if (isLoading || !ride || !riderLocation) {
     return (
       <View style={styles.loadingContainer}>
         <Text>Loading...</Text>
@@ -177,7 +233,7 @@ const TrackingCustomer = ({ route, navigation }) => {
           region={mapRegion}
           onMapReady={calculateMapRegion}
         >
-          <Marker coordinate={riderLocation} title="Rider Location" />
+          {riderLocation && <Marker coordinate={riderLocation} title="Rider Location" />}
           <Marker coordinate={customerLocation} title="Customer Location" pinColor="blue" />
           <Polyline coordinates={routeCoordinates} strokeColor="#FF0000" strokeWidth={3} />
         </MapView>
@@ -230,11 +286,10 @@ const styles = StyleSheet.create({
   },
   detailsContainer: {
     flex: 2,
-    backgroundColor: "#ffd700",
+    backgroundColor: "#f5f5f5",
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     padding: 20,
-
   },
   header: {
     flexDirection: 'row',
