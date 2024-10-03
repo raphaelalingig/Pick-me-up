@@ -1,23 +1,28 @@
 import React from "react";
+import { StatusBar } from "react-native";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from "../services/useAuth";
+import Icon from "react-native-vector-icons/Ionicons";
+import CustomDrawerContent from "./CustomDrawerContent";
+import AvatarRider from "../rider/avatarDropdown/AvatarRider";
+import AvatarCustomer from "../customer/pages/AvatarCustomer";
+
+// Import your screens here
 import Login from "../forms/Login";
 import Home from "../customer/pages/Home";
 import History from "../customer/pages/History";
 import Settings from "../customer/pages/Settings";
-import Icon from "react-native-vector-icons/Ionicons";
+import RiderHome from "../rider/pages/Home";
+import GetVerified from "../rider/sidebarContents/GetVerified";
 import RiderHistory from "../rider/sidebarContents/History";
 import RiderSettings from "../rider/sidebarContents/Settings";
-import GetVerified from "../rider/sidebarContents/GetVerified";
-import RiderHome from "../rider/pages/Home";
 import Register from "../forms/Register";
 import Confirmation from "../forms/Confirmation";
 import NearbyCustomerScreen from "../rider/pages/NearByCustomer";
 import BookingDetailsScreen from "../rider/pages/BookingDetailsScreen";
-import CustomDrawerContent from "./CustomDrawerContent";
-import AvatarRider from "../rider/avatarDropdown/AvatarRider";
 import MotorTaxiOptionScreen from "../customer/pages/MotorTaxiOp";
 import PakyawOptionScreen from "../customer/pages/PakyawOp";
 import DeliveryOptionScreen from "../customer/pages/DeliveryOp";
@@ -32,30 +37,37 @@ import BookedMap from "../rider/pages/BookedMap";
 import WaitingRider from "../customer/pages/WaitingForRider";
 import TrackingDestination from "../rider/pages/TrackingDestination";
 import TrackingCustomer from "../rider/pages/TrackingCustomer";
-import AvatarCustomer from "../customer/pages/AvatarCustomer";
 import MapPicker from "../customer/pages/MapPicker";
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
 
 const CustomerDrawerNavigation = () => {
+  const { userRole } = useAuth();
+
   return (
     <Drawer.Navigator
       initialRouteName="Home"
       drawerContent={(props) => <CustomDrawerContent {...props} />}
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: "#FBC635",
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        headerTintColor: "#000000",
+        drawerActiveTintColor: "#000000",
+        drawerInactiveTintColor: "#555555",
+      }}
     >
       <Drawer.Screen
         name="Home"
         component={Home}
         options={{
-          headerStyle: {
-            backgroundColor: "#FBC635",
-          },
-          headerTintColor: "#000000",
           drawerIcon: ({ color, size }) => (
             <Icon name="home-outline" color={color} size={size} />
           ),
-          headerRight: () => <AvatarCustomer />,
+          headerRight: () => userRole === 4 ? null : <AvatarCustomer />,
         }}
       />
       <Drawer.Screen
@@ -65,19 +77,17 @@ const CustomerDrawerNavigation = () => {
           drawerIcon: ({ color, size }) => (
             <Icon name="time-outline" color={color} size={size} />
           ),
+          headerRight: () => userRole === 4 ? null : <AvatarCustomer />,
         }}
       />
       <Drawer.Screen
         name="Settings"
         component={Settings}
         options={{
-          headerStyle: {
-            backgroundColor: "#FBC635",
-          },
-          headerTintColor: "#000000",
           drawerIcon: ({ color, size }) => (
             <Icon name="settings-outline" color={color} size={size} />
           ),
+          headerRight: () => userRole === 4 ? null : <AvatarCustomer />,
         }}
       />
     </Drawer.Navigator>
@@ -89,15 +99,21 @@ const RiderDrawerNavigation = () => {
     <Drawer.Navigator
       initialRouteName="Home"
       drawerContent={(props) => <CustomDrawerContent {...props} />}
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: "#FBC635",
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        headerTintColor: "#000000",
+        drawerActiveTintColor: "#000000",
+        drawerInactiveTintColor: "#555555",
+      }}
     >
       <Drawer.Screen
         name="Home"
         component={RiderHome}
         options={{
-          headerStyle: {
-            backgroundColor: "#FBC635",
-          },
-          headerTintColor: "#000000",
           drawerIcon: ({ color, size }) => (
             <Icon name="home-outline" color={color} size={size} />
           ),
@@ -108,10 +124,6 @@ const RiderDrawerNavigation = () => {
         name="Get Verified"
         component={GetVerified}
         options={{
-          headerStyle: {
-            backgroundColor: "#FBC635",
-          },
-          headerTintColor: "#000000",
           drawerIcon: ({ color, size }) => (
             <Icon name="checkmark-circle-outline" color={color} size={size} />
           ),
@@ -122,10 +134,6 @@ const RiderDrawerNavigation = () => {
         name="Booking History"
         component={RiderHistory}
         options={{
-          headerStyle: {
-            backgroundColor: "#FBC635",
-          },
-          headerTintColor: "#000000",
           drawerIcon: ({ color, size }) => (
             <Icon name="time-outline" color={color} size={size} />
           ),
@@ -136,10 +144,6 @@ const RiderDrawerNavigation = () => {
         name="Settings"
         component={RiderSettings}
         options={{
-          headerStyle: {
-            backgroundColor: "#FBC635",
-          },
-          headerTintColor: "#000000",
           drawerIcon: ({ color, size }) => (
             <Icon name="settings-outline" color={color} size={size} />
           ),
@@ -164,7 +168,16 @@ const CustomerStack = () => {
   const { isAuthenticated, userRole, loading } = useAuth();
 
   return (
-    <Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: "#FBC635",
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        headerTintColor: "#000000",
+      }}
+    >
       <Stack.Screen
         name="CustomerDrawer"
         component={CustomerDrawerNavigation}
@@ -198,7 +211,16 @@ const CustomerStack = () => {
 
 const RiderStack = () => {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: "#FBC635",
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        headerTintColor: "#000000",
+      }}
+    >
       <Stack.Screen
         name="RiderDrawer"
         component={RiderDrawerNavigation}
@@ -248,9 +270,14 @@ const RootStack = () => {
 
 const Navigation = () => {
   return (
-    <NavigationContainer>
-      <RootStack />
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <StatusBar backgroundColor="#FBC635" barStyle="dark-content" />
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#FBC635' }}>
+        <NavigationContainer>
+          <RootStack />
+        </NavigationContainer>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 };
 
