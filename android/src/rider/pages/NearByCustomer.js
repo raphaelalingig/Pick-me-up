@@ -83,7 +83,6 @@ const NearbyCustomerScreen = ({ navigation }) => {
                   Name: {`${ride.first_name} ${ride.last_name}`}
                 </Text>
                 <Text style={styles.customerText}>Pickup: {ride.ride_type}</Text>
-                <Text style={styles.customerText}>Fare: {ride.fare}</Text>
               </View>
               <TouchableOpacity
                 style={styles.detailsButton}

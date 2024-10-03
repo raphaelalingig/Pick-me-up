@@ -141,7 +141,7 @@ const DeliveryConfirmationScreen = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffd700", // Yellow background color
+    backgroundColor: "#FFD700", // Yellow background color
   },
   header: {
     flex: 2, // 20% of the screen height

@@ -1,4 +1,4 @@
-import { StyleSheet, TouchableOpacity, View, ImageBackground, Alert } from "react-native";
+import { StyleSheet, TouchableOpacity, View, ImageBackground, Alert, Image, } from "react-native";
 import React, { useState } from "react";
 import { Text } from "react-native-paper";
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'; // Importing icons
@@ -28,7 +28,7 @@ const CompleteRide = ({ navigation, route }) => {
 
   return (
     <ImageBackground
-      source={{ uri: "https://your-map-image-url.com" }} // Replace with your map image URL
+      source={require("../../pictures/9.png")}// Replace with your map image URL
       style={styles.background}
     >
       <View style={styles.overlay}>
@@ -42,8 +42,11 @@ const CompleteRide = ({ navigation, route }) => {
 
         {/* Circular Image Placeholder */}
         <View style={styles.imagePlaceholder}>
-          <Text>Image</Text>
-        </View>
+        <Image
+          source={require("../../pictures/7.png")} // Replace with your image URL
+          style={styles.image}
+        />
+      </View>
 
         {/* Arrival Message */}
         <View style={styles.messageContainer}>
@@ -102,7 +105,7 @@ const styles = StyleSheet.create({
   rideTypeText: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFD700',  // Yellow color for the title
+    color: '#000000',  // Yellow color for the title
   },
   // Image placeholder
   imagePlaceholder: {
@@ -113,6 +116,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 30,
+  },
+
+  image: {
+    width: '80%', // Adjust size as needed
+    height: '80%', // Adjust size as needed
+    borderRadius: 100, // Keep it circular
   },
   // Arrival message section
   messageContainer: {

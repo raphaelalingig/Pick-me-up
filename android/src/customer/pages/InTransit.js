@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Image,
   ImageBackground,
   Alert,
   ScrollView,
@@ -13,7 +14,6 @@ import { Button } from "react-native-paper";
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';  // Importing icons
 import userService from '../../services/auth&services';
 
-// There some changes here please check if it is right
 const Intransit = ({ navigation }) => {
   const [bookDetails, setBookDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,7 +62,6 @@ const Intransit = ({ navigation }) => {
       setIsLoading(false);
     }
   };
-  // End of changes to the cons
   
   if (isLoading || !bookDetails) {
     return (
@@ -79,6 +78,7 @@ const Intransit = ({ navigation }) => {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
+      
       {/* Header with menu icon */}
       <View style={styles.header}>
         <MaterialCommunityIcons
@@ -102,7 +102,10 @@ const Intransit = ({ navigation }) => {
 
       {/* Image Section */}
       <View style={styles.imagePlaceholder}>
-        <Text>Image</Text>
+        <Image
+          source={require("../../pictures/7.png")} // Replace with your image URL
+          style={styles.image}
+        />
       </View>
 
       {/* Message Section */}
@@ -162,6 +165,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'center',
     marginBottom: 30,
+  },
+  image: {
+    width: '80%', // Adjust size as needed
+    height: '80%', // Adjust size as needed
+    borderRadius: 100, // Keep it circular
   },
   // Message section
   messageContainer: {

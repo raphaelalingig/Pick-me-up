@@ -81,7 +81,7 @@ const WaitingRider = ({ navigation }) => {
       }
     >
       <ImageBackground
-        source={{ uri: "https://your-map-image-url.com" }}
+        source={require("../../pictures/11.png")}
         style={styles.background}
       >
         {/* Ride Type Section */}
@@ -97,17 +97,21 @@ const WaitingRider = ({ navigation }) => {
         {/* Book Details Section */}
         <View style={styles.container}>
           <View style={styles.bookDetailsContainer}>
+
             <View style={styles.messageContainer}>
               <Text style={styles.successMessage}>Ride Successfully Booked</Text>
               <Text style={styles.statusMessage}>Looking for Rider...</Text>
             </View>
 
-            <View style={styles.messageContainer2}>
+            <View style={styles.messageContainerBook}>
               <Text style={styles.subTitle}>Book Details</Text>
               <Text style={styles.detailText}>Type: {bookDetails.ride_type}</Text>
               <Text style={styles.detailText}>Pick Up: {bookDetails.pickup_location}</Text>
               <Text style={styles.detailText}>Drop Off: {bookDetails.dropoff_location}</Text>
-              <Text style={styles.subTitle}>Fare: {bookDetails.fare}</Text>
+            </View>
+
+            <View style={styles.messageContainerFare}>
+              <Text style={styles.subTitle}>Fare:     ₱{bookDetails.fare}</Text>
             </View>
             <TouchableOpacity onPress={handleCancel}>
               <Button mode="contained" style={styles.cancelButton}>
@@ -154,9 +158,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
   },
-  // Book details section with original yellow background and elevation
+  //yellow background and elevation
   bookDetailsContainer: {
-    backgroundColor: "#FFD700",  // Original yellow background
+    backgroundColor: "#FFD700",
     borderRadius: 10,
     padding: 20,
     elevation: 5,  // Elevation to give depth
@@ -178,16 +182,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  messageContainer2: {
+  messageContainerBook: {
     padding: 20,
     backgroundColor: 'white',
     alignItems: "flex-start",
     borderRadius: 8,
+    marginBottom: 15,
+  },
+
+  messageContainerFare: {
+    padding: 10,
+    paddingTop: 16,
+    borderRadius: 8,
+    backgroundColor: "#f5f5dc",
+    alignItems: "center", 
   },
 
   successMessage: {
     fontSize: 21,
-    color: "#daa520",
+    color: "#000000",
     marginBottom: 10,
     fontWeight: "500",
   },
