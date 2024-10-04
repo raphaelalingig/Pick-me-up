@@ -60,7 +60,7 @@ const NearbyCustomerScreen = ({ navigation }) => {
       }
     >
       <ImageBackground
-        source={require("../../pictures/13.png")} 
+        source={require("../../pictures/13.png")}
         style={styles.background}
       >
         {showSpinner && (
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
   noRidesText: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#000000", // Yellow text
+    color: "#000000",
   },
 });
 
