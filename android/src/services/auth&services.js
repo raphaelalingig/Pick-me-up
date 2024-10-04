@@ -271,7 +271,7 @@ const userService = {
       throw error;
     }
   },
-
+  
   accept_ride: async (ride_id) => { 
     const userId = await userService.getUserId();
     if (!userId) {
@@ -285,6 +285,17 @@ const userService = {
       return false;
     }
   
+    try {
+      // Ensure the key in the request body matches what the backend expects
+      const response = await axios.put(`${API_URL}accept_ride/${ride_id}`, { user_id: userId });
+      return response;
+    } catch (error) {
+      console.error("Error accepting ride:", error);
+      throw error;
+    }
+  },
+
+  set_riderLocation: async (ride_id) => { 
     try {
       // Ensure the key in the request body matches what the backend expects
       const response = await axios.put(`${API_URL}accept_ride/${ride_id}`, { user_id: userId });
@@ -345,7 +356,7 @@ const userService = {
   },
   
   saveRiderLocation: async (rideDetails) => {
-    return await axios.post(API_URL + 'ride-location', rideDetails);
+    return await axios.post(API_URL + 'rider-location', rideDetails);
   },
 
 }

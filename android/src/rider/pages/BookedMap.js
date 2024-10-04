@@ -4,7 +4,8 @@ import MapView, { Marker, Polyline } from "react-native-maps";
 import { RiderContext } from "../../context/riderContext";
 import { Button, Text } from "react-native-paper";
 
-const BookedMap = ({ navigation }) => {
+const BookedMap = ({ navigation, route }) => {
+  const { ride } = route.params; // Assuming the ride data is passed as a route parameter
   const { riderCoords, totalDistanceRide, setTotalDistanceRide } =
     useContext(RiderContext);
 
@@ -16,29 +17,22 @@ const BookedMap = ({ navigation }) => {
   });
 
   const [customerLocation, setCustomerLocation] = useState({
-    latitude: 8.4955,
-    longitude: 124.5999,
+    latitude: parseFloat(ride.ridelocations.customer_latitude),
+    longitude: parseFloat(ride.ridelocations.customer_longitude),
     latitudeDelta: 0.05,
     longitudeDelta: 0.05,
   });
 
   const [routeCoordinates, setRouteCoordinates] = useState([]);
-  const [totalFare, setTotalFare] = useState(0); // Add state to store the fare
+  const [totalFare, setTotalFare] = useState(parseFloat(ride.fare));
 
   useEffect(() => {
     fetchDirections();
   }, [riderLocation, customerLocation]);
 
-  useEffect(() => {
-    if (totalDistanceRide) {
-      calculateFare(totalDistanceRide);
-    }
-  }, [totalDistanceRide]);
-
   const fetchDirections = async () => {
     try {
-      // AIzaSyAekXSq_b4GaHneUKEBVsl4UTGlaskobFo
-      const apiKey = "";
+      const apiKey = "AIzaSyAekXSq_b4GaHneUKEBVsl4UTGlaskobFo";
       const origin = `${riderLocation.latitude},${riderLocation.longitude}`;
       const destination = `${customerLocation.latitude},${customerLocation.longitude}`;
       const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${apiKey}`;
@@ -51,12 +45,11 @@ const BookedMap = ({ navigation }) => {
         const decodedPoints = decodePolyline(points);
         setRouteCoordinates(decodedPoints);
 
-        // Get total distance from the first route's legs
         const totalDistanceMeters = result.routes[0].legs.reduce(
           (sum, leg) => sum + leg.distance.value,
           0
         );
-        const totalDistanceKm = (totalDistanceMeters / 1000).toFixed(2); // Convert to kilometers
+        const totalDistanceKm = (totalDistanceMeters / 1000).toFixed(2);
         setTotalDistanceRide(totalDistanceKm);
       }
     } catch (error) {
@@ -124,11 +117,18 @@ const BookedMap = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <MapView style={styles.map} region={riderLocation}>
-        <Marker coordinate={riderLocation} title="Rider Marker" />
+      <MapView 
+        style={styles.map} 
+        region={{
+          ...customerLocation,
+          latitudeDelta: Math.max(0.05, Math.abs(customerLocation.latitude - riderLocation.latitude) * 2),
+          longitudeDelta: Math.max(0.05, Math.abs(customerLocation.longitude - riderLocation.longitude) * 2),
+        }}
+      >
+        <Marker coordinate={riderLocation} title="Rider Location" />
         <Marker
           coordinate={customerLocation}
-          title="Customer Marker"
+          title="Customer Location"
           pinColor="blue"
         />
         <Polyline
@@ -138,14 +138,12 @@ const BookedMap = ({ navigation }) => {
         />
       </MapView>
 
-      {totalDistanceRide && (
-        <View style={styles.distanceContainer}>
-          <Text style={styles.distanceText}>
-            Total Distance: {totalDistanceRide} km
-          </Text>
-          <Text style={styles.totalFare}>Total Fare: ₱{totalFare}</Text>
-        </View>
-      )}
+      <View style={styles.distanceContainer}>
+        <Text style={styles.distanceText}>
+          Total Distance: {totalDistanceRide} km
+        </Text>
+        <Text style={styles.totalFare}>Total Fare: ₱{totalFare}</Text>
+      </View>
       <View style={styles.nextButtonContainer}>
         <Button
           style={styles.nextButtonStyle}
