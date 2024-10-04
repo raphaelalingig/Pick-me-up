@@ -60,7 +60,7 @@ const NearbyCustomerScreen = ({ navigation }) => {
       }
     >
       <ImageBackground
-        source={{ uri: "https://your-map-image-url.com" }}
+        source={require("../../pictures/13.png")} 
         style={styles.background}
       >
         {showSpinner && (
@@ -104,6 +104,8 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
     resizeMode: "cover",
+    opacity: 0.8,
+    backgroundColor: "#FFD700",
   },
   container: {
     margin: 10,
@@ -171,7 +173,7 @@ const styles = StyleSheet.create({
   noRidesText: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#FFD700", // Yellow text
+    color: "#000000", // Yellow text
   },
 });
 

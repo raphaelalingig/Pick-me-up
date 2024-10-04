@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { View, ScrollView, StyleSheet, Image, ToastAndroid, TouchableOpacity } from "react-native";
+import { View, ScrollView, StyleSheet, Image, ToastAndroid, TouchableOpacity, ImageBackground } from "react-native";
 import { TextInput, Button, Card, Title, Divider } from "react-native-paper";
 import * as ImagePicker from "expo-image-picker";
 import userService from "../../services/auth&services";
@@ -185,9 +185,15 @@ const GetVerified = () => {
   }, []);
 
   return (
+    <ImageBackground
+    source={require("../../pictures/13.png")} // Replace with your map image URL or local asset
+    style={styles.background}
+    >
     <ScrollView contentContainerStyle={styles.container}>
       <Card style={styles.card}>
         <Title style={styles.title}>Verify Your Account</Title>
+        
+
 
         {/* Section: License Details */}
         <Title style={styles.sectionTitle}>License Details</Title>
@@ -275,8 +281,10 @@ const GetVerified = () => {
             Confirm
           </Button>
         </View>
+        
       </Card>
     </ScrollView>
+    </ImageBackground>
   );
 };
 
@@ -291,11 +299,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFC533",
   },
   title: {
+    fontWeight: "bold",
     fontSize: 24,
     marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 18,
+    fontWeight: "bold",
     marginTop: 20,
     marginBottom: 10,
   },
@@ -329,7 +339,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   cancelButton: {
-    backgroundColor: "gray",
+    backgroundColor: "#b22222",
   },
   confirmButton: {
     backgroundColor: "green",
@@ -350,13 +360,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
     padding: 10,
-    borderWidth: 1,
-    borderColor: 'black',
-    borderRadius: 5,
   },
   uploadButton: {
-    width: 100,
-    height: 100,
+    width: 150,
+    height: 150,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'white',

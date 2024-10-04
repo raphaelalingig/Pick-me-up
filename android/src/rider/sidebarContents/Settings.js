@@ -99,8 +99,8 @@ const Settings = ({ navigation }) => {
 
   return (
     <ImageBackground
-      source={{ uri: "https://your-map-image-url.com" }}
-      style={styles.background}
+    source={require("../../pictures/3.png")} // Replace with your map image URL or local asset
+    style={styles.background}
     >
       <View style={styles.container}>
         <Image
@@ -222,12 +222,13 @@ const styles = StyleSheet.create({
     color: "#555", // Darker gray for better readability
   },
   input: {
-    width: "100%",
+    width: 200,
     padding: 10,
     borderColor: "#ccc",
     borderWidth: 1,
     borderRadius: 5,
     marginBottom: 20,
+    
   },
   saveButton: {
     backgroundColor: "#008000",
