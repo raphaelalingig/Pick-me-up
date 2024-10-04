@@ -7,36 +7,39 @@ import { RiderContext } from "../../context/riderContext";
 
 const TrackingDestination = ({ route, navigation }) => {
   const { ride } = route.params;
-  const { riderCoords, totalDistanceRide, setTotalDistanceRide } = useContext(RiderContext);
+  const { setTotalDistanceRide } = useContext(RiderContext);
   const [isLoading, setIsLoading] = useState(false);
+  const [customerLocation, setCustomerLocation] = useState({
+    latitude: parseFloat(ride.ridelocations.customer_latitude),
+    longitude: parseFloat(ride.ridelocations.customer_longitude),
+  });
   const [destinationLocation, setDestinationLocation] = useState({
-    latitude: ride.destination_latitude || 8.48488061840282,
-    longitude: ride.destination_longitude || 124.65672484721037, 
+    latitude: parseFloat(ride.ridelocations.dropoff_latitude),
+    longitude: parseFloat(ride.ridelocations.dropoff_longitude),
   });
   const [routeCoordinates, setRouteCoordinates] = useState([]);
-  const [totalFare, setTotalFare] = useState(0);
+  const [totalFare, setTotalFare] = useState(parseFloat(ride.fare));
   const [mapRegion, setMapRegion] = useState(null);
+  const [totalDistanceRide, setLocalTotalDistanceRide] = useState(0);
 
   useEffect(() => {
-    if (riderCoords.latitude && riderCoords.longitude) {
-      fetchDirections();
-      calculateMapRegion();
-    }
-  }, [riderCoords, destinationLocation]);
+    fetchDirections();
+    calculateMapRegion();
+  }, [customerLocation, destinationLocation]);
 
   useEffect(() => {
     if (totalDistanceRide) {
-      calculateFare(totalDistanceRide);
+      setTotalDistanceRide(totalDistanceRide);
     }
   }, [totalDistanceRide]);
 
   const calculateMapRegion = () => {
-    const minLat = Math.min(riderCoords.latitude, destinationLocation.latitude);
-    const maxLat = Math.max(riderCoords.latitude, destinationLocation.latitude);
-    const minLng = Math.min(riderCoords.longitude, destinationLocation.longitude);
-    const maxLng = Math.max(riderCoords.longitude, destinationLocation.longitude);
+    const minLat = Math.min(customerLocation.latitude, destinationLocation.latitude);
+    const maxLat = Math.max(customerLocation.latitude, destinationLocation.latitude);
+    const minLng = Math.min(customerLocation.longitude, destinationLocation.longitude);
+    const maxLng = Math.max(customerLocation.longitude, destinationLocation.longitude);
 
-    const latDelta = (maxLat - minLat) * 1.5; // Add some padding
+    const latDelta = (maxLat - minLat) * 1.5;
     const lngDelta = (maxLng - minLng) * 1.5;
 
     setMapRegion({
@@ -49,9 +52,8 @@ const TrackingDestination = ({ route, navigation }) => {
 
   const fetchDirections = async () => {
     try {
-      // AIzaSyAekXSq_b4GaHneUKEBVsl4UTGlaskobFo
-      const apiKey = "";
-      const origin = `${riderCoords.latitude},${riderCoords.longitude}`;
+      const apiKey = "AIzaSyAekXSq_b4GaHneUKEBVsl4UTGlaskobFo";
+      const origin = `${customerLocation.latitude},${customerLocation.longitude}`;
       const destination = `${destinationLocation.latitude},${destinationLocation.longitude}`;
       const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${apiKey}`;
 
@@ -68,27 +70,11 @@ const TrackingDestination = ({ route, navigation }) => {
           0
         );
         const totalDistanceKm = (totalDistanceMeters / 1000).toFixed(2);
-        setTotalDistanceRide(totalDistanceKm);
+        setLocalTotalDistanceRide(totalDistanceKm);
       }
     } catch (error) {
       console.error("Error fetching directions:", error);
     }
-  };
-
-  const calculateFare = (distance) => {
-    const baseFare = 40;
-    const additionalFareRate = 10;
-    const thresholdKm = 2;
-
-    let fare;
-    if (distance <= thresholdKm) {
-      fare = baseFare;
-    } else {
-      const exceedingDistance = distance - thresholdKm;
-      fare = baseFare + exceedingDistance * additionalFareRate;
-    }
-
-    setTotalFare(fare.toFixed(2));
   };
 
   const completeRide = async () => {
@@ -164,7 +150,7 @@ const TrackingDestination = ({ route, navigation }) => {
           style={styles.map} 
           region={mapRegion}
           onMapReady={calculateMapRegion}>
-          <Marker coordinate={riderCoords} title="Rider Location" />
+          <Marker coordinate={customerLocation} title="Customer Location" />
           <Marker coordinate={destinationLocation} title="Destination" pinColor="green" />
           <Polyline coordinates={routeCoordinates} strokeColor="#FF0000" strokeWidth={3} />
         </MapView>

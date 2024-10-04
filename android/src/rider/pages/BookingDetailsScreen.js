@@ -14,8 +14,6 @@ const BookingDetailsScreen = ({ route, navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [userId, setUserId] = useState(null);
 
-  
-
   useEffect(() => {
     const fetchUserId = async () => {
       try {
@@ -45,7 +43,8 @@ const BookingDetailsScreen = ({ route, navigation }) => {
       console.log("Accept ride response:", response.data);
       if (response.data && response.data.message) {
         Alert.alert("Success", response.data.message);
-        navigation.navigate("Home", { ride });
+        // const response = await userService.set_riderLocation(ride.ride_id);
+        navigation.navigate("Home");
       } else {
         Alert.alert("Error", "Failed to accept the ride. Please try again.");
       }
@@ -60,6 +59,11 @@ const BookingDetailsScreen = ({ route, navigation }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleViewLocation = () => {
+    console.log("Navigating to Booked Location with ride data:", ride);
+    navigation.navigate("Booked Location", { ride });
   };
 
   return (
@@ -78,6 +82,7 @@ const BookingDetailsScreen = ({ route, navigation }) => {
         <View style={styles.inputContainer}>
           <Text style={styles.conntext}>Service:</Text>
           <Text>{ride.ride_type}</Text>
+          <Text>{ride.ride_id}</Text>
           <Text style={styles.conntext}>Drop off:</Text>
           <Text>{ride.dropoff_location}</Text>
         </View>
@@ -87,7 +92,7 @@ const BookingDetailsScreen = ({ route, navigation }) => {
         </View>
         <TouchableOpacity
           style={styles.viewLocationButton}
-          onPress={() => navigation.navigate("Booked Location", { ride })}
+          onPress={handleViewLocation}
         >
           <Text style={styles.viewLocationButtonText}>View Location</Text>
         </TouchableOpacity>

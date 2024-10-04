@@ -10,10 +10,7 @@ const TrackingCustomer = ({ route, navigation }) => {
   const { ride } = route.params;
   const [isLoading, setIsLoading] = useState(true);
   const [riderLocation, setRiderLocation] = useState(null);
-  const [customerLocation, setCustomerLocation] = useState({
-    latitude: 8.4955,
-    longitude: 124.5999,
-  });
+  const [customerLocation, setCustomerLocation] = useState(null);
   const [routeCoordinates, setRouteCoordinates] = useState([]);
   const [totalFare, setTotalFare] = useState(0);
   const [mapRegion, setMapRegion] = useState(null);
@@ -35,6 +32,14 @@ const TrackingCustomer = ({ route, navigation }) => {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         });
+
+        // Set customer location from ride data
+        if (ride.ridelocations) {
+          setCustomerLocation({
+            latitude: parseFloat(ride.ridelocations.customer_latitude),
+            longitude: parseFloat(ride.ridelocations.customer_longitude),
+          });
+        }
 
         locationSubscription = await Location.watchPositionAsync(
           {
@@ -62,7 +67,7 @@ const TrackingCustomer = ({ route, navigation }) => {
         locationSubscription.remove();
       }
     };
-  }, []);
+  }, [ride]);
 
   useEffect(() => {
     if (riderLocation && customerLocation) {
@@ -78,7 +83,7 @@ const TrackingCustomer = ({ route, navigation }) => {
   }, [totalDistanceRide]);
 
   const calculateMapRegion = () => {
-    if (!riderLocation) return;
+    if (!riderLocation || !customerLocation) return;
 
     const minLat = Math.min(riderLocation.latitude, customerLocation.latitude);
     const maxLat = Math.max(riderLocation.latitude, customerLocation.latitude);
@@ -96,9 +101,10 @@ const TrackingCustomer = ({ route, navigation }) => {
     });
   };
 
+
   const fetchDirections = async () => {
     try {
-      const apiKey = "YOUR_GOOGLE_MAPS_API_KEY";
+      const apiKey = "AIzaSyAekXSq_b4GaHneUKEBVsl4UTGlaskobFo";
       const origin = `${riderLocation.latitude},${riderLocation.longitude}`;
       const destination = `${customerLocation.latitude},${customerLocation.longitude}`;
       const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${apiKey}`;
