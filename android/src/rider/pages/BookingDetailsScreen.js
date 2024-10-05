@@ -7,10 +7,12 @@ import {
   ImageBackground,
   Alert,
 } from "react-native";
+import * as Location from "expo-location";
 import userService from "../../services/auth&services"; 
 
 const BookingDetailsScreen = ({ route, navigation }) => {
   const { ride } = route.params;
+  const [riderLocation, setRiderLocation] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [userId, setUserId] = useState(null);
 
@@ -30,32 +32,62 @@ const BookingDetailsScreen = ({ route, navigation }) => {
   }, []);
    
 
+  const getCurrentLocation = async () => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      throw new Error("Permission to access location was denied");
+    }
+  
+    try {
+      let location = await Location.getCurrentPositionAsync({});
+      const newRideLocation = `${location.coords.latitude}, ${location.coords.longitude}`;
+      setRiderLocation(newRideLocation);
+  
+      const [riderLat, riderLng] = newRideLocation.split(',');
+  
+      const riderLocationDetails = {
+        ride_id: ride.ride_id,
+        rider_latitude: parseFloat(riderLat),
+        rider_longitude: parseFloat(riderLng),
+      };
+  
+      const response = await userService.saveRiderLocation(riderLocationDetails);
+      console.log("Rider location saved successfully:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Failed to get or save rider location:", error);
+      throw error; // Re-throw the error to be caught in handleAccept
+    }
+  };
+  
   const handleAccept = async (ride) => {
     if (!userId) {
       Alert.alert("Error", "User ID is not available.");
       return;
     }
-
+  
     console.log("Attempting to accept ride with ID:", ride.ride_id);
     setIsLoading(true);
     try {
-      const response = await userService.accept_ride(ride.ride_id); // Pass user_id with ride_id
+      await getCurrentLocation();
+      const response = await userService.accept_ride(ride.ride_id);
       console.log("Accept ride response:", response.data);
       if (response.data && response.data.message) {
         Alert.alert("Success", response.data.message);
-        // const response = await userService.set_riderLocation(ride.ride_id);
         navigation.navigate("Home");
       } else {
         Alert.alert("Error", "Failed to accept the ride. Please try again.");
       }
     } catch (error) {
       console.error("Failed to Accept Ride", error.response ? error.response.data : error.message);
-      if (error.response && error.response.status === 400) {
+      if (error.response && error.response.status === 404) {
+        Alert.alert("Error", "Ride or ride location not found. Please try again.");
+      } else if (error.response && error.response.status === 400) {
         Alert.alert("Error", error.response.data.error || "This ride is no longer available.");
-        navigation.goBack(); // Go back to the previous screen
       } else {
-        Alert.alert("Error", "An error occurred. Please try again.");
+        Alert.alert("Error", "An error occurred while getting location or accepting the ride. Please try again.");
       }
+      navigation.goBack();
     } finally {
       setIsLoading(false);
     }

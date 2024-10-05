@@ -175,7 +175,7 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
     try {
       const response = await userService.book(bookDetails);
       console.log("Booked Successfully:", response.data);
-      await userService.saveRideLocation(rideLocationDetails);
+      await userService.saveBookLocation(rideLocationDetails);
       navigation.navigate("WaitingForRider", { bookDetails });
     } catch (error) {
       console.error("Failed to add ride history or save ride location:", error);
