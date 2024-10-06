@@ -10,8 +10,9 @@ import {
   RefreshControl,
 } from "react-native";
 import { Button } from "react-native-paper";
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';  // Importing icons
-import userService from '../../services/auth&services';
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"; // Importing icons
+import userService from "../../services/auth&services";
+import { BlurView } from "expo-blur";
 
 const WaitingRider = ({ navigation }) => {
   const [bookDetails, setBookDetails] = useState(null);
@@ -45,7 +46,7 @@ const WaitingRider = ({ navigation }) => {
     try {
       const response = await userService.cancel_ride(bookDetails.ride_id);
       console.log("Cancel ride response:", response.data);
-  
+
       if (response.data && response.data.message) {
         Alert.alert("Success", response.data.message);
         navigation.navigate("Home");
@@ -53,9 +54,15 @@ const WaitingRider = ({ navigation }) => {
         Alert.alert("Error", "Failed to cancel the ride. Please try again.");
       }
     } catch (error) {
-      console.error("Failed to Cancel Ride", error.response ? error.response.data : error.message);
+      console.error(
+        "Failed to Cancel Ride",
+        error.response ? error.response.data : error.message
+      );
       if (error.response && error.response.status === 400) {
-        Alert.alert("Error", error.response.data.error || "This ride is no longer available.");
+        Alert.alert(
+          "Error",
+          error.response.data.error || "This ride is no longer available."
+        );
         navigation.goBack();
       } else {
         Alert.alert("Error", "An error occurred. Please try again.");
@@ -96,29 +103,40 @@ const WaitingRider = ({ navigation }) => {
 
         {/* Book Details Section */}
         <View style={styles.container}>
-          <View style={styles.bookDetailsContainer}>
-
+          <BlurView
+            intensity={800}
+            tint="light"
+            style={styles.bookDetailsContainer}
+          >
             <View style={styles.messageContainer}>
-              <Text style={styles.successMessage}>Ride Successfully Booked</Text>
+              <Text style={styles.successMessage}>
+                Ride Successfully Booked
+              </Text>
               <Text style={styles.statusMessage}>Looking for Rider...</Text>
             </View>
 
             <View style={styles.messageContainerBook}>
               <Text style={styles.subTitle}>Book Details</Text>
-              <Text style={styles.detailText}>Type: {bookDetails.ride_type}</Text>
-              <Text style={styles.detailText}>Pick Up: {bookDetails.pickup_location}</Text>
-              <Text style={styles.detailText}>Drop Off: {bookDetails.dropoff_location}</Text>
+              <Text style={styles.detailText}>
+                Type: {bookDetails.ride_type}
+              </Text>
+              <Text style={styles.detailText}>
+                Pick Up: {bookDetails.pickup_location}
+              </Text>
+              <Text style={styles.detailText}>
+                Drop Off: {bookDetails.dropoff_location}
+              </Text>
             </View>
 
             <View style={styles.messageContainerFare}>
-              <Text style={styles.subTitle}>Fare:     ₱{bookDetails.fare}</Text>
+              <Text style={styles.subTitle}>Fare: ₱{bookDetails.fare}</Text>
             </View>
             <TouchableOpacity onPress={handleCancel}>
               <Button mode="contained" style={styles.cancelButton}>
                 Cancel Ride
               </Button>
             </TouchableOpacity>
-          </View>
+          </BlurView>
         </View>
       </ImageBackground>
     </ScrollView>
@@ -142,8 +160,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     borderRadius: 8,
     alignItems: "center",
-    flexDirection: "row",  // To align icon and text horizontally
-    justifyContent: "center",  // Center the icon and text together
+    flexDirection: "row", // To align icon and text horizontally
+    justifyContent: "center", // Center the icon and text together
     elevation: 3, // Adding slight elevation
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -152,7 +170,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "600",
     color: "#333",
-    marginLeft: 10,  // Add spacing between icon and text
+    marginLeft: 10, // Add spacing between icon and text
   },
   container: {
     flex: 1,
@@ -160,13 +178,10 @@ const styles = StyleSheet.create({
   },
   //yellow background and elevation
   bookDetailsContainer: {
-    backgroundColor: "#FFD700",
+    backgroundColor: "rgba(255,215,0,0.5)", // For the semi-transparent background
+    borderColor: "rgba(255,255,255,0.25)",
     borderRadius: 10,
     padding: 20,
-    elevation: 5,  // Elevation to give depth
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
   },
   loadingContainer: {
     flex: 1,
@@ -184,7 +199,7 @@ const styles = StyleSheet.create({
 
   messageContainerBook: {
     padding: 20,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     alignItems: "flex-start",
     borderRadius: 8,
     marginBottom: 15,
@@ -195,7 +210,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     borderRadius: 8,
     backgroundColor: "#f5f5dc",
-    alignItems: "center", 
+    alignItems: "center",
   },
 
   successMessage: {
@@ -206,7 +221,7 @@ const styles = StyleSheet.create({
   },
   statusMessage: {
     fontSize: 14,
-    color: "#888",
+    color: "black",
     marginBottom: 20,
   },
   subTitle: {

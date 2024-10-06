@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useContext } from "react";
-import { StyleSheet, TouchableOpacity, View, Alert } from "react-native";
+import { StyleSheet, TouchableOpacity, View, Alert, Image } from "react-native";
 import { Text } from "react-native-paper";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import userService from "../../services/auth&services";
 import { RiderContext } from "../../context/riderContext";
+
+import riderWithUser from "../../../assets/riderWithCustomer.png";
+import flagDestination from "../../../assets/flagDestination.png";
 
 const TrackingDestination = ({ route, navigation }) => {
   const { ride } = route.params;
@@ -34,10 +37,22 @@ const TrackingDestination = ({ route, navigation }) => {
   }, [totalDistanceRide]);
 
   const calculateMapRegion = () => {
-    const minLat = Math.min(customerLocation.latitude, destinationLocation.latitude);
-    const maxLat = Math.max(customerLocation.latitude, destinationLocation.latitude);
-    const minLng = Math.min(customerLocation.longitude, destinationLocation.longitude);
-    const maxLng = Math.max(customerLocation.longitude, destinationLocation.longitude);
+    const minLat = Math.min(
+      customerLocation.latitude,
+      destinationLocation.latitude
+    );
+    const maxLat = Math.max(
+      customerLocation.latitude,
+      destinationLocation.latitude
+    );
+    const minLng = Math.min(
+      customerLocation.longitude,
+      destinationLocation.longitude
+    );
+    const maxLng = Math.max(
+      customerLocation.longitude,
+      destinationLocation.longitude
+    );
 
     const latDelta = (maxLat - minLat) * 1.5;
     const lngDelta = (maxLng - minLng) * 1.5;
@@ -88,7 +103,10 @@ const TrackingDestination = ({ route, navigation }) => {
         Alert.alert("Error", "Failed to finish the ride. Please try again.");
       }
     } catch (error) {
-      console.error("Failed to finish ride", error.response ? error.response.data : error.message);
+      console.error(
+        "Failed to finish ride",
+        error.response ? error.response.data : error.message
+      );
       Alert.alert("Error", "An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -146,13 +164,32 @@ const TrackingDestination = ({ route, navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.mapContainer}>
-        <MapView 
-          style={styles.map} 
+        <MapView
+          style={styles.map}
           region={mapRegion}
-          onMapReady={calculateMapRegion}>
-          <Marker coordinate={customerLocation} title="Customer Location" />
-          <Marker coordinate={destinationLocation} title="Destination" pinColor="green" />
-          <Polyline coordinates={routeCoordinates} strokeColor="#FF0000" strokeWidth={3} />
+          onMapReady={calculateMapRegion}
+        >
+          <Marker coordinate={customerLocation} title="Customer Location">
+            <Image
+              source={riderWithUser}
+              style={styles.riderWithUserIconStyle}
+            />
+          </Marker>
+          <Marker
+            coordinate={destinationLocation}
+            title="Destination"
+            pinColor="green"
+          >
+            <Image
+              source={flagDestination}
+              style={styles.flagDestinationIconStyle}
+            />
+          </Marker>
+          <Polyline
+            coordinates={routeCoordinates}
+            strokeColor="#FF0000"
+            strokeWidth={3}
+          />
         </MapView>
       </View>
 
@@ -189,8 +226,8 @@ const styles = StyleSheet.create({
     flex: 3, // Takes up 3/4 of the screen
   },
   map: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   contentContainer: {
     flex: 1, // Takes up 1/4 of the screen
@@ -198,18 +235,18 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
   headerText: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "#000",
+    textAlign: "center",
     marginBottom: 20,
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   button: {
     flex: 1,
@@ -224,23 +261,33 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "#FFF",
     fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   infoContainer: {
     justifyContent: "center",
-    backgroundColor: 'white',
+    backgroundColor: "white",
     padding: 5,
     borderRadius: 8,
   },
   infoText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
+  },
+  flagDestinationIconStyle: {
+    width: 40,
+    height: 40,
+    resizeMode: "contain",
+  },
+  riderWithUserIconStyle: {
+    width: 40,
+    height: 40,
+    resizeMode: "contain",
   },
 });
 

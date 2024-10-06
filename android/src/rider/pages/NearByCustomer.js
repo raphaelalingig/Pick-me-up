@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     paddingLeft: 15,
   },
   detailsButton: {
-    backgroundColor: "#000",
+    backgroundColor: "#000000",
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 5,
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   detailsButtonText: {
-    color: "#FFD700", // Updated to yellow
+    color: "white", 
     fontSize: 14,
     fontWeight: "bold",
   },

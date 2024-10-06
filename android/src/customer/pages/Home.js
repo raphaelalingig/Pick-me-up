@@ -12,7 +12,8 @@ import { Text, Button } from "react-native-paper";
 import { CustomerContext } from "../../context/customerContext";
 import * as Location from "expo-location";
 import userService from "../../services/auth&services";
-import { MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons'; // For icons
+import { MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons"; // For icons
+import { BlurView } from "expo-blur";
 
 const BookNow = ({ setCurrentForm, navigation, checkRideAndLocation }) => {
   const [loading, setLoading] = useState(false);
@@ -21,11 +22,11 @@ const BookNow = ({ setCurrentForm, navigation, checkRideAndLocation }) => {
     setLoading(true);
     try {
       const user_status = await userService.getUserStatus();
-      if (user_status === 'Disabled') {
+      if (user_status === "Disabled") {
         alert("Your Account has been Disabled, Contact Admin for more Info.");
         return "Can not Book";
       }
-      
+
       const result = await checkRideAndLocation();
       if (result === "proceed") {
         setCurrentForm("ChooseServiceScreen");
@@ -40,42 +41,45 @@ const BookNow = ({ setCurrentForm, navigation, checkRideAndLocation }) => {
 
   return (
     <ImageBackground
-    source={require("../../pictures/2.png")} // Replace with your map image URL or local asset
-    style={styles.background}
+      source={require("../../pictures/2.png")} // Replace with your map image URL or local asset
+      style={styles.background}
     >
-    <View style={styles.contentContainer}>
-      <View style={styles.titleContainer}>
-        <Text variant="titleLarge" style={styles.titleText}>
-          PICKME UP
-        </Text>
-        <Text
-          variant="titleSmall"
-          style={{ color: "#FBC635", textAlign: "center" }}
-        >
-          Pick you up wherever you are.
-        </Text>
-      </View>
-
-      <TouchableOpacity onPress={handleBookNow} disabled={loading}>
-        <View style={{ padding: 15, backgroundColor: "black", borderRadius: 10 }}>
-          <Text variant="titleMedium" style={styles.titleText}>
-            {loading ? "Checking..." : "Book Now"}
+      <View style={styles.contentContainer}>
+        <View style={styles.titleContainer}>
+          <Text variant="titleLarge" style={styles.titleText}>
+            PICKME UP
+          </Text>
+          <Text
+            variant="titleSmall"
+            style={{ color: "#FBC635", textAlign: "center" }}
+          >
+            Pick you up wherever you are.
           </Text>
         </View>
-      </TouchableOpacity>
-      <View>
-        <Button>
-          <Text
-            style={{ textDecorationLine: "underline" }}
-            onPress={() => navigation.navigate("Location")}
+
+        <TouchableOpacity onPress={handleBookNow} disabled={loading}>
+          <View
+            style={{ padding: 15, backgroundColor: "black", borderRadius: 10 }}
           >
-            View Location
-          </Text>
-        </Button>
+            <Text variant="titleMedium" style={styles.titleText}>
+              {loading ? "Checking..." : "Book Now"}
+            </Text>
+          </View>
+        </TouchableOpacity>
+        <View>
+          <Button>
+            <Text
+              style={{ textDecorationLine: "underline" }}
+              onPress={() => navigation.navigate("Location")}
+            >
+              View Location
+            </Text>
+          </Button>
+        </View>
       </View>
-    </View>
     </ImageBackground>
-  );};
+  );
+};
 
 const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
   const [selectedService, setSelectedService] = useState(null);
@@ -95,11 +99,12 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
       source={require("../../pictures/3.png")} // Replace with your map image URL or local asset
       style={styles.background}
     >
-      <View style={styles.container}>
-        <Text style={styles.title}>CHOOSE RIDER SERVICES</Text>
+      <BlurView intensity={800} tint="light" style={styles.container}>
+        <Text style={{ color: "black", fontSize: 18, fontWeight: "bold" }}>
+          CHOOSE RIDER SERVICES
+        </Text>
         <View style={styles.buttonContainer}>
-
-        <TouchableOpacity
+          <TouchableOpacity
             style={[
               styles.serviceButton,
               selectedService === "Motor Taxi" && styles.selectedButton,
@@ -119,7 +124,7 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
               Bring you where ever you want
             </Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={[
               styles.serviceButton,
@@ -161,7 +166,6 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
               Ride with friend & family
             </Text>
           </TouchableOpacity>
-
         </View>
         <View style={styles.actionContainer}>
           <TouchableOpacity
@@ -174,7 +178,7 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
             <Text style={styles.bookButtonText}>BOOK</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </BlurView>
     </ImageBackground>
   );
 };
@@ -190,23 +194,23 @@ const MainComponent = ({ navigation }) => {
   const checkRideAndLocation = useCallback(async () => {
     try {
       // Check for existing booking or ride
-      
+
       const response = await userService.checkActiveBook();
       const ride = response.rideDetails;
       if (response && response.hasActiveRide) {
         const { status } = response.rideDetails;
         switch (status) {
-          case 'Available':
-            navigation.navigate("WaitingForRider", {ride});
+          case "Available":
+            navigation.navigate("WaitingForRider", { ride });
             return "existing_booking";
-          case 'Booked':
-            navigation.navigate("Tracking Rider", {ride});
+          case "Booked":
+            navigation.navigate("Tracking Rider", { ride });
             return "existing_ride";
-          case 'In Transit':
-            navigation.navigate("In Transit", {ride});
+          case "In Transit":
+            navigation.navigate("In Transit", { ride });
             return "in_transit";
-          case 'Review':
-            navigation.navigate("To Review", {ride});
+          case "Review":
+            navigation.navigate("To Review", { ride });
             return "review";
         }
       }
@@ -274,9 +278,9 @@ const MainComponent = ({ navigation }) => {
     >
       <View style={{ flex: 1 }}>
         {currentForm === "BookNow" ? (
-          <BookNow 
-            setCurrentForm={setCurrentForm} 
-            navigation={navigation} 
+          <BookNow
+            setCurrentForm={setCurrentForm}
+            navigation={navigation}
             checkRideAndLocation={checkRideAndLocation}
           />
         ) : (
@@ -312,20 +316,17 @@ const styles = StyleSheet.create({
     justifyContent: "space-evenly",
   },
   container: {
-    backgroundColor: "#FFD700",
+    backgroundColor: "rgba(255,215,0,0.5)", // For the semi-transparent background
+    borderColor: "rgba(255,255,255,0.25)",
     margin: 20,
     borderRadius: 10,
     padding: 20,
     alignItems: "center",
-    elevation: 5,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
   },
   buttonContainer: {
     justifyContent: "space-around",
     marginBottom: 20,
-    width: '100%', // Width set to 100%
+    width: "100%", // Width set to 100%
   },
   serviceButton: {
     flexDirection: "row",
@@ -337,7 +338,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     borderWidth: 1,
     borderColor: "transparent",
-    width: '100%', // Width set to 100%
+    width: "100%", // Width set to 100%
   },
   serviceButtonText: {
     fontWeight: "bold",
@@ -346,7 +347,7 @@ const styles = StyleSheet.create({
   serviceDescription: {
     marginLeft: 15,
     color: "#555",
-    flexShrink: 1
+    flexShrink: 1,
   },
   selectedButton: {
     borderColor: "black",
@@ -377,6 +378,5 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
-
 
 export default MainComponent;

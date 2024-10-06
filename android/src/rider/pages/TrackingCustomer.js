@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, TouchableOpacity, View, Alert, Dimensions } from "react-native";
-import { MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import {
+  StyleSheet,
+  TouchableOpacity,
+  View,
+  Alert,
+  Dimensions,
+  Image,
+} from "react-native";
+import { MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 import { Text } from "react-native-paper";
 import MapView, { Marker, Polyline } from "react-native-maps";
-import * as Location from 'expo-location';
+import * as Location from "expo-location";
 import userService from "../../services/auth&services";
+import riderMarker from "../../../assets/rider.png";
+import customerMarker from "../../../assets/customer.png";
 
 const TrackingCustomer = ({ route, navigation }) => {
   const { ride } = route.params;
@@ -22,8 +31,8 @@ const TrackingCustomer = ({ route, navigation }) => {
     const setupLocation = async () => {
       try {
         let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert('Permission to access location was denied');
+        if (status !== "granted") {
+          Alert.alert("Permission to access location was denied");
           return;
         }
 
@@ -87,8 +96,14 @@ const TrackingCustomer = ({ route, navigation }) => {
 
     const minLat = Math.min(riderLocation.latitude, customerLocation.latitude);
     const maxLat = Math.max(riderLocation.latitude, customerLocation.latitude);
-    const minLng = Math.min(riderLocation.longitude, customerLocation.longitude);
-    const maxLng = Math.max(riderLocation.longitude, customerLocation.longitude);
+    const minLng = Math.min(
+      riderLocation.longitude,
+      customerLocation.longitude
+    );
+    const maxLng = Math.max(
+      riderLocation.longitude,
+      customerLocation.longitude
+    );
 
     const latDelta = (maxLat - minLat) * 1.5;
     const lngDelta = (maxLng - minLng) * 1.5;
@@ -100,7 +115,6 @@ const TrackingCustomer = ({ route, navigation }) => {
       longitudeDelta: Math.max(lngDelta, 0.02),
     });
   };
-
 
   const fetchDirections = async () => {
     try {
@@ -128,7 +142,6 @@ const TrackingCustomer = ({ route, navigation }) => {
       console.error("Error fetching directions:", error);
     }
   };
-
 
   const calculateFare = (distance) => {
     const baseFare = 40;
@@ -185,7 +198,6 @@ const TrackingCustomer = ({ route, navigation }) => {
     }
     return poly;
   };
-  
 
   const startRide = async () => {
     setIsLoading(true);
@@ -198,7 +210,10 @@ const TrackingCustomer = ({ route, navigation }) => {
         Alert.alert("Error", "Failed to start the ride. Please try again.");
       }
     } catch (error) {
-      console.error("Failed to start ride", error.response ? error.response.data : error.message);
+      console.error(
+        "Failed to start ride",
+        error.response ? error.response.data : error.message
+      );
       Alert.alert("Error", "An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -216,7 +231,10 @@ const TrackingCustomer = ({ route, navigation }) => {
         Alert.alert("Error", "Failed to cancel the ride. Please try again.");
       }
     } catch (error) {
-      console.error("Failed to Cancel Ride", error.response ? error.response.data : error.message);
+      console.error(
+        "Failed to Cancel Ride",
+        error.response ? error.response.data : error.message
+      );
       Alert.alert("Error", "An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -234,14 +252,28 @@ const TrackingCustomer = ({ route, navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.mapContainer}>
-        <MapView 
-          style={styles.map} 
+        <MapView
+          style={styles.map}
           region={mapRegion}
           onMapReady={calculateMapRegion}
         >
-          {riderLocation && <Marker coordinate={riderLocation} title="Rider Location" />}
-          <Marker coordinate={customerLocation} title="Customer Location" pinColor="blue" />
-          <Polyline coordinates={routeCoordinates} strokeColor="#FF0000" strokeWidth={3} />
+          {riderLocation && (
+            <Marker coordinate={riderLocation} title="Rider Location">
+              <Image source={riderMarker} style={styles.riderIconStyle} />
+            </Marker>
+          )}
+          <Marker
+            coordinate={customerLocation}
+            title="Customer Location"
+            pinColor="blue"
+          >
+            <Image source={customerMarker} style={styles.customerIconStyle} />
+          </Marker>
+          <Polyline
+            coordinates={routeCoordinates}
+            strokeColor="#FF0000"
+            strokeWidth={3}
+          />
         </MapView>
       </View>
 
@@ -255,11 +287,17 @@ const TrackingCustomer = ({ route, navigation }) => {
           <Text style={styles.subTitle}>Customer Details</Text>
           <View style={styles.detailRow}>
             <MaterialCommunityIcons name="account" size={24} color="black" />
-            <Text style={styles.detailText}>{ride.user ? `${ride.user.first_name} ${ride.user.last_name}` : 'N/A'}</Text>
+            <Text style={styles.detailText}>
+              {ride.user
+                ? `${ride.user.first_name} ${ride.user.last_name}`
+                : "N/A"}
+            </Text>
           </View>
           <View style={styles.detailRow}>
             <MaterialCommunityIcons name="phone" size={24} color="black" />
-            <Text style={styles.detailText}>{ride.user ? ride.user.mobile_number : 'N/A'}</Text>
+            <Text style={styles.detailText}>
+              {ride.user ? ride.user.mobile_number : "N/A"}
+            </Text>
           </View>
         </View>
 
@@ -270,7 +308,10 @@ const TrackingCustomer = ({ route, navigation }) => {
           <TouchableOpacity style={styles.button} onPress={startRide}>
             <Text style={styles.buttonText}>Start Ride</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={handleCancel}>
+          <TouchableOpacity
+            style={[styles.button, styles.cancelButton]}
+            onPress={handleCancel}
+          >
             <Text style={styles.buttonText}>Cancel</Text>
           </TouchableOpacity>
         </View>
@@ -287,8 +328,8 @@ const styles = StyleSheet.create({
     flex: 3,
   },
   map: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   detailsContainer: {
     flex: 2,
@@ -298,8 +339,8 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 15,
   },
   serviceTitle: {
@@ -328,8 +369,8 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   button: {
     flex: 1,
@@ -337,7 +378,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 5,
     marginHorizontal: 5,
-    alignItems: 'center',
+    alignItems: "center",
   },
   cancelButton: {
     backgroundColor: "#dc3545",
@@ -349,8 +390,18 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  riderIconStyle: {
+    width: 40,
+    height: 40,
+    resizeMode: "contain",
+  },
+  customerIconStyle: {
+    width: 40,
+    height: 40,
+    resizeMode: "contain",
   },
 });
 

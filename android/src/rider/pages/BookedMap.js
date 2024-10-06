@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useContext } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, Image } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { RiderContext } from "../../context/riderContext";
 import { Button, Text } from "react-native-paper";
+import riderMarker from "../../../assets/rider.png";
+import customerMarker from "../../../assets/customer.png";
 
 const BookedMap = ({ navigation, route }) => {
   const { ride } = route.params; // Assuming the ride data is passed as a route parameter
@@ -117,20 +119,30 @@ const BookedMap = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <MapView 
-        style={styles.map} 
+      <MapView
+        style={styles.map}
         region={{
           ...customerLocation,
-          latitudeDelta: Math.max(0.05, Math.abs(customerLocation.latitude - riderLocation.latitude) * 2),
-          longitudeDelta: Math.max(0.05, Math.abs(customerLocation.longitude - riderLocation.longitude) * 2),
+          latitudeDelta: Math.max(
+            0.05,
+            Math.abs(customerLocation.latitude - riderLocation.latitude) * 2
+          ),
+          longitudeDelta: Math.max(
+            0.05,
+            Math.abs(customerLocation.longitude - riderLocation.longitude) * 2
+          ),
         }}
       >
-        <Marker coordinate={riderLocation} title="Rider Location" />
+        <Marker coordinate={riderLocation} title="Rider Location">
+          <Image source={riderMarker} style={styles.riderIconStyle} />
+        </Marker>
         <Marker
           coordinate={customerLocation}
           title="Customer Location"
           pinColor="blue"
-        />
+        >
+          <Image source={customerMarker} style={styles.customerIconStyle} />
+        </Marker>
         <Polyline
           coordinates={routeCoordinates}
           strokeColor="#FF0000"
@@ -196,5 +208,16 @@ const styles = StyleSheet.create({
   nextButtonStyle: {
     backgroundColor: "#008000",
     borderRadius: 5,
+  },
+
+  riderIconStyle: {
+    width: 40,
+    height: 40,
+    resizeMode: "contain",
+  },
+  customerIconStyle: {
+    width: 40,
+    height: 40,
+    resizeMode: "contain",
   },
 });

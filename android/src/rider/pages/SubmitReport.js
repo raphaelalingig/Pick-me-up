@@ -1,68 +1,81 @@
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { ImageBackground, StyleSheet, TouchableOpacity, View } from "react-native";
 import React from "react";
 import { TextInput, Text } from "react-native-paper";
+import { BlurView } from "expo-blur";
+
 
 const SubmitReport = ({ navigation }) => {
   return (
-    <View style={styles.container}>
-      <View style={styles.contentContainer}>
-        <View style={styles.inputContainer}>
-          <View>
-            <TextInput
-              placeholder="Customer Name:"
-              editable={false}
-              style={styles.textinput}
-              mode="outlined"
-            />
-          </View>
-          <View>
-            <TextInput
-              placeholder="Write Down your Complaint"
-              style={styles.messageInput}
-              mode="outlined"
-              label="Message:"
-            />
-          </View>
+    <ImageBackground
+      source={require("../../pictures/4.png")}
+      style={styles.background}
+    >
+      <View style={styles.container}>
+        <BlurView intensity={800} tint="light" style={styles.contentContainer}>
           <View style={styles.inputContainer}>
-            <TextInput
-              value="Date: "
-              editable={false}
-              style={styles.textinput}
-              mode="outlined"
-            />
-            <TextInput
-              value="Location: "
-              editable={false}
-              style={styles.textinput}
-              mode="outlined"
-            />
+            <View>
+              <TextInput
+                placeholder="Customer Name:"
+                editable={false}
+                style={styles.textinput}
+                mode="outlined"
+              />
+            </View>
+            <View>
+              <TextInput
+                placeholder="Write Down your Complaint"
+                style={styles.messageInput}
+                mode="outlined"
+                label="Message:"
+              />
+            </View>
+            <View style={styles.inputContainer}>
+              <TextInput
+                value="Date: "
+                editable={false}
+                style={styles.textinput}
+                mode="outlined"
+              />
+              <TextInput
+                value="Location: "
+                editable={false}
+                style={styles.textinput}
+                mode="outlined"
+              />
+            </View>
           </View>
-        </View>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.acceptButton}
-            onPress={() => navigation.navigate("Home")}
-          >
-            <Text style={styles.acceptButtonText}>Confirm</Text>
-          </TouchableOpacity>
-        </View>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.acceptButton}
+              onPress={() => navigation.navigate("Home")}
+            >
+              <Text style={styles.acceptButtonText}>Confirm</Text>
+            </TouchableOpacity>
+          </View>
+        </BlurView>
       </View>
-    </View>
+    </ImageBackground>
   );
 };
 
 export default SubmitReport;
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    resizeMode: "cover",
+    justifyContent: "center",
+  },
   container: {
     flex: 1,
-    backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
   },
   contentContainer: {
     padding: 20,
-    backgroundColor: "#FFC533",
+    backgroundColor: 'rgba(255,215,0,0.5)', // For the semi-transparent background
+    borderColor: 'rgba(255,255,255,0.25)',  
+    borderRadius: 10,
     width: "90%",
   },
   textinput: {
