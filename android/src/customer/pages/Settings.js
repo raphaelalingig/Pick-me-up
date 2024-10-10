@@ -31,11 +31,9 @@ const Settings = ({ navigation }) => {
         return (
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Personal Information</Text>
-            <TextInput placeholder="Name" style={styles.input} />
-            <TextInput placeholder="Email" style={styles.input} />
-            <TouchableOpacity style={styles.saveButton} onPress={closeModal}>
-              <Text style={styles.buttonText}>Save</Text>
-            </TouchableOpacity>
+            <Text>Name: Customer 1</Text>
+            <Text>Mail: Customer1@gmail.om</Text>
+            <Text>PhoneNumber: 09461272381</Text>
           </View>
         );
       case 'Change Password':
@@ -54,9 +52,6 @@ const Settings = ({ navigation }) => {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>About PickMeUp</Text>
             <Text style={styles.modalText}>This app connects riders with customers for quick transportation services.</Text>
-            <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
-              <Text style={styles.buttonText}>Close</Text>
-            </TouchableOpacity>
           </View>
         );
       case 'Help and Support':
@@ -64,9 +59,6 @@ const Settings = ({ navigation }) => {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Help and Support</Text>
             <Text style={styles.modalText}>If you need assistance, please contact support@pickmeup.com</Text>
-            <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
-              <Text style={styles.buttonText}>Close</Text>
-            </TouchableOpacity>
           </View>
         );
       case 'App Version':
@@ -74,9 +66,6 @@ const Settings = ({ navigation }) => {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>App Version</Text>
             <Text style={styles.modalText}>Version 1.1.00.1</Text>
-            <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
-              <Text style={styles.buttonText}>Close</Text>
-            </TouchableOpacity>
           </View>
         );
       default:

@@ -69,8 +69,8 @@ console.log(formattedCurrentDate);
 
   return (
     <ImageBackground
-      source={{ uri: "https://your-map-image-url.com" }}
-      style={styles.background}
+    source={require("../../pictures/3.png")} // Replace with your map image URL or local asset
+    style={styles.background}
     >
       <View style={styles.container}>
         <Text style={styles.title}>Delivery</Text>
@@ -142,6 +142,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
+    
   },
   title: {
     fontSize: 20,
