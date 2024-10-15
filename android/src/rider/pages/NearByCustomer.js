@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   ImageBackground,
-  RefreshControl
+  RefreshControl,
 } from "react-native";
 import FindingCustomerSpinner from "../spinner/FindingCustomerSpinner";
 import userService from "../../services/auth&services"; // Adjust the import path as needed
@@ -16,14 +16,15 @@ const NearbyCustomerScreen = ({ navigation }) => {
   const [showSpinner, setShowSpinner] = useState(true);
   const [availableRides, setAvailableRides] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
-  
 
   const fetchAvailableRides = useCallback(async () => {
     try {
       const response = await userService.getAvailableRides();
 
       // Sort the rides by date in descending order (oldest to latest)
-      const sortedRides = response.data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      const sortedRides = response.data.sort(
+        (a, b) => new Date(a.created_at) - new Date(b.created_at)
+      );
 
       setAvailableRides(sortedRides);
       setShowSpinner(false);
@@ -63,38 +64,37 @@ const NearbyCustomerScreen = ({ navigation }) => {
         source={require("../../pictures/13.png")}
         style={styles.background}
       >
-        {showSpinner && (
-          <View style={styles.spinnerContainer}>
-            <FindingCustomerSpinner />
-          </View>
-        )}
-        
         {!showSpinner && availableRides.length === 0 && (
           <View style={styles.noRidesContainer}>
-            <Text style={styles.noRidesText}>No rides available at the moment.</Text>
+            <View style={styles.spinnerContainer}>
+              <FindingCustomerSpinner />
+            </View>
+            <Text style={styles.noRidesText}></Text>
           </View>
         )}
-        
-        <ScrollView contentContainerStyle={styles.container}>
-          {availableRides.map((ride) => (
-            <View key={ride.id} style={styles.customerCard}>
-              <View style={styles.customerInfo}>
-                <Text style={styles.customerText}>
-                  Name: {`${ride.first_name} ${ride.last_name}`}
-                </Text>
-                <Text style={styles.customerText}>Pickup: {ride.ride_type}</Text>
+
+        {availableRides.length > 0 && (
+          <ScrollView contentContainerStyle={styles.container}>
+            {availableRides.map((ride) => (
+              <View key={ride.id} style={styles.customerCard}>
+                <View style={styles.customerInfo}>
+                  <Text style={styles.customerText}>
+                    Name: {`${ride.first_name} ${ride.last_name}`}
+                  </Text>
+                  <Text style={styles.customerText}>
+                    Pickup: {ride.ride_type}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.detailsButton}
+                  onPress={() => handleDetailsButtonPress(ride)}
+                >
+                  <Text style={styles.detailsButtonText}>Details</Text>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                style={styles.detailsButton}
-                onPress={() => handleDetailsButtonPress(ride)}
-              >
-                <Text style={styles.detailsButtonText}>
-                  Details
-                </Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </ScrollView>
+            ))}
+          </ScrollView>
+        )}
       </ImageBackground>
     </ScrollView>
   );
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   detailsButtonText: {
-    color: "white", 
+    color: "white",
     fontSize: 14,
     fontWeight: "bold",
   },

@@ -7,7 +7,7 @@ const FindingCustomerSpinner = () => {
     <View style={styles.container}>
       <Spinner />
       <View style={{ marginTop: 10 }}>
-        <Text>Finding Customer</Text>
+        <Text>No rides available at the moment.</Text>
       </View>
     </View>
   );
