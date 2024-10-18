@@ -7,6 +7,7 @@ import {
   Image,
   ScrollView,
   RefreshControl,
+  TouchableOpacity,
 } from "react-native";
 import { Button, Text, ActivityIndicator, MD2Colors } from "react-native-paper";
 import * as Location from "expo-location";
@@ -19,6 +20,39 @@ const Home = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
   const { riderCoords, setRiderCoords } = useContext(RiderContext);
+
+  const handleFind = async () => {
+    setLoading(true);
+    try {
+      const user_status = await userService.fetchRider();
+  
+      // Check if the response indicates "Get Verified"
+      if (user_status.message === "Get Verified") {
+        alert("Please complete your verification process before booking a ride.");
+        return "Cannot Book";
+      }
+  
+      // Check if the response indicates "Account Disabled"
+      if (user_status.message === "Account Disabled") {
+        alert("Your account has been disabled! Contact Admin for more info.");
+        return "Cannot Book";
+      }
+  
+      // If everything is fine, proceed with finding a customer
+      console.log("User is verified and account is active.");
+      navigation.navigate("Nearby Customer");
+      // Your additional logic to start finding a customer goes here
+      return "Proceed";
+  
+    } catch (error) {
+      console.error("Error in Finding Customer:", error);
+      // Show an error message to the user
+      alert("An error occurred while checking your status. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const checkRideAndLocation = useCallback(async () => {
     try {
@@ -100,13 +134,15 @@ const Home = ({ navigation }) => {
               style={styles.logo}
             />
           </View>
-          <Button
-            mode="contained"
-            style={styles.button}
-            onPress={() => navigation.navigate("Nearby Customer")}
-          >
-            START FINDING CUSTOMER
-          </Button>
+          <TouchableOpacity onPress={handleFind} disabled={loading}>
+            <View
+              style={{ padding: 15, backgroundColor: "black", borderRadius: 10 }}
+            >
+              <Text variant="titleMedium" style={styles.titleText}>
+                {loading ? "Checking..." : "START FINDING CUSTOMER"}
+              </Text>
+            </View>
+          </TouchableOpacity>
           <Button
             disabled={loading}
             onPress={() => navigation.navigate("Current Location")}
@@ -173,6 +209,12 @@ const styles = StyleSheet.create({
     color: "black",
     padding: 5,
     textDecorationLine: "underline",
+  },
+
+  titleText: {
+    fontWeight: "bold",
+    color: "#FBC635",
+    textAlign: "center",
   },
 });
 
