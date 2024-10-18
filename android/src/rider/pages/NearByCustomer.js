@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   ImageBackground,
-  RefreshControl
+  RefreshControl,
 } from "react-native";
 import FindingCustomerSpinner from "../spinner/FindingCustomerSpinner";
 import NearbyCustomersMap from "./NearbyCustomersMap"; // Import the new component
@@ -25,7 +25,9 @@ const NearbyCustomerScreen = ({ navigation }) => {
       const response = await userService.getAvailableRides();
 
       // Sort the rides by date in descending order (oldest to latest)
-      const sortedRides = response.data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      const sortedRides = response.data.sort(
+        (a, b) => new Date(a.created_at) - new Date(b.created_at)
+      );
 
       setAvailableRides(sortedRides);
       setShowSpinner(false);
@@ -176,7 +178,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   detailsButtonText: {
-    color: "white", 
+    color: "white",
     fontSize: 14,
     fontWeight: "bold",
   },
