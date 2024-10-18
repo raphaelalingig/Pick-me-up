@@ -22,8 +22,9 @@ const BookNow = ({ setCurrentForm, navigation, checkRideAndLocation }) => {
     setLoading(true);
     try {
       const user_status = await userService.getUserStatus();
+      console.log(user_status)
       if (user_status === "Disabled") {
-        alert("Your Account has been Disabled, Contact Admin for more Info.");
+        alert("Your Account has been Disabled! Contact Admin for more Info and Try Relogging In.");
         return "Can not Book";
       }
 
