@@ -10,12 +10,15 @@ import {
   RefreshControl,
 } from "react-native";
 import FindingCustomerSpinner from "../spinner/FindingCustomerSpinner";
-import userService from "../../services/auth&services"; // Adjust the import path as needed
+import NearbyCustomersMap from "./NearbyCustomersMap"; // Import the new component
+import userService from "../../services/auth&services";
 
 const NearbyCustomerScreen = ({ navigation }) => {
   const [showSpinner, setShowSpinner] = useState(true);
   const [availableRides, setAvailableRides] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [showMap, setShowMap] = useState(false);
+  
 
   const fetchAvailableRides = useCallback(async () => {
     try {
@@ -54,6 +57,15 @@ const NearbyCustomerScreen = ({ navigation }) => {
   };
 
   return (
+    <>
+      {showMap && (
+        <NearbyCustomersMap
+          availableRides={availableRides}
+          onClose={() => setShowMap(false)}
+          navigation={navigation}
+        />
+      )}
+      
     <ScrollView
       contentContainerStyle={{ flexGrow: 1 }}
       refreshControl={
@@ -64,16 +76,27 @@ const NearbyCustomerScreen = ({ navigation }) => {
         source={require("../../pictures/13.png")}
         style={styles.background}
       >
-        {!showSpinner && availableRides.length === 0 && (
-          <View style={styles.noRidesContainer}>
+          {showSpinner && (
             <View style={styles.spinnerContainer}>
               <FindingCustomerSpinner />
             </View>
-            <Text style={styles.noRidesText}></Text>
+          )}
+          
+          {!showSpinner && (
+            <TouchableOpacity
+              style={styles.mapButton}
+              onPress={() => setShowMap(true)}
+            >
+              <Text style={styles.mapButtonText}>Show in Map</Text>
+            </TouchableOpacity>
+          )}
+
+          {!showSpinner && availableRides.length === 0 && (
+            <View style={styles.noRidesContainer}>
+              <Text style={styles.noRidesText}>No rides available at the moment.</Text>
           </View>
         )}
 
-        {availableRides.length > 0 && (
           <ScrollView contentContainerStyle={styles.container}>
             {availableRides.map((ride) => (
               <View key={ride.id} style={styles.customerCard}>
@@ -89,14 +112,16 @@ const NearbyCustomerScreen = ({ navigation }) => {
                   style={styles.detailsButton}
                   onPress={() => handleDetailsButtonPress(ride)}
                 >
-                  <Text style={styles.detailsButtonText}>Details</Text>
+                <Text style={styles.detailsButtonText}>
+                  Details
+                </Text>
                 </TouchableOpacity>
               </View>
             ))}
           </ScrollView>
-        )}
       </ImageBackground>
     </ScrollView>
+    </>
   );
 };
 
@@ -175,6 +200,22 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#000000",
   },
+  mapButton: {
+    backgroundColor: '#000000',
+    padding: 15,
+    borderRadius: 10,
+    margin: 10,
+    alignItems: 'center',
+    shadowColor: "#FFD700",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 5,
+  },
+  mapButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });
-
 export default NearbyCustomerScreen;
