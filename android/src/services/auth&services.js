@@ -72,6 +72,20 @@ const userService = {
     }
   },
 
+  fetchRider: async () => {
+    const user_id = await userService.getUserId();
+    console.log(user_id)
+    const response = await axios.get(API_URL + `riderId/${user_id}`);
+    
+    return response.data;
+  },
+
+  fetchCustomer: async () => {
+    const response = await axios.get(API_URL + 'customer');
+    return response.data;
+  },
+
+
   upload: async (formData) => {
     try {
       const token = await AsyncStorage.getItem('token');
