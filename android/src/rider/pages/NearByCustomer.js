@@ -47,9 +47,14 @@ const NearbyCustomerScreen = ({ navigation }) => {
   // Automatically refresh when the screen is focused
   useFocusEffect(
     useCallback(() => {
-      fetchAvailableRides();
+      const intervalId = setInterval(() => {
+        fetchAvailableRides();
+      }, 10000); // Fetch every 10 seconds
+  
+      return () => clearInterval(intervalId); // Cleanup on unmount
     }, [fetchAvailableRides])
   );
+  
 
   const handleDetailsButtonPress = (ride) => {
     console.log("Details button pressed for ride:", ride.ride_id);
@@ -66,16 +71,16 @@ const NearbyCustomerScreen = ({ navigation }) => {
         />
       )}
       
-    <ScrollView
-      contentContainerStyle={{ flexGrow: 1 }}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      <ImageBackground
-        source={require("../../pictures/13.png")}
-        style={styles.background}
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
+        <ImageBackground
+          source={require("../../pictures/13.png")}
+          style={styles.background}
+        >
           {showSpinner && (
             <View style={styles.spinnerContainer}>
               <FindingCustomerSpinner />
@@ -94,33 +99,31 @@ const NearbyCustomerScreen = ({ navigation }) => {
           {!showSpinner && availableRides.length === 0 && (
             <View style={styles.noRidesContainer}>
               <Text style={styles.noRidesText}>No rides available at the moment.</Text>
-          </View>
-        )}
-
+            </View>
+          )}
+          
           <ScrollView contentContainerStyle={styles.container}>
-            {availableRides.map((ride) => (
-              <View key={ride.id} style={styles.customerCard}>
-                <View style={styles.customerInfo}>
-                  <Text style={styles.customerText}>
-                    Name: {`${ride.first_name} ${ride.last_name}`}
-                  </Text>
-                  <Text style={styles.customerText}>
-                    Pickup: {ride.ride_type}
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  style={styles.detailsButton}
-                  onPress={() => handleDetailsButtonPress(ride)}
-                >
+          {availableRides.map((ride) => (
+            <View key={ride.id} style={styles.customerCard}>
+              <View style={styles.customerInfo}>
+                <Text style={styles.customerText}>
+                  Name: {`${ride.first_name} ${ride.last_name}`}
+                </Text>
+                <Text style={styles.customerText}>Pickup: {ride.ride_type}</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.detailsButton}
+                onPress={() => handleDetailsButtonPress(ride)}
+              >
                 <Text style={styles.detailsButtonText}>
                   Details
                 </Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </ScrollView>
-      </ImageBackground>
-    </ScrollView>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </ScrollView>
+        </ImageBackground>
+      </ScrollView>
     </>
   );
 };
