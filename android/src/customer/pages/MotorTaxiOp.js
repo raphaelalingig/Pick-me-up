@@ -352,7 +352,7 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
               </TouchableOpacity>
             </View>
           </View>
-
+  
           <View style={styles.fareContainer}>
             <Text style={styles.fareLabel}>Estimated Fare:</Text>
             <TextInput
@@ -368,13 +368,43 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
           <View style={styles.actionContainer}>
             <TouchableOpacity
               style={styles.cancelButton}
-              onPress={() => navigation.goBack()}
+              onPress={() => {
+                Alert.alert(
+                  "Confirm Cancel",
+                  "Are you sure you want to cancel?",
+                  [
+                    {
+                      text: "No",
+                      style: "cancel",
+                    },
+                    {
+                      text: "Yes",
+                      onPress: () => navigation.goBack(),
+                    },
+                  ]
+                );
+              }}
             >
               <Text style={styles.cancelButtonText}>CANCEL</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.confirmButton}
-              onPress={handleConfirm}
+              onPress={() => {
+                Alert.alert(
+                  "Confirm Action",
+                  "Do you want to proceed with the confirmation?",
+                  [
+                    {
+                      text: "Cancel",
+                      style: "cancel",
+                    },
+                    {
+                      text: "OK",
+                      onPress: handleConfirm,
+                    },
+                  ]
+                );
+              }}
             >
               <Text style={styles.confirmButtonText}>Confirm</Text>
             </TouchableOpacity>
@@ -383,6 +413,7 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
       </ImageBackground>
     </ScrollView>
   );
+  
 };
 
 const styles = StyleSheet.create({

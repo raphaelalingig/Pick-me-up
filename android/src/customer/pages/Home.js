@@ -7,6 +7,7 @@ import {
   ImageBackground,
   ScrollView,
   RefreshControl,
+  Alert,
 } from "react-native";
 import { Text, Button } from "react-native-paper";
 import { CustomerContext } from "../../context/customerContext";
@@ -90,14 +91,31 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
   };
 
   const handleBookPress = () => {
-    if (selectedService) {
-      navigation.navigate(selectedService); // Navigate to the selected service screen
-    }
+    // Alert before proceeding with the booking
+    Alert.alert(
+      "Confirm Booking",
+      "Do you want to proceed with the booking?",
+      [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Booking canceled"),
+          style: "cancel",
+        },
+        {
+          text: "OK",
+          onPress: () => {
+            if (selectedService) {
+              navigation.navigate(selectedService); // Navigate to the selected service screen
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
     <ImageBackground
-      source={require("../../pictures/3.png")} // Replace with your map image URL or local asset
+      source={require("../../pictures/3.png")}
       style={styles.background}
     >
       <BlurView intensity={800} tint="light" style={styles.container}>
@@ -122,7 +140,7 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
               Moto-Taxi
             </Text>
             <Text style={styles.serviceDescription}>
-              Bring you where ever you want
+              Bring you wherever you want
             </Text>
           </TouchableOpacity>
 
@@ -167,6 +185,7 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
               Ride with friend & family
             </Text>
           </TouchableOpacity>
+
         </View>
         <View style={styles.actionContainer}>
           <TouchableOpacity

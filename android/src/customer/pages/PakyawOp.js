@@ -6,12 +6,32 @@ import {
   TextInput,
   TouchableOpacity,
   ImageBackground,
+  Alert, // Make sure to import Alert
 } from "react-native";
 
 const PakyawOptionScreen = ({ navigation }) => {
+  const handleConfirmPress = () => {
+    // Insert alert here to confirm the action
+    Alert.alert(
+      "Confirm Action",
+      "Do you want to proceed with the confirmation?",
+      [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Confirmation canceled"),
+          style: "cancel",
+        },
+        {
+          text: "OK",
+          onPress: () => navigation.navigate("Tracking Rider"),
+        },
+      ]
+    );
+  };
+
   return (
     <ImageBackground
-      source={require("../../pictures/3.png")} // Replace with your map image URL or local asset
+      source={require("../../pictures/3.png")}
       style={styles.background}
     >
       <View style={styles.container}>
@@ -46,14 +66,28 @@ const PakyawOptionScreen = ({ navigation }) => {
           <TouchableOpacity style={styles.cancelButton}>
             <Text
               style={styles.cancelButtonText}
-              onPress={() => navigation.goBack()}
+              onPress={() => {                
+                Alert.alert(
+                "Confirm Cancel",
+                "Are you sure you want to cancel?",
+                [
+                  {
+                    text: "No",
+                    style: "cancel",
+                  },
+                  {
+                    text: "Yes",
+                    onPress: () => navigation.goBack(),
+                  },
+                ]
+              );}}
             >
               Cancel
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.confirmButton}
-            onPress={() => navigation.navigate("Tracking Rider")}
+            onPress={handleConfirmPress} // Change to use the new function
           >
             <Text style={styles.confirmButtonText}>Confirm</Text>
           </TouchableOpacity>

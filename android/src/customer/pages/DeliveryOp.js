@@ -6,6 +6,7 @@ import {
   TextInput,
   TouchableOpacity,
   ImageBackground,
+  Alert, // Ensure Alert is imported
 } from "react-native";
 import { useAuth } from "../../services/useAuth";
 import userService from "../../services/auth&services";
@@ -20,9 +21,8 @@ const DeliveryOptionScreen = ({ navigation }) => {
   useEffect(() => {
     const fetchUserId = async () => {
       const response = await userService.getUserId();
-      const id = parseInt(response, 10)
+      const id = parseInt(response, 10);
       setUserId(id);
-      
     };
 
     fetchUserId();
@@ -40,10 +40,9 @@ const DeliveryOptionScreen = ({ navigation }) => {
   // Format the date as YYYY-MM-DD HH:mm:ss
   const formattedCurrentDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 
-console.log(formattedCurrentDate); 
- 
+  console.log(formattedCurrentDate);
+
   const handleConfirm = async () => {
-    
     const bookDetails = {
       user_id: userId, // Logged-in user's ID
       ride_date: formattedCurrentDate,
@@ -69,8 +68,8 @@ console.log(formattedCurrentDate);
 
   return (
     <ImageBackground
-    source={require("../../pictures/3.png")} // Replace with your map image URL or local asset
-    style={styles.background}
+      source={require("../../pictures/3.png")}
+      style={styles.background}
     >
       <View style={styles.container}>
         <Text style={styles.title}>Delivery</Text>
@@ -94,10 +93,46 @@ console.log(formattedCurrentDate);
           onChangeText={setFare}
         />
         <View style={styles.actionContainer}>
-          <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => {
+              Alert.alert(
+                "Confirm Cancel",
+                "Are you sure you want to cancel?",
+                [
+                  {
+                    text: "No",
+                    style: "cancel",
+                  },
+                  {
+                    text: "Yes",
+                    onPress: () => navigation.goBack(),
+                  },
+                ]
+              );
+            }}
+          >
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
+          <TouchableOpacity
+            style={styles.confirmButton}
+            onPress={() => {
+              Alert.alert(
+                "Confirm Action",
+                "Do you want to proceed with the confirmation?",
+                [
+                  {
+                    text: "Cancel",
+                    style: "cancel",
+                  },
+                  {
+                    text: "OK",
+                    onPress: handleConfirm,
+                  },
+                ]
+              );
+            }}
+          >
             <Text style={styles.confirmButtonText}>Confirm</Text>
           </TouchableOpacity>
         </View>
