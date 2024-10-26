@@ -133,7 +133,7 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
     }
 
     try {
-      const apiKey = "";
+      const apiKey = "AIzaSyAekXSq_b4GaHneUKEBVsl4UTGlaskobFo";
       const [pickupLat, pickupLng] = pickup.split(",");
       const [dropoffLat, dropoffLng] = dropoff.split(",");
       const origin = `${pickupLat},${pickupLng}`;
