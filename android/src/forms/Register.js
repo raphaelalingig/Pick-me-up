@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   ImageBackground,
 } from "react-native";
-import { TextInput, Text, Button, Keyboard } from "react-native-paper";
+import { TextInput, Text, Button, Keyboard, HelperText } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
 import Animated, { FadeInRight, FadeOutLeft } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
@@ -32,6 +32,7 @@ const FirstForm = memo(
     setGender,
     userType,
     setUserType,
+    errors, // Add errors prop
   }) => (
     <Animated.View
       entering={FadeInRight}
@@ -43,22 +44,43 @@ const FirstForm = memo(
           Name
         </Text>
         <View style={{ gap: 10 }}>
-          <TextInput
-            placeholder="First Name"
-            mode="outlined"
-            value={first_name}
-            onChangeText={setFirstName}
-            outlineStyle={styles.textinputs}
-          />
-          <TextInput
-            placeholder="Last Name"
-            mode="outlined"
-            value={last_name}
-            onChangeText={setLastName}
-            outlineStyle={styles.textinputs}
-          />
+          <View>
+            <TextInput
+              placeholder="First Name"
+              mode="outlined"
+              value={first_name}
+              onChangeText={setFirstName}
+              outlineStyle={[
+                styles.textinputs,
+                errors.first_name && styles.errorInput
+              ]}
+            />
+            {errors.first_name && (
+              <HelperText type="error" visible={true}>
+                {errors.first_name[0]}
+              </HelperText>
+            )}
+          </View>
+          <View>
+            <TextInput
+              placeholder="Last Name"
+              mode="outlined"
+              value={last_name}
+              onChangeText={setLastName}
+              outlineStyle={[
+                styles.textinputs,
+                errors.last_name && styles.errorInput
+              ]}
+            />
+            {errors.last_name && (
+              <HelperText type="error" visible={true}>
+                {errors.last_name[0]}
+              </HelperText>
+            )}
+          </View>
         </View>
       </View>
+      
       <View>
         <Text variant="bodyLarge" style={styles.labels}>
           Username
@@ -67,9 +89,18 @@ const FirstForm = memo(
           mode="outlined"
           value={user_name}
           onChangeText={setUsername}
-          outlineStyle={styles.textinputs}
+          outlineStyle={[
+            styles.textinputs,
+            errors.user_name && styles.errorInput
+          ]}
         />
+        {errors.user_name && (
+          <HelperText type="error" visible={true}>
+            {errors.user_name[0]}
+          </HelperText>
+        )}
       </View>
+
       <View>
         <Text variant="bodyLarge" style={styles.labels}>
           Select Birth Date
@@ -77,7 +108,10 @@ const FirstForm = memo(
         <Button
           onPress={() => setShowDatePicker(true)}
           mode="outlined"
-          style={styles.datePickerButton}
+          style={[
+            styles.datePickerButton,
+            errors.date_of_birth && styles.errorInput
+          ]}
           labelStyle={{ color: "#000" }}
         >
           <Text>
@@ -86,6 +120,11 @@ const FirstForm = memo(
               : "Select date of birth"}
           </Text>
         </Button>
+        {errors.date_of_birth && (
+          <HelperText type="error" visible={true}>
+            {errors.date_of_birth[0]}
+          </HelperText>
+        )}
         {showDatePicker && (
           <DateTimePicker
             ref={datePickerRef}
@@ -99,30 +138,61 @@ const FirstForm = memo(
       </View>
 
       <View>
-        <Picker
-          selectedValue={gender}
-          onValueChange={(value) => setGender(value)}
-        >
-          <Picker.Item label="Select Gender" disabled />
-          <Picker.Item label="Male" value="Male" />
-          <Picker.Item label="Female" value="Female" />
-        </Picker>
+        <Text variant="bodyLarge" style={styles.labels}>
+          Gender
+        </Text>
+        <View style={[
+          styles.pickerContainer,
+          errors.gender && styles.errorInput
+        ]}>
+          <Picker
+            selectedValue={gender}
+            onValueChange={(value) => setGender(value)}
+          >
+            <Picker.Item label="Select Gender" value="" />
+            <Picker.Item label="Male" value="Male" />
+            <Picker.Item label="Female" value="Female" />
+          </Picker>
+        </View>
+        {errors.gender && (
+          <HelperText type="error" visible={true}>
+            {errors.gender[0]}
+          </HelperText>
+        )}
       </View>
+
       <View>
-        <Picker
-          selectedValue={userType}
-          onValueChange={(itemValue) => setUserType(itemValue)}
-        >
-          <Picker.Item label="Select User Type" disabled />
-          <Picker.Item label="Customer" value="Customer" />
-          <Picker.Item label="Rider" value="Rider" />
-        </Picker>
+        <Text variant="bodyLarge" style={styles.labels}>
+          User Type
+        </Text>
+        <View style={[
+          styles.pickerContainer,
+          errors.role_id && styles.errorInput
+        ]}>
+          <Picker
+            selectedValue={userType}
+            onValueChange={(itemValue) => setUserType(itemValue)}
+          >
+            <Picker.Item label="Select User Type" value="" />
+            <Picker.Item label="Customer" value="Customer" />
+            <Picker.Item label="Rider" value="Rider" />
+          </Picker>
+        </View>
+        {errors.role_id && (
+          <HelperText type="error" visible={true}>
+            {errors.role_id[0]}
+          </HelperText>
+        )}
       </View>
+
       <View style={styles.buttonContainer}>
         <TouchableOpacity>
           <Button
             style={styles.button}
-            onPress={() => setCurrentForm("second")}
+            onPress={() => {
+              // Clear errors when moving to next form
+              setCurrentForm("second");
+            }}
             mode="contained"
           >
             <Text>Next</Text>
@@ -132,7 +202,6 @@ const FirstForm = memo(
     </Animated.View>
   )
 );
-
 const SecondForm = memo(
   ({
     setCurrentForm,
@@ -146,6 +215,7 @@ const SecondForm = memo(
     setRepassword,
     mobile_number,
     setMobileNumber,
+    errors,
   }) => (
     <Animated.View
       entering={FadeInRight}
@@ -161,10 +231,19 @@ const SecondForm = memo(
           mode="outlined"
           value={mobile_number}
           onChangeText={setMobileNumber}
-          outlineStyle={styles.textinputs}
+          outlineStyle={[
+            styles.textinputs,
+            errors.mobile_number && styles.errorInput
+          ]}
           keyboardType="phone-pad"
         />
+        {errors.mobile_number && (
+          <HelperText type="error" visible={true}>
+            {errors.mobile_number[0]}
+          </HelperText>
+        )}
       </View>
+
       <View>
         <Text variant="bodyLarge" style={styles.labels}>
           Email
@@ -174,30 +253,64 @@ const SecondForm = memo(
           mode="outlined"
           value={email}
           onChangeText={setEmail}
-          outlineStyle={styles.textinputs}
+          outlineStyle={[
+            styles.textinputs,
+            errors.email && styles.errorInput
+          ]}
+          keyboardType="email-address"
+          autoCapitalize="none"
         />
+        {errors.email && (
+          <HelperText type="error" visible={true}>
+            {errors.email[0]}
+          </HelperText>
+        )}
       </View>
+
       <View>
         <Text variant="bodyLarge" style={styles.labels}>
           Password
         </Text>
         <View style={{ gap: 10 }}>
-          <TextInput
-            placeholder="Enter Password"
-            mode="outlined"
-            value={password}
-            onChangeText={setPassword}
-            outlineStyle={styles.textinputs}
-          />
-          <TextInput
-            placeholder="Confirm Password"
-            mode="outlined"
-            value={repassword}
-            onChangeText={setRepassword}
-            outlineStyle={styles.textinputs}
-          />
+          <View>
+            <TextInput
+              placeholder="Enter Password"
+              mode="outlined"
+              value={password}
+              onChangeText={setPassword}
+              outlineStyle={[
+                styles.textinputs,
+                errors.password && styles.errorInput
+              ]}
+              secureTextEntry
+            />
+            {errors.password && (
+              <HelperText type="error" visible={true}>
+                {errors.password[0]}
+              </HelperText>
+            )}
+          </View>
+          <View>
+            <TextInput
+              placeholder="Confirm Password"
+              mode="outlined"
+              value={repassword}
+              onChangeText={setRepassword}
+              outlineStyle={[
+                styles.textinputs,
+                password !== repassword && styles.errorInput
+              ]}
+              secureTextEntry
+            />
+            {password !== repassword && (
+              <HelperText type="error" visible={true}>
+                Passwords do not match
+              </HelperText>
+            )}
+          </View>
         </View>
       </View>
+
       <View style={styles.buttonContainer}>
         <View style={{ flexDirection: "row", gap: 5 }}>
           <TouchableOpacity>
@@ -227,6 +340,7 @@ const SecondForm = memo(
   )
 );
 
+
 const Register = ({ navigation }) => {
   const [first_name, setFirstName] = useState("");
   const [last_name, setLastName] = useState("");
@@ -244,6 +358,7 @@ const Register = ({ navigation }) => {
   const [mobile_number, setMobileNumber] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [userType, setUserType] = useState("");
+  const [errors, setErrors] = useState({});
 
   const datePickerRef = useRef();
   const [date_of_birth, setDateOfBirth] = useState(new Date());
@@ -255,7 +370,8 @@ const Register = ({ navigation }) => {
   const handleRegistration = async () => {
     try {
       setLoading(true);
-  
+      setErrors({});
+
       // Check if all required fields are filled
       if (
         user_name === "" ||
@@ -266,14 +382,15 @@ const Register = ({ navigation }) => {
         email === "" ||
         password === "" ||
         mobile_number === "" ||
-        userType === "" // Check if userType is selected
+        userType === "" 
       ) {
         showToast("Please input required data");
         setIsError(true);
         setLoading(false);
         return;
       }
-  
+      
+
       // Check if passwords match
       if (password !== repassword) {
         showToast("Passwords do not match");
@@ -281,38 +398,62 @@ const Register = ({ navigation }) => {
         setLoading(false);
         return;
       }
-  
-      // Request OTP
-      const otpResponse = await userService.requestOtp({ email, mobile_number });
-  
-      if (otpResponse.status !== 200) {
-        showToast("Failed to send OTP");
-        setLoading(false);
-        return;
-      }
-  
-      // Proceed to OTP confirmation page with necessary data
-      navigation.navigate("Confirmation", {
-        email,
-        mobile_number,
+
+      // Convert userType to role_id
+      const roleId = userType === "Customer" ? 4 : 3; // Customer = 4, Rider = 3
+
+      const userData = {
         user_name,
         first_name,
         last_name,
         gender,
         date_of_birth: date_of_birth.toISOString().split("T")[0],
+        email,
         password,
-        repassword,
-        userType
-      });
-  
-      setLoading(false);
+        password_confirmation: repassword,
+        role_id: roleId,
+        mobile_number,
+      };
+
+      console.log("Request Payload:", userData); // Debugging
+
+      const response = await userService.signup(userData);
+
+      console.log("Response:", response); // Debugging
+
+      showToast("Registration successful");
+
+      if (Keyboard && Keyboard.dismiss) {
+        Keyboard.dismiss();
+      }
+
+      setTimeout(() => {
+        navigation.replace("Login");
+      }, 1000);
+
+      resetForm();
+
+
     } catch (error) {
-      console.error("Registration error:", error.response?.data || error.message);
-      showToast("An error occurred during registration.");
-      setLoading(false);
+        if (error.response?.status === 422) {
+            // Handle validation errors quietly, without extra console logging
+            setErrors(error.response.data.errors || {});
+            const firstError = Object.values(error.response.data.errors)[0];
+            if (firstError && firstError[0]) {
+                showToast(firstError[0]);
+            }
+        } else {
+            // Log and handle unexpected errors only
+            console.error("Unexpected registration error:", error.message);
+            showToast("An unexpected error occurred during registration.");
+        }
+    } finally {
+        setLoading(false);
     }
-  };
-  
+};
+
+
+
   const resetForm = () => {
     setUsername("");
     setFirstName("");
@@ -387,6 +528,7 @@ const Register = ({ navigation }) => {
               setMobileNumber={setMobileNumber}
               userType={userType}
               setUserType={setUserType}
+              errors={errors}
             />
           ) : (
             <SecondForm
@@ -415,6 +557,7 @@ const Register = ({ navigation }) => {
               last_name={last_name}
               setLastName={setLastName}
               handleRegistration={handleRegistration}
+              errors={errors}
             />
           )}
         </BlurView>
@@ -463,6 +606,16 @@ const styles = StyleSheet.create({
     flex: 1,
     width: "100%",
     height: "100%",
+  },
+  errorInput: {
+    borderColor: 'red',
+    borderWidth: 1,
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#000',
+    borderRadius: 4,
+    marginTop: 5,
   },
 });
 
