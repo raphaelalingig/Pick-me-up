@@ -7,8 +7,8 @@ import {
   TouchableOpacity,
   ImageBackground,
   Alert,
-  FlatList,
-  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import * as Location from "expo-location";
 import { CustomerContext } from "../../context/customerContext";
@@ -64,7 +64,6 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
         setDropoffAddress(address);
       }
 
-      // Calculate distance and update fare when both pickup and dropoff are set
       if (pickupLocation && dropoffLocation) {
         fetchDirectionsAndUpdateFare();
       }
@@ -97,7 +96,6 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
     const newPickupLocation = `${location.coords.latitude}, ${location.coords.longitude}`;
     setPickupLocation(newPickupLocation);
 
-    // Get address for current location
     try {
       const result = await Location.reverseGeocodeAsync({
         latitude: location.coords.latitude,
@@ -113,7 +111,6 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
       setPickupAddress("Address not found");
     }
 
-    // Calculate distance and update fare if dropoff is set
     if (dropoffLocation) {
       fetchDirectionsAndUpdateFare(newPickupLocation, dropoffLocation);
     }
@@ -133,12 +130,11 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
     }
 
     try {
-      const apiKey = "AIzaSyAekXSq_b4GaHneUKEBVsl4UTGlaskobFo";
       const [pickupLat, pickupLng] = pickup.split(",");
       const [dropoffLat, dropoffLng] = dropoff.split(",");
       const origin = `${pickupLat},${pickupLng}`;
       const destination = `${dropoffLat},${dropoffLng}`;
-      const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${apiKey}`;
+      const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${GOOGLE_PLACES_API_KEY}`;
 
       const response = await fetch(url);
       const result = await response.json();
@@ -187,10 +183,6 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
       ride_type: "Motor Taxi",
       pickup_location: pickupAddress,
       dropoff_location: dropoffAddress,
-      // details: {
-      //   fare: parseFloat(fare),
-      //   totalDistanceRide: totalDistanceRide
-      // },
       fare: parseFloat(fare),
       status: "Available",
     };
@@ -255,24 +247,29 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
     try {
       const response = await fetch(placeDetailsUrl);
       const data = await response.json();
-      if (
-        data.result &&
-        data.result.geometry &&
-        data.result.geometry.location
-      ) {
+      if (data.result && data.result.geometry && data.result.geometry.location) {
         const { lat, lng } = data.result.geometry.location;
         const location = `${lat}, ${lng}`;
+        
+        // Store the new location value
+        let newPickupLocation = pickupLocation;
+        let newDropoffLocation = dropoffLocation;
+        
         if (locationType === "pickup") {
+          newPickupLocation = location;
           setPickupLocation(location);
           setPickupAddress(suggestion.description);
           setPickupSuggestions([]);
         } else {
+          newDropoffLocation = location;
           setDropoffLocation(location);
           setDropoffAddress(suggestion.description);
           setDropoffSuggestions([]);
         }
-        if (pickupLocation && dropoffLocation) {
-          fetchDirectionsAndUpdateFare();
+  
+        // Use the new values directly instead of depending on state
+        if (newPickupLocation && newDropoffLocation) {
+          await fetchDirectionsAndUpdateFare(newPickupLocation, newDropoffLocation);
         }
       }
     } catch (error) {
@@ -281,43 +278,46 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollViewContent}>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
       <ImageBackground
         source={require("../../pictures/3.png")}
         style={styles.background}
       >
-        <BlurView intensity={800} tint="light" style={styles.container}>
+        <BlurView intensity={800} tint="light" style={styles.blurContainer}>
           <Text style={styles.title}>Motor-Taxi</Text>
+          
           <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Pick me up from"
-              value={pickupAddress}
-              onChangeText={handlePickupInputChange}
-            />
-            {pickupSuggestions.length > 0 && (
-              <FlatList
-                data={pickupSuggestions}
-                renderItem={({ item }) => (
-                  <PlaceSuggestion
-                    suggestion={item}
-                    onPress={(suggestion) =>
-                      handleSuggestionPress(suggestion, "pickup")
-                    }
-                  />
-                )}
-                keyExtractor={(item) => item.place_id}
-                style={styles.suggestionList}
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={styles.input}
+                placeholder="Pick me up from"
+                value={pickupAddress}
+                onChangeText={handlePickupInputChange}
               />
-            )}
+              {pickupSuggestions.length > 0 && (
+                <View style={styles.suggestionsContainer}>
+                  {pickupSuggestions.map((item) => (
+                    <PlaceSuggestion
+                      key={item.place_id}
+                      suggestion={item}
+                      onPress={(suggestion) =>
+                        handleSuggestionPress(suggestion, "pickup")
+                      }
+                    />
+                  ))}
+                </View>
+              )}
+            </View>
+
             <View style={styles.locationButtonsContainer}>
               <TouchableOpacity
                 style={styles.locationButton}
                 onPress={getCurrentLocation}
               >
-                <Text style={styles.locationButtonText}>
-                  Use current location
-                </Text>
+                <Text style={styles.locationButtonText}>Use current location</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.locationButton}
@@ -326,27 +326,29 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
                 <Text style={styles.locationButtonText}>Choose from map</Text>
               </TouchableOpacity>
             </View>
-            <TextInput
-              style={styles.input}
-              placeholder="Destination"
-              value={dropoffAddress}
-              onChangeText={handleDropoffInputChange}
-            />
-            {dropoffSuggestions.length > 0 && (
-              <FlatList
-                data={dropoffSuggestions}
-                renderItem={({ item }) => (
-                  <PlaceSuggestion
-                    suggestion={item}
-                    onPress={(suggestion) =>
-                      handleSuggestionPress(suggestion, "dropoff")
-                    }
-                  />
-                )}
-                keyExtractor={(item) => item.place_id}
-                style={styles.suggestionList}
+
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={styles.input}
+                placeholder="Destination"
+                value={dropoffAddress}
+                onChangeText={handleDropoffInputChange}
               />
-            )}
+              {dropoffSuggestions.length > 0 && (
+                <View style={styles.suggestionsContainer}>
+                  {dropoffSuggestions.map((item) => (
+                    <PlaceSuggestion
+                      key={item.place_id}
+                      suggestion={item}
+                      onPress={(suggestion) =>
+                        handleSuggestionPress(suggestion, "dropoff")
+                      }
+                    />
+                  ))}
+                </View>
+              )}
+            </View>
+
             <View style={styles.locationButtonsContainer}>
               <TouchableOpacity
                 style={styles.locationButton}
@@ -356,7 +358,7 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
               </TouchableOpacity>
             </View>
           </View>
-  
+
           <View style={styles.fareContainer}>
             <Text style={styles.fareLabel}>Estimated Fare:</Text>
             <TextInput
@@ -369,6 +371,7 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
               Distance: {totalDistanceRide} km
             </Text>
           </View>
+
           <View style={styles.actionContainer}>
             <TouchableOpacity
               style={styles.cancelButton}
@@ -377,14 +380,8 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
                   "Confirm Cancel",
                   "Are you sure you want to cancel?",
                   [
-                    {
-                      text: "No",
-                      style: "cancel",
-                    },
-                    {
-                      text: "Yes",
-                      onPress: () => navigation.goBack(),
-                    },
+                    { text: "No", style: "cancel" },
+                    { text: "Yes", onPress: () => navigation.goBack() },
                   ]
                 );
               }}
@@ -398,14 +395,8 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
                   "Confirm Action",
                   "Do you want to proceed with the confirmation?",
                   [
-                    {
-                      text: "Cancel",
-                      style: "cancel",
-                    },
-                    {
-                      text: "OK",
-                      onPress: handleConfirm,
-                    },
+                    { text: "Cancel", style: "cancel" },
+                    { text: "OK", onPress: handleConfirm },
                   ]
                 );
               }}
@@ -415,13 +406,12 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
           </View>
         </BlurView>
       </ImageBackground>
-    </ScrollView>
+    </KeyboardAvoidingView>
   );
-  
 };
 
 const styles = StyleSheet.create({
-  scrollView: {
+  container: {
     flex: 1,
   },
   background: {
@@ -429,32 +419,9 @@ const styles = StyleSheet.create({
     resizeMode: "cover",
     justifyContent: "center",
   },
-  header: {
-    position: "absolute",
-    top: 40,
-    left: 10,
-    right: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  scrollViewContent: {
-    flexGrow: 1,
-  },
-  backButton: {
-    padding: 10,
-  },
-  backButtonText: {
-    fontSize: 24,
-  },
-  menuButton: {
-    padding: 10,
-  },
-  menuButtonText: {
-    fontSize: 24,
-  },
-  container: {
-    backgroundColor: "rgba(255,215,0,0.5)", // For the semi-transparent background
-    borderColor: "rgba(255,255,255,0.25)",
+  blurContainer: {
+    flex: 1,
+    backgroundColor: "rgba(255,215,0,0.5)",
     margin: 5,
     borderRadius: 10,
     alignItems: "center",
@@ -468,6 +435,9 @@ const styles = StyleSheet.create({
   inputContainer: {
     width: "100%",
     marginBottom: 20,
+  },
+  inputWrapper: {
+    marginBottom: 10,
   },
   input: {
     backgroundColor: "#fff",
