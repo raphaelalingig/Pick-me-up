@@ -25,28 +25,20 @@ const Home = ({ navigation }) => {
     setLoading(true);
     try {
       const user_status = await userService.fetchRider();
-  
-      // Check if the response indicates "Get Verified"
       if (user_status.message === "Get Verified") {
         alert("Please complete your verification process before booking a ride.");
         return "Cannot Book";
       }
-  
-      // Check if the response indicates "Account Disabled"
       if (user_status.message === "Account Disabled") {
         alert("Your account has been disabled! Contact Admin for more info.");
         return "Cannot Book";
       }
-  
-      // If everything is fine, proceed with finding a customer
       console.log("User is verified and account is active.");
       navigation.navigate("Nearby Customer");
-      // Your additional logic to start finding a customer goes here
       return "Proceed";
   
     } catch (error) {
       console.error("Error in Finding Customer:", error);
-      // Show an error message to the user
       alert("An error occurred while checking your status. Please try again.");
     } finally {
       setLoading(false);
@@ -56,20 +48,6 @@ const Home = ({ navigation }) => {
 
   const checkRideAndLocation = useCallback(async () => {
     try {
-      const response = await userService.checkActiveRide();
-      if (response && response.hasActiveRide) {
-        const { status } = response.rideDetails;
-        console.log(status)
-        const ride = response.rideDetails; 
-        switch (status) {
-          case 'Booked':
-            navigation.navigate("Tracking Customer", {ride});
-            return "existing_ride";
-          case 'In Transit':
-            navigation.navigate("Tracking Destination", {ride});
-            return "in_transit";
-        }
-      }
 
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
@@ -89,6 +67,23 @@ const Home = ({ navigation }) => {
         timestamp: location.timestamp,
       });
 
+
+      const response = await userService.checkActiveRide();
+      if (response && response.hasActiveRide) {
+        const { status } = response.rideDetails;
+        console.log(status)
+        const ride = response.rideDetails; 
+        switch (status) {
+          case 'Booked':
+            navigation.navigate("Tracking Customer", {ride});
+            return "existing_ride";
+          case 'In Transit':
+            navigation.navigate("Tracking Destination", {ride});
+            return "in_transit";
+        }
+      }
+
+      
       return "proceed";
     } catch (error) {
       setErrorMsg("Error fetching location or ride status");
@@ -130,7 +125,7 @@ const Home = ({ navigation }) => {
         <View style={styles.container}>
           <View style={styles.logoContainer}>
             <Image
-              source={require("../../pictures/Pick-Me-Up-Logo.png")}
+              source={require("../../pictures/icon.png")}
               style={styles.logo}
             />
           </View>
@@ -188,9 +183,7 @@ const styles = StyleSheet.create({
   logo: {
     width: 150,
     height: 150,
-    borderRadius: 75,
     borderWidth: 2,
-    borderColor: "blue",
   },
   button: {
     marginTop: 20,

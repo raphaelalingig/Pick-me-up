@@ -38,20 +38,38 @@ const NearbyCustomersMap = ({ availableRides, onClose, navigation }) => {
         </Marker>
 
         {/* Customer Markers */}
-        {availableRides.map((ride) => (
-          <Marker
-            key={ride.id}
-            coordinate={{
-              latitude: parseFloat(ride.ridelocations.customer_latitude),
-              longitude: parseFloat(ride.ridelocations.customer_longitude),
-            }}
-            title={`${ride.first_name} ${ride.last_name}`}
-            description={ride.ride_type}
-            onCalloutPress={() => handleMarkerPress(ride)}
-          >
-            <Image source={customerMarker} style={styles.markerIcon} />
-          </Marker>
-        ))}
+        {availableRides.map((ride, index) => {
+          // Ensure ridelocations exist
+          if (!ride.ridelocations) {
+            console.warn(`Ride ${ride.ride_id} has no ridelocations.`);
+            return null; // Skip this ride
+          }
+
+          // Parse coordinates
+          const customerLat = parseFloat(ride.ridelocations.customer_latitude);
+          const customerLong = parseFloat(ride.ridelocations.customer_longitude);
+
+          // Check for valid coordinates
+          if (isNaN(customerLat) || isNaN(customerLong)) {
+            console.warn(`Invalid coordinates for ride ${ride.ride_id}:`, customerLat, customerLong);
+            return null; // Skip if invalid
+          }
+
+          return (
+            <Marker
+              key={ride.ride_id || `ride-marker-${index}`}
+              coordinate={{
+                latitude: customerLat,
+                longitude: customerLong,
+              }}
+              title={`${ride.first_name} ${ride.last_name}`}
+              description={ride.ride_type}
+              onCalloutPress={() => handleMarkerPress(ride)}
+            >
+              <Image source={customerMarker} style={styles.markerIcon} />
+            </Marker>
+          );
+        })}
       </MapView>
 
       <TouchableOpacity style={styles.closeButton} onPress={onClose}>

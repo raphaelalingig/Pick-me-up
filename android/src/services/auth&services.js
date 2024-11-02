@@ -54,21 +54,20 @@ const userService = {
     }
   },
 
-  requestOtp: async (userData) => {
+  updateRiderStatusAndLocation: async (locationData) =>{
     try {
-      await axios.post(API_URL + 'send-otp', userData);
-    } catch (error) {
-        console.error('Signup error:', error);
-        throw error;
-    }
-  },
+      const user_id = await userService.getUserId();
 
-  verifyOtp: async (data) => {
-    try {
-      await axios.post(API_URL + 'verify-otp');
+      const response = await axios.put(API_URL + "rider_available", {
+        longitude: locationData.longitude,
+        latitude: locationData.latitude,
+        status: "Available",
+        user_id: user_id
+      });
+      return response.data;
     } catch (error) {
-        console.error('Signup error:', error);
-        throw error;
+      console.error("Failed to update rider status and location:", error);
+      throw error;
     }
   },
 

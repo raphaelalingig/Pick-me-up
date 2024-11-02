@@ -187,6 +187,10 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
       ride_type: "Motor Taxi",
       pickup_location: pickupAddress,
       dropoff_location: dropoffAddress,
+      // details: {
+      //   fare: parseFloat(fare),
+      //   totalDistanceRide: totalDistanceRide
+      // },
       fare: parseFloat(fare),
       status: "Available",
     };
