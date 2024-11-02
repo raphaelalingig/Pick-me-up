@@ -226,7 +226,10 @@ const styles = StyleSheet.create({
   noRidesText: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#000000",
+    color: "white",
+    padding: 10,
+    backgroundColor: "black",
+    borderRadius: 10,
   },
   mapButton: {
     backgroundColor: '#000000',
