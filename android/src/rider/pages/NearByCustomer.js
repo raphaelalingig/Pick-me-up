@@ -12,6 +12,7 @@ import {
 import FindingCustomerSpinner from "../spinner/FindingCustomerSpinner";
 import NearbyCustomersMap from "./NearbyCustomersMap"; // Import the new component
 import userService from "../../services/auth&services";
+import Pusher from "pusher-js/react-native"; // Import Pusher
 
 const NearbyCustomerScreen = ({ navigation }) => {
   const [showSpinner, setShowSpinner] = useState(true);
@@ -19,10 +20,10 @@ const NearbyCustomerScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [showMap, setShowMap] = useState(false);
   
-
   const fetchAvailableRides = useCallback(async () => {
     try {
       const response = await userService.getAvailableRides();
+      console.log('Fetched rides:', response.data);
 
       // Sort the rides by date in descending order (oldest to latest)
       const sortedRides = response.data.sort(
@@ -35,35 +36,59 @@ const NearbyCustomerScreen = ({ navigation }) => {
       console.error("Failed to fetch available rides:", error);
       setShowSpinner(false);
     }
-  });
+  }, []); // Make sure to include dependencies if needed
+
+  useEffect(() => {
+    const pusher = new Pusher('1b95c94058a5463b0b08', {
+        cluster: 'ap1',
+    });
+
+    const channel = pusher.subscribe('rides');
+
+    channel.bind('RIDES_UPDATE', (data) => {
+      console.log('Received rides update:', data.rides);
+      setAvailableRides(prevRides => {
+          const updatedRides = [...prevRides, ...data.rides];
+          // Remove duplicates if necessary
+          return [...new Map(updatedRides.map(ride => [ride.ride_id, ride])).values()];
+      });
+    });
+
+    // Fetch available rides initially
+    fetchAvailableRides();
+
+    // Clean up the Pusher connection on unmount
+    return () => {
+        pusher.unsubscribe('rides');
+    };
+  }, [fetchAvailableRides]); // Include fetchAvailableRides as a dependency
 
   const onRefresh = useCallback(async () => {
-    await setRefreshing(true);
+    setRefreshing(true);
     setShowSpinner(true);
     await fetchAvailableRides();
     setRefreshing(false);
   }, [fetchAvailableRides]);
-
-  // Automatically refresh when the screen is focused
-  useFocusEffect(
-    useCallback(() => {
-      const intervalId = setInterval(() => {
-        fetchAvailableRides();
-      }, 10000); // Fetch every 10 seconds
-  
-      return () => clearInterval(intervalId); // Cleanup on unmount
-    }, [fetchAvailableRides])
-  );
-  
 
   const handleDetailsButtonPress = (ride) => {
     console.log("Details button pressed for ride:", ride.ride_id);
     navigation.navigate("BookingDetails", { ride });
   };
 
+  const handleShowMap = () => {
+    console.log("Available Rides:", availableRides);
+
+    if (availableRides.length > 0) {
+      setShowMap(true);
+    } else {
+      console.warn("No available rides to show on the map.");
+    }
+  };
+
   return (
     <>
       {showMap && (
+        
         <NearbyCustomersMap
           availableRides={availableRides}
           onClose={() => setShowMap(false)}
@@ -90,7 +115,7 @@ const NearbyCustomerScreen = ({ navigation }) => {
           {!showSpinner && (
             <TouchableOpacity
               style={styles.mapButton}
-              onPress={() => setShowMap(true)}
+              onPress={handleShowMap}
             >
               <Text style={styles.mapButtonText}>Show in Map</Text>
             </TouchableOpacity>
@@ -103,25 +128,25 @@ const NearbyCustomerScreen = ({ navigation }) => {
           )}
           
           <ScrollView contentContainerStyle={styles.container}>
-          {availableRides.map((ride) => (
-            <View key={ride.id} style={styles.customerCard}>
-              <View style={styles.customerInfo}>
-                <Text style={styles.customerText}>
-                  Name: {`${ride.first_name} ${ride.last_name}`}
-                </Text>
-                <Text style={styles.customerText}>Pickup: {ride.ride_type}</Text>
+            {availableRides.map((ride, index) => (
+              <View key={ride.ride_id || `ride-${index}`} style={styles.customerCard}>
+                <View style={styles.customerInfo}>
+                  <Text style={styles.customerText}>
+                    Name: {`${ride.first_name} ${ride.last_name}`}
+                  </Text>
+                  <Text style={styles.customerText}>Pickup: {ride.ride_type}</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.detailsButton}
+                  onPress={() => handleDetailsButtonPress(ride)}
+                >
+                  <Text style={styles.detailsButtonText}>
+                    Details
+                  </Text>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                style={styles.detailsButton}
-                onPress={() => handleDetailsButtonPress(ride)}
-              >
-                <Text style={styles.detailsButtonText}>
-                  Details
-                </Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </ScrollView>
+            ))}
+          </ScrollView>
         </ImageBackground>
       </ScrollView>
     </>
@@ -221,4 +246,5 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+
 export default NearbyCustomerScreen;

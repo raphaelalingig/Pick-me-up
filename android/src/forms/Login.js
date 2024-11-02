@@ -5,6 +5,8 @@ import { Button, Text, Dialog, Portal } from "react-native-paper";
 import { useAuth } from "../services/useAuth";
 import userService from "../services/auth&services";
 import CustomIconInput from "./CustomIconInput";
+import * as Location from 'expo-location';
+
 
 const Login = ({ navigation }) => {
   const [user_name, setUsername] = useState("");
@@ -18,6 +20,35 @@ const Login = ({ navigation }) => {
   const [hideEntry, setHideEntry] = useState(true);
   const [user, setUser] = useState("");
   const [status, setStatus] = useState(null);
+
+
+
+  const getCurrentLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === 'granted') {
+        const location = await Location.getCurrentPositionAsync({});
+        console.log("Location fetched successfully:", location);
+        
+        // Update rider status and location
+        await userService.updateRiderStatusAndLocation({
+          longitude: location.coords.longitude,
+          latitude: location.coords.latitude,
+          status: "Available",
+        });
+        console.log("Location updated successfully in the database");
+        
+        
+      } else {
+        console.error("Location permission not granted");
+        setError("Location permission is required to proceed.");
+      }
+    } catch (error) {
+      console.error("Error fetching location:", error);
+      setError("An error occurred while fetching location.");
+    }
+  };
+  
 
   const handleLogin = async () => {
     setError("");
@@ -39,11 +70,12 @@ const Login = ({ navigation }) => {
       setUser(user_id);
       setStatus(userStatus);
       console.log(user, userStatus);
+      
   
       if (role === 3 || role === 1 || role === 2) {
-        // setSelectedRole(role);
-        // setShowDialog(true);
         await login(receivedToken, role, user_id, userStatus);
+        await getCurrentLocation();
+        // Navigate after location update
         navigation.replace(role === 3 ? "RiderStack" : "CustomerStack");
       } else if (role === 4) {
         await login(receivedToken, role, user_id, userStatus);

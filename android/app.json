@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "android",
-    "slug": "android",
+    "name": "Pick Me Up",
+    "slug": "pick-me-up",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

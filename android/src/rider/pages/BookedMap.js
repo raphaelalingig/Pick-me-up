@@ -156,16 +156,6 @@ const BookedMap = ({ navigation, route }) => {
         </Text>
         <Text style={styles.totalFare}>Total Fare: ₱{totalFare}</Text>
       </View>
-      <View style={styles.nextButtonContainer}>
-        <Button
-          style={styles.nextButtonStyle}
-          onPress={() => navigation.navigate("Submit Report")}
-        >
-          <Text variant="labelLarge" style={{ color: "white" }}>
-            Next
-          </Text>
-        </Button>
-      </View>
     </View>
   );
 };

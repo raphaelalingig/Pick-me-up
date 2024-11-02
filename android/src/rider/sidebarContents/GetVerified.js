@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { View, ScrollView, StyleSheet, Image, ToastAndroid, TouchableOpacity, ImageBackground } from "react-native";
+import { View, ScrollView, StyleSheet, Image, ToastAndroid, TouchableOpacity, ImageBackground, ActivityIndicator } from "react-native";
 import { TextInput, Button, Card, Title, Divider } from "react-native-paper";
 import * as ImagePicker from "expo-image-picker";
 import userService from "../../services/auth&services";
@@ -9,13 +9,12 @@ import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEff
 
 const GetVerified = () => {
   const [licenseNumber, setLicenseNumber] = useState("");
-  const [licenseExpDate, setLicenseExpDate] = useState(new Date()); // or null
-  const [orExpDate, setOrExpDate] = useState(new Date()); // or null
+  const [licenseExpDate, setLicenseExpDate] = useState(new Date());
+  const [orExpDate, setOrExpDate] = useState(new Date());
   const [motorPlateNumber, setMotorPlateNumber] = useState("");
   
   const [licenseImage, setLicenseImage] = useState(null);
   const [orCr, setOrCr] = useState(null);
-  const [COR, setCOR] = useState(null);
   const [motorModel, setMotorModel] = useState(null);
   const [tplInsurance, setTplInsurance] = useState(null);
   const [brgyClearance, setBrgyClearance] = useState(null);
@@ -23,6 +22,9 @@ const GetVerified = () => {
 
   const [showLicenseDatePicker, setShowLicenseDatePicker] = useState(false);
   const [showOrExpDatePicker, setShowOrExpDatePicker] = useState(false);
+
+  // New loading state
+  const [isLoading, setIsLoading] = useState(false);
 
   const showToast = (message = "Something went wrong") => {
     ToastAndroid.show(message, 3000);
@@ -35,10 +37,9 @@ const GetVerified = () => {
       console.log("Uploaded images response:", uploadedImages);
         
       if (uploadedImages && uploadedImages.success) {
-        const { data } = uploadedImages; // Extract the data
+        const { data } = uploadedImages;
         setLicenseImage(data.license_image_url);
         setOrCr(data.or_cr_image_url);
-        setCOR(data.cor_image_url);
         setMotorModel(data.motor_model_image_url);
         setTplInsurance(data.tpl_insurance_image_url);
         setBrgyClearance(data.brgy_clearance_image_url);
@@ -55,7 +56,7 @@ const GetVerified = () => {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
         alert('Sorry, we need camera roll permissions to make this work!');
-        return; // Early return if permissions are not granted
+        return;
       }
     };
 
@@ -89,6 +90,7 @@ const GetVerified = () => {
 
   const handleSubmit = async () => {
     try {
+      setIsLoading(true); // Start loading
       const uploadImage = async (imageUri, requirementId) => {
         if (!imageUri) return;
 
@@ -101,8 +103,6 @@ const GetVerified = () => {
         });
 
         const response = await userService.upload(formData);
-        console.log(`Upload response for requirement ${requirementId}:`, response);
-
         if (response && response.success) {
           console.log(`Uploaded requirement ${requirementId} successfully`);
         } else {
@@ -110,42 +110,31 @@ const GetVerified = () => {
         }
       };
 
-      // await Promise.all([
-      //   uploadImage(motorModel, 1),
-      //   uploadImage(orCr, 2),
-      //   uploadImage(COR, 4),
-      //   uploadImage(licenseImage, 5),
-      //   uploadImage(tplInsurance, 8),
-      //   uploadImage(brgyClearance, 9),
-      //   uploadImage(policeClearance, 10),
-      // ]);
-
-      await uploadImage(motorModel, 1);
-      await uploadImage(orCr, 2);
-      await uploadImage(COR, 4);
-      await uploadImage(licenseImage, 5),
-      await uploadImage(tplInsurance, 8),
-      await uploadImage(brgyClearance, 9),
-      await uploadImage(policeClearance, 10)
-
       if (!licenseNumber || !licenseExpDate || !motorPlateNumber) {
         showToast("Please fill in all required fields.");
         return;
       }
   
+      const uploadPromises = [
+        uploadImage(motorModel, 1),
+        uploadImage(orCr, 2),
+        uploadImage(licenseImage, 4),
+        uploadImage(tplInsurance, 7),
+        uploadImage(brgyClearance, 8),
+        uploadImage(policeClearance, 9),
+      ];
+  
+      await Promise.all(uploadPromises);
+  
       const textData = {
         or_expiration_date: orExpDate.toISOString().split('T')[0],
         drivers_license_number: licenseNumber,
         license_expiration_date: licenseExpDate.toISOString().split('T')[0],
-        plate_number: motorPlateNumber
+        plate_number: motorPlateNumber,
       };
   
-      // Log the data being submitted
-      console.log('Submitting rider info:', textData);
-  
       const updateResponse = await userService.updateRiderInfo(textData);
-      console.log("Update rider info response:", updateResponse);
-  
+      
       if (updateResponse && updateResponse.success) {
         showToast("All documents uploaded and information updated successfully");
       } else {
@@ -154,6 +143,8 @@ const GetVerified = () => {
     } catch (error) {
       console.error("Error uploading documents or updating information:", error);
       showToast(`Error: ${error.message || 'Unknown error'}. Please try again.`);
+    } finally {
+      setIsLoading(false); // End loading
     }
   };
 
@@ -186,78 +177,75 @@ const GetVerified = () => {
 
   return (
     <ImageBackground
-    source={require("../../pictures/13.png")} // Replace with your map image URL or local asset
-    style={styles.background}
+      source={require("../../pictures/13.png")} // Replace with your map image URL or local asset
+      style={styles.background}
     >
-    <ScrollView contentContainerStyle={styles.container}>
-      <Card style={styles.card}>
-        <Title style={styles.title}>Verify Your Account</Title>
-        
-
-
-        {/* Section: License Details */}
-        <Title style={styles.sectionTitle}>License Details</Title>
-        <Divider style={styles.divider} />
-        {renderImageOrIcon(licenseImage, () => pickImage(setLicenseImage), "License Image")}
-        <TextInput
-          label="License Number"
-          value={licenseNumber}
-          onChangeText={setLicenseNumber}
-          style={styles.input}
-        />
-        <TouchableOpacity onPress={() => setShowLicenseDatePicker(true)}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Card style={styles.card}>
+          <Title style={styles.title}>Verify Your Account</Title>
+          
+          {/* Section: License Details */}
+          <Title style={styles.sectionTitle}>License Details</Title>
+          <Divider style={styles.divider} />
+          {renderImageOrIcon(licenseImage, () => pickImage(setLicenseImage), "License Image")}
           <TextInput
-            label="License Expiration Date"
-            value={licenseExpDate.toDateString()}
-            editable={false}
+            label="License Number"
+            value={licenseNumber}
+            onChangeText={setLicenseNumber}
             style={styles.input}
           />
-        </TouchableOpacity>
-        {showLicenseDatePicker && (
-          <DateTimePicker
-            testID="licenseDatePicker"
-            value={licenseExpDate}
-            mode="date"
-            is24Hour={true}
-            display="default"
-            onChange={onChangeLicenseDate}
-          />
-        )}
+          <TouchableOpacity onPress={() => setShowLicenseDatePicker(true)}>
+            <TextInput
+              label="License Expiration Date"
+              value={licenseExpDate.toDateString()}
+              editable={false}
+              style={styles.input}
+            />
+          </TouchableOpacity>
+          {showLicenseDatePicker && (
+            <DateTimePicker
+              testID="licenseDatePicker"
+              value={licenseExpDate}
+              mode="date"
+              is24Hour={true}
+              display="default"
+              onChange={onChangeLicenseDate}
+            />
+          )}
 
-        {/* Section: Vehicle Information */}
-        <Title style={styles.sectionTitle}>Vehicle Information</Title>
-        <Divider style={styles.divider} />
-        {renderImageOrIcon(motorModel, () => pickImage(setMotorModel), "Motor Model Image")}
-        {renderImageOrIcon(orCr, () => pickImage(setOrCr), "OR/CR Image")}
-        {renderImageOrIcon(COR, () => pickImage(setCOR), "COR Image")}
+          {/* Section: Vehicle Information */}
+          <Title style={styles.sectionTitle}>Vehicle Information</Title>
+          <Divider style={styles.divider} />
+          {renderImageOrIcon(motorModel, () => pickImage(setMotorModel), "Motor Model Image")}
+          {renderImageOrIcon(orCr, () => pickImage(setOrCr), "OR/CR Image")}
 
-        <TouchableOpacity onPress={() => setShowOrExpDatePicker(true)}>
+          <TouchableOpacity onPress={() => setShowOrExpDatePicker(true)}>
+            <TextInput
+              label="OR Expiration Date"
+              value={orExpDate.toDateString()}
+              editable={false}
+              style={styles.input}
+            />
+          </TouchableOpacity>
+          {showOrExpDatePicker && (
+            <DateTimePicker
+              testID="orDatePicker"
+              value={orExpDate}
+              mode="date"
+              is24Hour={true}
+              display="default"
+              onChange={onChangeOrExpDate}
+            />
+          )}
+
           <TextInput
-            label="OR Expiration Date"
-            value={orExpDate.toDateString()}
-            editable={false}
+            label="Plate Number"
+            value={motorPlateNumber}
+            onChangeText={setMotorPlateNumber}
             style={styles.input}
           />
-        </TouchableOpacity>
-        {showOrExpDatePicker && (
-          <DateTimePicker
-            testID="orExpDatePicker"
-            value={orExpDate}
-            mode="date"
-            is24Hour={true}
-            display="default"
-            onChange={onChangeOrExpDate}
-          />
-        )}
 
-        <TextInput
-          label="Motor Plate Number"
-          value={motorPlateNumber}
-          onChangeText={setMotorPlateNumber}
-          style={styles.input}
-        />
-
-        {/* Section: Clearances */}
+          {/* Section: Clearances */}
         <Title style={styles.sectionTitle}>Clearances</Title>
         <Divider style={styles.divider} />
         {renderImageOrIcon(brgyClearance, () => pickImage(setBrgyClearance), "Barangay Clearance")}
@@ -265,6 +253,9 @@ const GetVerified = () => {
         {renderImageOrIcon(tplInsurance, () => pickImage(setTplInsurance), "TPL Insurance")}
 
         {/* Cancel and Confirm Buttons */}
+        {isLoading ? (
+            <ActivityIndicator size="large" color="#0000ff" style={styles.loadingIndicator} />
+          ) : (
         <View style={styles.buttonContainer}>
           <Button
             mode="contained"
@@ -272,7 +263,7 @@ const GetVerified = () => {
             style={[styles.button, styles.cancelButton]}
           >
             Cancel
-          </Button>
+            </Button>
           <Button
             mode="contained"
             onPress={handleSubmit}
@@ -281,13 +272,13 @@ const GetVerified = () => {
             Confirm
           </Button>
         </View>
+          )}
         
-      </Card>
-    </ScrollView>
+        </Card>
+      </ScrollView>
     </ImageBackground>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
@@ -368,6 +359,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'white',
+  },
+  loadingIndicator: {
+    marginVertical: 20,
   },
 });
 

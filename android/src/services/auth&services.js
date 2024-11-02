@@ -28,8 +28,8 @@ const userService = {
     try {
       await axios.post(API_URL + 'signup', userData);
     } catch (error) {
-        console.error('Signup error:', error);
-        throw error;
+      // Remove the console error to prevent logging 422 errors
+      throw error;  // Rethrow the error for handling in handleRegistration
     }
   },
 
@@ -54,21 +54,20 @@ const userService = {
     }
   },
 
-  requestOtp: async (userData) => {
+  updateRiderStatusAndLocation: async (locationData) =>{
     try {
-      await axios.post(API_URL + 'send-otp', userData);
-    } catch (error) {
-        console.error('Signup error:', error);
-        throw error;
-    }
-  },
+      const user_id = await userService.getUserId();
 
-  verifyOtp: async (data) => {
-    try {
-      await axios.post(API_URL + 'verify-otp');
+      const response = await axios.put(API_URL + "rider_available", {
+        longitude: locationData.longitude,
+        latitude: locationData.latitude,
+        status: "Available",
+        user_id: user_id
+      });
+      return response.data;
     } catch (error) {
-        console.error('Signup error:', error);
-        throw error;
+      console.error("Failed to update rider status and location:", error);
+      throw error;
     }
   },
 
@@ -81,7 +80,10 @@ const userService = {
   },
 
   fetchCustomer: async () => {
-    const response = await axios.get(API_URL + 'customer');
+    const user_id = await userService.getUserId();
+    console.log(user_id)
+    const response = await axios.get(API_URL + `customerId/${user_id}`);
+    
     return response.data;
   },
 
@@ -302,6 +304,23 @@ const userService = {
     try {
       // Ensure the key in the request body matches what the backend expects
       const response = await axios.put(`${API_URL}accept_ride/${ride_id}`, { user_id: userId });
+      return response;
+    } catch (error) {
+      console.error("Error accepting ride:", error);
+      throw error;
+    }
+  },
+
+  apply_ride: async (ride_id) => { 
+    const userId = await userService.getUserId();
+    if (!userId) {
+      console.error("User ID not found");
+      return false;
+    }
+  
+    try {
+      // Ensure the key in the request body matches what the backend expects
+      const response = await axios.post(`${API_URL}apply_ride/${ride_id}`, { user_id: userId });
       return response;
     } catch (error) {
       console.error("Error accepting ride:", error);

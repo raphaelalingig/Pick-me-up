@@ -32,37 +32,37 @@ const BookingDetailsScreen = ({ route, navigation }) => {
     fetchUserId();
   }, []);
 
-  const getCurrentLocation = async () => {
-    let { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") {
-      throw new Error("Permission to access location was denied");
-    }
+  // const getCurrentLocation = async () => {
+  //   let { status } = await Location.requestForegroundPermissionsAsync();
+  //   if (status !== "granted") {
+  //     throw new Error("Permission to access location was denied");
+  //   }
 
-    try {
-      let location = await Location.getCurrentPositionAsync({});
-      const newRideLocation = `${location.coords.latitude}, ${location.coords.longitude}`;
-      setRiderLocation(newRideLocation);
+  //   try {
+  //     let location = await Location.getCurrentPositionAsync({});
+  //     const newRideLocation = `${location.coords.latitude}, ${location.coords.longitude}`;
+  //     setRiderLocation(newRideLocation);
 
-      const [riderLat, riderLng] = newRideLocation.split(",");
+  //     const [riderLat, riderLng] = newRideLocation.split(",");
 
-      const riderLocationDetails = {
-        ride_id: ride.ride_id,
-        rider_latitude: parseFloat(riderLat),
-        rider_longitude: parseFloat(riderLng),
-      };
+  //     const riderLocationDetails = {
+  //       ride_id: ride.ride_id,
+  //       rider_latitude: parseFloat(riderLat),
+  //       rider_longitude: parseFloat(riderLng),
+  //     };
 
-      const response = await userService.saveRiderLocation(
-        riderLocationDetails
-      );
-      console.log("Rider location saved successfully:", response.data);
-      return response.data;
-    } catch (error) {
-      console.error("Failed to get or save rider location:", error);
-      throw error; // Re-throw the error to be caught in handleAccept
-    }
-  };
+  //     const response = await userService.saveRiderLocation(
+  //       riderLocationDetails
+  //     );
+  //     console.log("Rider location saved successfully:", response.data);
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error("Failed to get or save rider location:", error);
+  //     throw error; // Re-throw the error to be caught in handleAccept
+  //   }
+  // };
 
-  const handleAccept = async (ride) => {
+  const handleApply = async (ride) => {
     if (!userId) {
       Alert.alert("Error", "User ID is not available.");
       return;
@@ -71,10 +71,12 @@ const BookingDetailsScreen = ({ route, navigation }) => {
     console.log("Attempting to accept ride with ID:", ride.ride_id);
     setIsLoading(true);
     try {
-      await getCurrentLocation();
-      const response = await userService.accept_ride(ride.ride_id);
+      const response = await userService.apply_ride(ride.ride_id);
       console.log("Accept ride response:", response.data);
-      if (response.data && response.data.message) {
+      if (response.data.message === "exist") {
+        Alert.alert("Message", 'You have already applied for this ride.');
+        navigation.goBack();
+      }else if (response.data && response.data.message){
         Alert.alert("Success", response.data.message);
         navigation.navigate("Home");
       } else {
@@ -106,6 +108,53 @@ const BookingDetailsScreen = ({ route, navigation }) => {
       setIsLoading(false);
     }
   };
+
+  // const handleAccept = async (ride) => {
+  //   if (!userId) {
+  //     Alert.alert("Error", "User ID is not available.");
+  //     return;
+  //   }
+
+  //   await getCurrentLocation;
+
+  //   console.log("Attempting to accept ride with ID:", ride.ride_id);
+  //   setIsLoading(true);
+  //   try {
+  //     const response = await userService.apply_ride(ride.ride_id);
+  //     console.log("Accept ride response:", response.data);
+  //     if (response.data && response.data.message) {
+  //       Alert.alert("Success", response.data.message);
+  //       navigation.navigate("Home");
+  //     } else {
+  //       Alert.alert("Error", "Failed to accept the ride. Please try again.");
+  //     }
+  //   } catch (error) {
+  //     console.error(
+  //       "Failed to Accept Ride",
+  //       error.response ? error.response.data : error.message
+  //     );
+  //     if (error.response && error.response.status === 404) {
+  //       Alert.alert(
+  //         "Error",
+  //         "Ride or ride location not found. Please try again."
+  //       );
+  //     } else if (error.response && error.response.status === 400) {
+  //       Alert.alert(
+  //         "Error",
+  //         error.response.data.error || "This ride is no longer available."
+  //       );
+  //     } else {
+  //       Alert.alert(
+  //         "Error",
+  //         "An error occurred while getting location or accepting the ride. Please try again."
+  //       );
+  //     }
+  //     navigation.goBack();
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
 
   const handleViewLocation = () => {
     console.log("Navigating to Booked Location with ride data:", ride);
@@ -152,11 +201,11 @@ const BookingDetailsScreen = ({ route, navigation }) => {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.acceptButton}
-            onPress={() => handleAccept(ride)}
+            onPress={() => handleApply(ride)}
             disabled={isLoading}
           >
             <Text style={styles.acceptButtonText}>
-              {isLoading ? "Accepting..." : "Accept"}
+              {isLoading ? "Accepting..." : "Apply"}
             </Text>
           </TouchableOpacity>
         </View>

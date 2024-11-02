@@ -22,12 +22,12 @@ const BookNow = ({ setCurrentForm, navigation, checkRideAndLocation }) => {
   const handleBookNow = async () => {
     setLoading(true);
     try {
-      const user_status = await userService.getUserStatus();
-      console.log(user_status)
-      if (user_status === "Disabled") {
-        alert("Your Account has been Disabled! Contact Admin for more Info and Try Relogging In.");
-        return "Can not Book";
+      const user_status = await userService.fetchCustomer();
+      if (user_status.message === "Account Disabled") {
+        alert("Your account has been disabled! Contact Admin for more info.");
+        return "Cannot Book";
       }
+      console.log("User is verified and account is active.");
 
       const result = await checkRideAndLocation();
       if (result === "proceed") {
@@ -105,6 +105,7 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
           text: "OK",
           onPress: () => {
             if (selectedService) {
+              setCurrentForm("BookNow")
               navigation.navigate(selectedService); // Navigate to the selected service screen
             }
           },
@@ -213,7 +214,24 @@ const MainComponent = ({ navigation }) => {
 
   const checkRideAndLocation = useCallback(async () => {
     try {
-      // Check for existing booking or ride
+      // Get location if no existing ride
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setErrorMsg("Permission to access location was denied");
+        return "location_denied";
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      setLocation(location);
+
+      setCustomerCoords({
+        accuracy: location.coords.accuracy,
+        longitude: location.coords.longitude,
+        latitude: location.coords.latitude,
+        altitude: location.coords.altitude,
+        altitudeAccuracy: location.coords.altitudeAccuracy,
+        timestamp: location.timestamp,
+      });
 
       const response = await userService.checkActiveBook();
       const ride = response.rideDetails;
@@ -234,25 +252,6 @@ const MainComponent = ({ navigation }) => {
             return "review";
         }
       }
-
-      // Get location if no existing ride
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        setErrorMsg("Permission to access location was denied");
-        return "location_denied";
-      }
-
-      let location = await Location.getCurrentPositionAsync({});
-      setLocation(location);
-
-      setCustomerCoords({
-        accuracy: location.coords.accuracy,
-        longitude: location.coords.longitude,
-        latitude: location.coords.latitude,
-        altitude: location.coords.altitude,
-        altitudeAccuracy: location.coords.altitudeAccuracy,
-        timestamp: location.timestamp,
-      });
 
       return "proceed";
     } catch (error) {
