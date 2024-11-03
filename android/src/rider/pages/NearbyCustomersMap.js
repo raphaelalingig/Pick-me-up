@@ -39,15 +39,15 @@ const NearbyCustomersMap = ({ availableRides, onClose, navigation }) => {
 
         {/* Customer Markers */}
         {availableRides.map((ride, index) => {
-          // Ensure ridelocations exist
-          if (!ride.ridelocations) {
+          // Ensure ridelocations exist 
+          if (!ride.customer_latitude || ! ride.customer_longitude) {
             console.warn(`Ride ${ride.ride_id} has no ridelocations.`);
             return null; // Skip this ride
           }
 
           // Parse coordinates
-          const customerLat = parseFloat(ride.ridelocations.customer_latitude);
-          const customerLong = parseFloat(ride.ridelocations.customer_longitude);
+          const customerLat = parseFloat(ride.customer_latitude);
+          const customerLong = parseFloat(ride.customer_longitude);
 
           // Check for valid coordinates
           if (isNaN(customerLat) || isNaN(customerLong)) {
