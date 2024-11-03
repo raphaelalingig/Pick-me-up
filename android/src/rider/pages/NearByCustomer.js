@@ -31,6 +31,7 @@ const NearbyCustomerScreen = ({ navigation }) => {
       );
 
       setAvailableRides(sortedRides);
+      console.log(response.data)
       setShowSpinner(false);
     } catch (error) {
       console.error("Failed to fetch available rides:", error);
