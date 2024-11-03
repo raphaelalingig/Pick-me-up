@@ -77,29 +77,14 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
   ]);
 
   const getCurrentLocation = async () => {
-    let { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Permission to access location was denied");
-      return;
-    }
 
-    let location = await Location.getCurrentPositionAsync({});
-    setCustomerCoords({
-      accuracy: location.coords.accuracy,
-      longitude: location.coords.longitude,
-      latitude: location.coords.latitude,
-      altitude: location.coords.altitude,
-      altitudeAccuracy: location.coords.altitudeAccuracy,
-      timestamp: location.timestamp,
-    });
-
-    const newPickupLocation = `${location.coords.latitude}, ${location.coords.longitude}`;
+    const newPickupLocation = `${customerCoords.latitude}, ${customerCoords.longitude}`;
     setPickupLocation(newPickupLocation);
 
     try {
       const result = await Location.reverseGeocodeAsync({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
+        latitude: customerCoords.latitude,
+        longitude: customerCoords.longitude,
       });
       if (result.length > 0) {
         const { street, city, region, country } = result[0];
@@ -184,6 +169,7 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
       pickup_location: pickupAddress,
       dropoff_location: dropoffAddress,
       fare: parseFloat(fare),
+      distance: totalDistanceRide,
       status: "Available",
     };
 
@@ -277,6 +263,26 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
     }
   };
 
+  const clearPickupAddress = () => {
+    setPickupLocation("");
+    setPickupAddress("");
+    setPickupSuggestions([]);
+    if (dropoffLocation) {
+      setFare("40.00");
+      setTotalDistanceRide(0);
+    }
+  };
+
+  const clearDropoffAddress = () => {
+    setDropoffLocation("");
+    setDropoffAddress("");
+    setDropoffSuggestions([]);
+    if (pickupLocation) {
+      setFare("40.00");
+      setTotalDistanceRide(0);
+    }
+  };
+
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -291,12 +297,22 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
           
           <View style={styles.inputContainer}>
             <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="Pick me up from"
-                value={pickupAddress}
-                onChangeText={handlePickupInputChange}
-              />
+              <View style={styles.inputWithClear}>
+                <TextInput
+                  style={[styles.input, { flex: 1, marginBottom: 0 }]}
+                  placeholder="Pick me up from"
+                  value={pickupAddress}
+                  onChangeText={handlePickupInputChange}
+                />
+                {pickupAddress !== "" && (
+                  <TouchableOpacity
+                    style={styles.clearButton}
+                    onPress={clearPickupAddress}
+                  >
+                    <Text style={styles.clearButtonText}>×</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
               {pickupSuggestions.length > 0 && (
                 <View style={styles.suggestionsContainer}>
                   {pickupSuggestions.map((item) => (
@@ -328,12 +344,22 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
             </View>
 
             <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="Destination"
-                value={dropoffAddress}
-                onChangeText={handleDropoffInputChange}
-              />
+              <View style={styles.inputWithClear}>
+                <TextInput
+                  style={[styles.input, { flex: 1, marginBottom: 0 }]}
+                  placeholder="Destination"
+                  value={dropoffAddress}
+                  onChangeText={handleDropoffInputChange}
+                />
+                {dropoffAddress !== "" && (
+                  <TouchableOpacity
+                    style={styles.clearButton}
+                    onPress={clearDropoffAddress}
+                  >
+                    <Text style={styles.clearButtonText}>×</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
               {dropoffSuggestions.length > 0 && (
                 <View style={styles.suggestionsContainer}>
                   {dropoffSuggestions.map((item) => (
@@ -533,6 +559,29 @@ const styles = StyleSheet.create({
   flatList: {
     flex: 1,
     width: "100%",
+  },
+  inputWithClear: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  clearButton: {
+    padding: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  clearButtonText: {
+    fontSize: 20,
+    color: '#999',
+    fontWeight: 'bold',
+  },
+  input: {
+    backgroundColor: '#fff',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10,
   },
 });
 

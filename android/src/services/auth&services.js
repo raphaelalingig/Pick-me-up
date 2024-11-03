@@ -177,6 +177,28 @@ const userService = {
     }
   },
 
+  fetchLoc: async () => {
+    try {
+      const response = await axios.get(API_URL + "riders_loc");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching locations:", error);
+      throw error;
+    }
+  },
+
+  getRideApplications: async (ride_id) => {
+    try {
+      const response = await axios.get(`${API_URL}riders_apply`, {
+        params: { ride_id }
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching locations:", error);
+      throw error;
+    }
+  },
+
   checkActiveBook: async () => {
     try {
       const userId = await userService.getUserId();

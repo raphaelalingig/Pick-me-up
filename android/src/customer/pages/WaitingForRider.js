@@ -39,8 +39,11 @@ const WaitingRider = ({ navigation }) => {
   const [viewMode, setViewMode] = useState('details'); // 'details' or 'map'
   const [modalVisible, setModalVisible] = useState(false);
   const [applications, setApplications] = useState([]);
+  const [riderLocs, setRiderLocations] = useState([]);
+  const [loadingMessage, setLoadingMessage] = useState("Finding your rider...");
 
   const fetchLatestRide = useCallback(async () => {
+    setIsLoading(true);
     try {
       const ride = await userService.checkActiveBook();
       setBookDetails(ride.rideDetails);
@@ -52,18 +55,31 @@ const WaitingRider = ({ navigation }) => {
   }, []);
 
   const fetchApplications = useCallback(async () => {
+    console.log(bookDetails.ride_id)
     try {
       if (!bookDetails?.ride_id) return;
       const response = await userService.getRideApplications(bookDetails.ride_id);
-      setApplications(response.applications);
+      console.log(response)
+      setApplications(response);
       setModalVisible(true);
     } catch (error) {
       Alert.alert("Error", "Failed to retrieve rider applications.");
     }
   }, [bookDetails]);
 
+  const fetchLoc = useCallback(async () => {
+    try {
+      const response = await userService.fetchLoc();
+      console.log(response)
+      setRiderLocations(response);
+    } catch (error) {
+      Alert.alert("Error", "Failed to retrieve rider locations.");
+    }
+  }, []);
+
   useEffect(() => {
     fetchLatestRide();
+    fetchLoc();
   }, [fetchLatestRide]);
 
   const onRefresh = useCallback(() => {
@@ -73,7 +89,7 @@ const WaitingRider = ({ navigation }) => {
 
   const handleCancel = useCallback(async () => {
     if (!bookDetails?.ride_id) return;
-
+    setLoadingMessage("Canceling your ride...");
     setIsLoading(true);
     try {
       const response = await userService.cancel_ride(bookDetails.ride_id);
@@ -94,10 +110,29 @@ const WaitingRider = ({ navigation }) => {
     }
   }, [bookDetails, navigation]);
 
+  const handleCancelConfirmation = useCallback(() => {
+    Alert.alert(
+      "Cancel Ride",
+      "Are you sure you want to cancel this ride?",
+      [
+        { text: "No", style: "cancel" },
+        {
+          text: "Yes",
+          onPress: handleCancel,
+          style: "destructive",
+        },
+      ]
+    );
+  }, [handleCancel]);
+
+  const handleMarkerPress = (rider) => {
+    console.log("Rider", rider.user.first_name, "pressed")
+  };
+
   const renderLoadingScreen = () => (
     <View style={styles.loadingContainer}>
       <ActivityIndicator size="large" color="#007BFF" />
-      <Text style={styles.loadingText}>Finding your rider...</Text>
+      <Text style={styles.loadingText}>{loadingMessage}</Text>
     </View>
   );
 
@@ -142,7 +177,7 @@ const WaitingRider = ({ navigation }) => {
           </Chip>
           <Chip 
             icon="close-circle" 
-            onPress={handleCancel} 
+            onPress={handleCancelConfirmation} 
             style={[styles.chip, styles.cancelChip]}
           >
             Cancel Ride
@@ -162,19 +197,52 @@ const WaitingRider = ({ navigation }) => {
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
           <Text style={styles.modalTitle}>Nearby Rider Applications</Text>
+          
           <ScrollView>
-            {applications.map((app, index) => (
-              <Card key={index} style={styles.applicationCard}>
-                <Card.Content>
-                  <Text style={styles.applicantName}>{app.name}</Text>
-                  <View style={styles.applicantDetails}>
-                    <Text>Rating: {app.rating} ⭐</Text>
-                    <Text>Distance: {app.distance} km</Text>
-                  </View>
-                </Card.Content>
-              </Card>
-            ))}
+            {applications.length === 0 ? (
+              <Text style={styles.noApplicantText}>Currently no ride applicants</Text>
+            ) : (
+              applications.map((app, index) => (
+                <Card key={index} style={styles.applicationCard}>
+                  <Card.Content>
+                    <Text style={styles.applicantName}>
+                      {app.applier_details.first_name} {app.applier_details.last_name}
+                    </Text>
+                    <View style={styles.applicantDetails}>
+                      <Text>Rating: 4.4 ⭐</Text>
+                      <Text>Distance: 1000 km</Text>
+                    </View>
+                    <Button
+                      mode="contained"
+                      onPress={() => {
+                        const riderLat = parseFloat(app.applier_loc.rider_latitude);
+                        const riderLong = parseFloat(app.applier_loc.rider_longitude);
+                        if (isNaN(riderLat) || isNaN(riderLong)) {
+                          console.warn(`Invalid coordinates for applier ${app.ride_id}:`, riderLat, riderLong);
+                          return null; // Skip if invalid
+                        }
+                        
+                        setRegion({
+                          latitude: riderLat,
+                          longitude: riderLong,
+                          latitudeDelta: 0.05,
+                          longitudeDelta: 0.05,
+                        });
+                        setViewMode('map');
+                        setModalVisible(false);
+                        
+                      }}
+                      style={styles.showMapButton}
+                    >
+                      Show in Map
+                    </Button>
+
+                  </Card.Content>
+                </Card>
+              ))
+            )}
           </ScrollView>
+          
           <Button 
             mode="contained" 
             onPress={() => setModalVisible(false)}
@@ -202,6 +270,39 @@ const WaitingRider = ({ navigation }) => {
       >
         <Image source={customerMarker} style={styles.markerIcon} />
       </Marker>
+
+      {riderLocs.map((rider, index) => {
+          // Ensure ridelocations exist
+          if (!rider.rider_latitude || !rider.rider_longitude) {
+            console.warn(`Ride ${rider.rider_id} has no ridelocations.`);
+            return null; // Skip this ride
+          }
+
+          // Parse coordinates
+          const riderLat = parseFloat(rider.rider_latitude);
+          const riderLong = parseFloat(rider.rider_longitude);
+
+          // Check for valid coordinates
+          if (isNaN(riderLat) || isNaN(riderLong)) {
+            console.warn(`Invalid coordinates for ride ${rider.ride_id}:`, riderLat, riderLong);
+            return null; // Skip if invalid
+          }
+
+          return (
+            <Marker
+              key={rider.ride_id || `ride-marker-${index}`}
+              coordinate={{
+                latitude: riderLat,
+                longitude: riderLong,
+              }}
+              title={`${rider.user.first_name} ${rider.user.last_name}`}
+              // description={rider.ride_type}
+              onCalloutPress={() => handleMarkerPress(rider)}
+            >
+              <Image source={riderMarker} style={styles.markerIcon} />
+            </Marker>
+          );
+        })}
     </MapView>
   );
 
@@ -226,7 +327,10 @@ const WaitingRider = ({ navigation }) => {
             styles.toggleButton, 
             viewMode === 'map' ? styles.activeToggle : styles.inactiveToggle
           ]}
-          onPress={() => setViewMode('map')}
+          onPress={async () => {
+            await fetchLoc();
+            setViewMode('map');
+          }}
         >
           <Text style={styles.toggleText}>Rider Map</Text>
         </TouchableOpacity>
@@ -269,7 +373,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     padding: 10,
-    backgroundColor: 'transparent', // Changed to transparent
+    backgroundColor: 'transparent',
   },
   toggleButton: {
     flex: 1,
@@ -277,17 +381,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: 5,
     borderRadius: 10,
-    backgroundColor: 'transparent', // Changed to transparent
+    backgroundColor: 'transparent',
   },
   activeToggle: {
     borderBottomWidth: 2,
     borderBottomColor: '#007BFF',
   },
   inactiveToggle: {
-    backgroundColor: 'transparent', // Removed background color
+    backgroundColor: 'transparent',
   },
   toggleText: {
-    color: '#007BFF', // Active toggle text color
+    color: '#007BFF',
     fontWeight: 'bold',
   },
   background: {
@@ -383,9 +487,35 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 5,
   },
+  showMapButton: {
+    backgroundColor: '#007BFF',
+    borderRadius: 20,
+    paddingVertical: 1, 
+    marginVertical: 5, 
+    elevation: 4,
+    shadowColor: '#000', 
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
   closeModalButton: {
     marginTop: 15,
+    backgroundColor: '#FF3D00', 
+    borderRadius: 20,
+    paddingVertical: 10,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
+  
 });
 
 export default WaitingRider;

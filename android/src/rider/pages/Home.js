@@ -45,6 +45,8 @@ const Home = ({ navigation }) => {
     }
   };
 
+  
+
 
   const checkRideAndLocation = useCallback(async () => {
     try {
