@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
@@ -8,11 +8,12 @@ import {
   ScrollView,
   ImageBackground,
   RefreshControl,
+  Alert,
 } from "react-native";
 import FindingCustomerSpinner from "../spinner/FindingCustomerSpinner";
-import NearbyCustomersMap from "./NearbyCustomersMap"; // Import the new component
+import NearbyCustomersMap from "./NearbyCustomersMap";
 import userService from "../../services/auth&services";
-import Pusher from "pusher-js/react-native"; // Import Pusher
+import Pusher from "pusher-js/react-native";
 
 const NearbyCustomerScreen = ({ navigation }) => {
   const [showSpinner, setShowSpinner] = useState(true);
@@ -25,9 +26,8 @@ const NearbyCustomerScreen = ({ navigation }) => {
       const response = await userService.getAvailableRides();
       console.log('Fetched rides:', response.data);
 
-      // Sort the rides by date in descending order (oldest to latest)
       const sortedRides = response.data.sort(
-        (a, b) => new Date(a.created_at) - new Date(b.created_at)
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
       );
 
       setAvailableRides(sortedRides);
@@ -35,33 +35,67 @@ const NearbyCustomerScreen = ({ navigation }) => {
     } catch (error) {
       console.error("Failed to fetch available rides:", error);
       setShowSpinner(false);
+      Alert.alert("Error", "Failed to fetch available rides. Please try again.");
     }
-  }, []); // Make sure to include dependencies if needed
+  }, []);
 
+  // Set up Pusher connection
   useEffect(() => {
-    const pusher = new Pusher('1b95c94058a5463b0b08', {
+    let pusher;
+    try {
+      // Initialize Pusher
+      pusher = new Pusher('1b95c94058a5463b0b08', {
         cluster: 'ap1',
-    });
-
-    const channel = pusher.subscribe('rides');
-
-    channel.bind('RIDES_UPDATE', (data) => {
-      console.log('Received rides update:', data.rides);
-      setAvailableRides(prevRides => {
-          const updatedRides = [...prevRides, ...data.rides];
-          // Remove duplicates if necessary
-          return [...new Map(updatedRides.map(ride => [ride.ride_id, ride])).values()];
+        forceTLS: true,
+        encrypted: true,
       });
-    });
 
-    // Fetch available rides initially
-    fetchAvailableRides();
+      // Subscribe to the channel
+      const channel = pusher.subscribe('rides');
 
-    // Clean up the Pusher connection on unmount
+      // Debug connection state
+      pusher.connection.bind('state_change', states => {
+        console.log('Pusher state changed:', states);
+      });
+
+      pusher.connection.bind('connected', () => {
+        console.log('Successfully connected to Pusher');
+      });
+
+      pusher.connection.bind('error', error => {
+        console.error('Pusher connection error:', error);
+      });
+
+      // Listen for ride updates
+      channel.bind('RIDES_UPDATE', data => {
+        console.log('Received RIDES_UPDATE event:', data);
+        if (data && Array.isArray(data.rides)) {
+          const sortedRides = data.rides.sort(
+            (a, b) => new Date(b.created_at) - new Date(a.created_at)
+          );
+          setAvailableRides(sortedRides);
+        }
+      });
+
+      // Fetch initial data
+      fetchAvailableRides();
+
+    } catch (error) {
+      console.error('Error setting up Pusher:', error);
+    }
+
+    // Cleanup function
     return () => {
-        pusher.unsubscribe('rides');
+      if (pusher) {
+        try {
+          pusher.unsubscribe('rides');
+          pusher.disconnect();
+        } catch (error) {
+          console.error('Error cleaning up Pusher:', error);
+        }
+      }
     };
-  }, [fetchAvailableRides]); // Include fetchAvailableRides as a dependency
+  }, []);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -138,7 +172,10 @@ const NearbyCustomerScreen = ({ navigation }) => {
                 </View>
                 <TouchableOpacity
                   style={styles.detailsButton}
-                  onPress={() => handleDetailsButtonPress(ride)}
+                  onPress={async () => {
+                    await fetchAvailableRides();
+                    handleDetailsButtonPress(ride);
+                  }}
                 >
                   <Text style={styles.detailsButtonText}>
                     Details

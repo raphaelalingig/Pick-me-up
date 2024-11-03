@@ -34,7 +34,7 @@ const Login = ({ navigation }) => {
         await userService.updateRiderStatusAndLocation({
           longitude: location.coords.longitude,
           latitude: location.coords.latitude,
-          status: "Available",
+          status: "Online",
         });
         console.log("Location updated successfully in the database");
         
