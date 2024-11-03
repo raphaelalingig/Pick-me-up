@@ -77,7 +77,7 @@ const NearbyCustomerScreen = ({ navigation }) => {
           setAvailableRides(sortedRides);
         }
       });
-
+ 
       // Fetch initial data
       fetchAvailableRides();
 

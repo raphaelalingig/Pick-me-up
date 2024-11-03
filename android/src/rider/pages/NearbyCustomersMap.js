@@ -39,7 +39,7 @@ const NearbyCustomersMap = ({ availableRides, onClose, navigation }) => {
 
         {/* Customer Markers */}
         {availableRides.map((ride, index) => {
-          // Ensure ridelocations exist
+          // Ensure ridelocations exist 
           if (!ride.customer_latitude || ! ride.customer_longitude) {
             console.warn(`Ride ${ride.ride_id} has no ridelocations.`);
             return null; // Skip this ride
