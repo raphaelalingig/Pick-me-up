@@ -193,22 +193,37 @@ const BookingDetailsScreen = ({ route, navigation }) => {
         </TouchableOpacity>
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.cancelButtonText}>Back</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.acceptButton}
-            onPress={() => handleApply(ride)}
-            disabled={isLoading}
-          >
-            <Text style={styles.acceptButtonText}>
-              {isLoading ? "Accepting..." : "Apply"}
-            </Text>
-          </TouchableOpacity>
-        </View>
+  <TouchableOpacity
+    style={styles.cancelButton}
+    onPress={() => navigation.goBack()}
+  >
+    <Text style={styles.cancelButtonText}>Back</Text>
+  </TouchableOpacity>
+  <TouchableOpacity
+    style={styles.acceptButton}
+    onPress={() => {
+      Alert.alert(
+        "Confirm Application",
+        "Are you sure you want to apply for this ride?",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
+          {
+            text: "OK",
+            onPress: () => handleApply(ride),
+          },
+        ]
+      );
+    }}
+    disabled={isLoading}
+  >
+    <Text style={styles.acceptButtonText}>
+      {isLoading ? "Accepting..." : "Apply"}
+    </Text>
+  </TouchableOpacity>
+</View>
       </BlurView>
     </ImageBackground>
   );
