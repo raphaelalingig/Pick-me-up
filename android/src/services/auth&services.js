@@ -187,6 +187,16 @@ const userService = {
     }
   },
 
+  getApplications: async (userId) => {
+    try {
+      const response = await axios.get(`${API_URL}apply/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching applications:", error);
+      throw error;
+    }
+  },
+
   getRideApplications: async (ride_id) => {
     try {
       const response = await axios.get(`${API_URL}riders_apply`, {
@@ -194,7 +204,7 @@ const userService = {
       });
       return response.data;
     } catch (error) {
-      console.error("Error fetching locations:", error);
+      console.error("Error fetching applications:", error);
       throw error;
     }
   },
@@ -333,7 +343,7 @@ const userService = {
     }
   },
 
-  apply_ride: async (ride_id) => { 
+  apply_ride: async (ride_id, customer) => { 
     const userId = await userService.getUserId();
     if (!userId) {
       console.error("User ID not found");
@@ -342,7 +352,24 @@ const userService = {
   
     try {
       // Ensure the key in the request body matches what the backend expects
-      const response = await axios.post(`${API_URL}apply_ride/${ride_id}`, { user_id: userId });
+      const response = await axios.post(`${API_URL}apply_ride/${ride_id}`, { user_id: userId, customer_id: customer });
+      return response;
+    } catch (error) {
+      console.error("Error accepting ride:", error);
+      throw error;
+    }
+  },
+
+  apply_rider: async (ride_id, rider) => { 
+    const userId = await userService.getUserId();
+    if (!userId) {
+      console.error("User ID not found");
+      return false;
+    }
+  
+    try {
+      // Ensure the key in the request body matches what the backend expects
+      const response = await axios.post(`${API_URL}apply_rider/${ride_id}`, { user_id: userId , rider_id: rider});
       return response;
     } catch (error) {
       console.error("Error accepting ride:", error);

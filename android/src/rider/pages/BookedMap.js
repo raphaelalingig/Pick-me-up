@@ -19,8 +19,8 @@ const BookedMap = ({ navigation, route }) => {
   });
 
   const [customerLocation, setCustomerLocation] = useState({
-    latitude: parseFloat(ride.ridelocations.customer_latitude),
-    longitude: parseFloat(ride.ridelocations.customer_longitude),
+    latitude: parseFloat(ride.customer_latitude),
+    longitude: parseFloat(ride.customer_longitude),
     latitudeDelta: 0.05,
     longitudeDelta: 0.05,
   });

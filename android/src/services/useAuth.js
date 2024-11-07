@@ -9,7 +9,7 @@ export const useAuth = () => {
     throw new Error("useAuth must be used within an AuthProvider");
   }
 
-  const { isAuthenticated, setIsAuthenticated, userRole, setUserRole, userStatus, setUserStatus, loading } = context;
+  const { isAuthenticated, setIsAuthenticated, userRole, setUserRole, userStatus, setUserStatus, token, setToken, userId, setUserId, loading } = context;
 
   const login = useCallback(async (token, role, user_id, status) => { 
     try {
@@ -22,11 +22,12 @@ export const useAuth = () => {
       setIsAuthenticated(true);
       setUserRole(parseInt(role));
       setUserStatus(status);
+      setToken(token);
       console.log('Login successful:', { isAuthenticated: true, userRole: parseInt(role), user_id, status });
     } catch (error) {
       console.error("Error during login:", error);
     }
-  }, [setIsAuthenticated, setUserRole, setUserStatus]);
+  }, [setIsAuthenticated, setUserRole, setUserStatus, setToken, setUserId]);
 
   const logout = useCallback(async () => {
     try {
@@ -34,19 +35,23 @@ export const useAuth = () => {
       await AsyncStorage.removeItem("role");
       await AsyncStorage.removeItem("user_id");
       await AsyncStorage.removeItem("status");
+      await AsyncStorage.removeItem("user_id");
       setIsAuthenticated(false);
       setUserRole(null);
       setUserStatus(null);
+      setUserId(null);
       console.log('Logout successful');
     } catch (error) {
       console.error("Error during logout:", error);
     }
-  }, [setIsAuthenticated, setUserRole, setUserStatus]);
+  }, [setIsAuthenticated, setUserRole, setUserStatus, setToken, setUserId]);
 
   return {
     isAuthenticated,
     userRole,
     userStatus,
+    userId,
+    token,
     login,
     logout,
     loading

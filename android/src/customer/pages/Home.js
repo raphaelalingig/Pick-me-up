@@ -88,9 +88,11 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
 
   const handleServiceSelect = (service) => {
     setSelectedService(service);
+    handleBookPress();
   };
 
   const handleBookPress = () => {
+    console.log("Serive: ",selectedService)
     // Alert before proceeding with the booking
     Alert.alert(
       "Confirm Booking",
@@ -105,13 +107,16 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
           text: "OK",
           onPress: () => {
             if (selectedService) {
-              setCurrentForm("BookNow")
-              navigation.navigate(selectedService); // Navigate to the selected service screen
+              proceedWithBooking();
             }
           },
         },
       ]
     );
+  };
+  
+  const proceedWithBooking = () => {
+    navigation.navigate(selectedService); // Navigate to the selected service screen
   };
 
   return (
@@ -129,7 +134,9 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
               styles.serviceButton,
               selectedService === "Motor Taxi" && styles.selectedButton,
             ]}
-            onPress={() => handleServiceSelect("Motor Taxi")}
+            onPress={() => {
+              navigation.navigate("Motor Taxi");
+            }}
           >
             <MaterialCommunityIcons name="motorbike" size={24} color="black" />
             <Text
@@ -145,7 +152,7 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={[
               styles.serviceButton,
               selectedService === "Delivery" && styles.selectedButton,
@@ -185,7 +192,7 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
             <Text style={styles.serviceDescription}>
               Ride with friend & family
             </Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
         </View>
         <View style={styles.actionContainer}>
@@ -195,9 +202,9 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
           >
             <Text style={styles.cancelButtonText}>CANCEL</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.bookButton} onPress={handleBookPress}>
+          {/* <TouchableOpacity style={styles.bookButton} onPress={handleBookPress}>
             <Text style={styles.bookButtonText}>BOOK</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </BlurView>
     </ImageBackground>

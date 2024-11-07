@@ -247,9 +247,9 @@ const RiderStack = () => {
 };
 
 const RootStack = () => {
-  const { isAuthenticated, userRole, loading } = useAuth();
+  const { isAuthenticated, userRole, loading, token } = useAuth();
 
-  console.log("RootStack render:", { isAuthenticated, userRole, loading });
+  console.log("RootStack render:", { isAuthenticated, userRole, loading, token });
 
   if (loading) {
     return null; // Or a loading screen
