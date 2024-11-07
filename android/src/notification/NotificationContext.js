@@ -1,6 +1,7 @@
 // NotificationContext.js
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import Pusher from 'pusher-js/react-native';
+// import { NotificationModal } from './NotificationModal';
 
 const NotificationContext = createContext();
 
@@ -49,14 +50,14 @@ export const NotificationProvider = ({ children, user_id }) => {
       >
         {children}
         {/* Regular Notification Modal */}
-        <NotificationModal allowedScreens={['Home', 'Profile', 'Settings']} />
+        {/* <NotificationModal allowedScreens={['Home', 'Profile', 'Settings']} /> */}
         
         {/* Match Modal */}
-        <MatchModal 
+        {/* <MatchModal 
           isVisible={showMatchModal}
           matchData={matchData}
           onClose={() => setShowMatchModal(false)}
-        />
+        /> */}
       </NotificationContext.Provider>
     );
   };

@@ -65,11 +65,11 @@ const Login = ({ navigation }) => {
         user_name,
         password
       );
+      console.log("login", receivedToken);
       
       setToken(receivedToken);
       setUser(user_id);
       setStatus(userStatus);
-      console.log(user, userStatus);
       
   
       if (role === 3 || role === 1 || role === 2) {

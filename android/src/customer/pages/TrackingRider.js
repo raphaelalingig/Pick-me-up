@@ -26,6 +26,7 @@ const DeliveryConfirmationScreen = ({navigation}) => {
     try {
       const ride = await userService.checkActiveBook();
       setBookDetails(ride.rideDetails);
+      console.log(ride.rideDetails)
     } catch (error) {
       Alert.alert("Error", "Failed to retrieve the latest available ride.");
     } finally {

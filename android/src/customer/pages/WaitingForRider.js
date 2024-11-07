@@ -22,6 +22,7 @@ import MapView, { Marker } from 'react-native-maps';
 import riderMarker from "../../../assets/rider.png";
 import customerMarker from "../../../assets/customer.png";
 import { CustomerContext } from "../../context/customerContext";
+import usePusher from "../../services/pusher";
 
 const { width, height } = Dimensions.get('window');
 
@@ -36,17 +37,30 @@ const WaitingRider = ({ navigation }) => {
   const [bookDetails, setBookDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [viewMode, setViewMode] = useState('details'); // 'details' or 'map'
+  const [viewMode, setViewMode] = useState('details');
   const [modalVisible, setModalVisible] = useState(false);
+  const [riderModalVisible, setRiderModalVisible] = useState(false);
   const [applications, setApplications] = useState([]);
   const [riderLocs, setRiderLocations] = useState([]);
+  const [selectedRider, setSelectedRider] = useState(null);
+  const [userId, setUserId] = useState(null);
   const [loadingMessage, setLoadingMessage] = useState("Finding your rider...");
+  const [showMatchModal, setShowMatchModal] = useState(false);
+  const [matchedRide, setMatchedRide] = useState(null);
+
+  const pusher = usePusher();
 
   const fetchLatestRide = useCallback(async () => {
     setIsLoading(true);
     try {
       const ride = await userService.checkActiveBook();
       setBookDetails(ride.rideDetails);
+      setRegion({
+        latitude: parseFloat(ride.rideDetails.customer_latitude),
+        longitude: parseFloat(ride.rideDetails.customer_longitude),
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
+      });
       setIsLoading(false);
     } catch (error) {
       Alert.alert("Error", "Failed to retrieve the latest available ride.");
@@ -54,15 +68,46 @@ const WaitingRider = ({ navigation }) => {
     }
   }, []);
 
+  useEffect(() => {
+    const fetchUserId = async () => {
+      try {
+        const response = await userService.getUserId();
+        const id = parseInt(response, 10);
+        console.log("Fetched user_id:", id);
+        setUserId(id);
+      } catch (error) {
+        console.error("Error fetching user_id:", error);
+      }
+    };
+
+    fetchUserId();
+  }, []);
+
   const fetchApplications = useCallback(async () => {
-    console.log(bookDetails.ride_id)
+    console.log("Ride ID:", bookDetails.ride_id)
     try {
       if (!bookDetails?.ride_id) return;
+
+      const userId = await userService.getUserId();
+      if (!userId) {
+        console.warn("No user ID available");
+        return;
+      }
+  
       const response = await userService.getRideApplications(bookDetails.ride_id);
-      console.log(response)
-      setApplications(response);
+      console.log("All applications:", response);
+  
+      // Filter out applications where the applier_details.user_id matches the current user's ID
+      const filteredApplications = response.filter(application => 
+        application.applier_details.user_id !== parseInt(userId)
+      );
+      
+      console.log("Current User ID:", userId);
+      console.log("Filtered applications:", filteredApplications);
+      setApplications(filteredApplications);
       setModalVisible(true);
     } catch (error) {
+      console.error("Error fetching applications:", error);
       Alert.alert("Error", "Failed to retrieve rider applications.");
     }
   }, [bookDetails]);
@@ -70,12 +115,41 @@ const WaitingRider = ({ navigation }) => {
   const fetchLoc = useCallback(async () => {
     try {
       const response = await userService.fetchLoc();
-      console.log(response)
       setRiderLocations(response);
     } catch (error) {
       Alert.alert("Error", "Failed to retrieve rider locations.");
     }
   }, []);
+
+  useEffect(() => {
+    const setupPusher = async () => {
+      try {
+        if (!userId) return;
+        const bookedChannel = pusher.subscribe('booked');
+
+        bookedChannel.bind('BOOKED', data => {
+          console.log("Data received:", data);
+          if (data && data.ride && data.ride.length > 0) {
+            const book = data.ride[0];
+            if (book.apply_to === userId) {
+              setMatchedRide(book);
+              setShowMatchModal(true);
+            }
+          }
+        });
+
+        return () => {
+          appliedChannel.unbind_all();
+          pusher.unsubscribe('booked');
+        };
+      } catch (error) {
+        console.error('Error setting up Pusher:', error);
+      }
+    };
+
+    setupPusher();
+    fetchLatestRide();
+  }, [userId]);
 
   useEffect(() => {
     fetchLatestRide();
@@ -86,6 +160,67 @@ const WaitingRider = ({ navigation }) => {
     setRefreshing(true);
     fetchLatestRide().then(() => setRefreshing(false));
   }, [fetchLatestRide]);
+
+  const handleApply = async (bookDetails, selectedRider) => {
+    if (!userId) {
+      Alert.alert("Error", "User ID is not available.");
+      return;
+    }
+    const ride_id = bookDetails.ride_id;
+    const rider = selectedRider.user_id;
+
+
+    console.log("Attempting to apply rider with ID:", bookDetails.ride_id);
+    setIsLoading(true);
+    try {
+      const response = await userService.apply_rider(ride_id, rider);
+      console.log("Accept ride response:", response.data);
+      if (response.data.message === "exist") {
+        setRiderModalVisible(false);
+        Alert.alert("Message", 'You have already applied for this rider.');
+      }else if (response.data && response.data.message){
+        Alert.alert("Success", 'Applied Successfully!');
+        navigation.navigate("Home");
+      } else {
+        Alert.alert("Error", "Failed to accept the ride. Please try again.");
+      }
+    } catch (error) {
+      console.error(
+        "Failed to Accept Ride",
+        error.response ? error.response.data : error.message
+      );
+      if (error.response && error.response.status === 404) {
+        Alert.alert(
+          "Error",
+          "Ride or ride location not found. Please try again."
+        );
+      } else if (error.response && error.response.status === 400) {
+        Alert.alert(
+          "Error",
+          error.response.data.error || "This ride is no longer available."
+        );
+      } else {
+        Alert.alert(
+          "Error",
+          "An error occurred while getting location or accepting the ride. Please try again."
+        );
+      }
+      navigation.goBack();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const isRiderApplied = useCallback((rider) => {
+    if (!applications || !rider) return false;
+    
+    const riderFullName = `${rider.user.first_name} ${rider.user.last_name}`.toLowerCase();
+    
+    return applications.some(application => {
+      const applierFullName = `${application.applier_details.first_name} ${application.applier_details.last_name}`.toLowerCase();
+      return applierFullName === riderFullName;
+    });
+  }, [applications]);
 
   const handleCancel = useCallback(async () => {
     if (!bookDetails?.ride_id) return;
@@ -126,7 +261,12 @@ const WaitingRider = ({ navigation }) => {
   }, [handleCancel]);
 
   const handleMarkerPress = (rider) => {
-    console.log("Rider", rider.user.first_name, "pressed")
+    setSelectedRider(rider);
+    setRiderModalVisible(true);
+  };
+
+  const handleCancelModal = () => {
+    setRiderModalVisible(false);
   };
 
   const renderLoadingScreen = () => (
@@ -134,6 +274,45 @@ const WaitingRider = ({ navigation }) => {
       <ActivityIndicator size="large" color="#007BFF" />
       <Text style={styles.loadingText}>{loadingMessage}</Text>
     </View>
+  );
+
+  const renderRiderInfoModal = () => (
+    <Modal
+      visible={riderModalVisible}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={() => setRiderModalVisible(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContainer}>
+          {selectedRider && (
+            
+            <>
+              <Text style={styles.modalTitle}>Rider Information</Text>
+              <Text style={styles.modalText}>Name: {selectedRider.user.first_name} {selectedRider.user.last_name}</Text>
+              <Text style={styles.modalText}>Rating: 4.4 ⭐</Text>
+              <Text style={styles.modalText}>Distance: 1000 km</Text>
+              <View style={styles.modalButtonContainer}>
+                <Button 
+                  mode="contained" 
+                  onPress={() => handleApply(bookDetails, selectedRider)}
+                  style={styles.applyButton}
+                >
+                  {isRiderApplied(selectedRider) ? ("Accept") : ("Apply")}
+                </Button>
+              <Button 
+                mode="outlined" 
+                onPress={handleCancelModal} 
+                style={styles.cancelButton}
+              >
+                Cancel
+              </Button>
+              </View>
+            </>
+          )}
+        </View>
+      </View>
+    </Modal>
   );
 
   const renderRideDetailsContent = () => (
@@ -209,7 +388,6 @@ const WaitingRider = ({ navigation }) => {
                       {app.applier_details.first_name} {app.applier_details.last_name}
                     </Text>
                     <View style={styles.applicantDetails}>
-                      <Text>Rating: 4.4 ⭐</Text>
                       <Text>Distance: 1000 km</Text>
                     </View>
                     <Button
@@ -236,6 +414,9 @@ const WaitingRider = ({ navigation }) => {
                     >
                       Show in Map
                     </Button>
+                    <Button>
+
+                    </Button>
 
                   </Card.Content>
                 </Card>
@@ -257,58 +438,96 @@ const WaitingRider = ({ navigation }) => {
 
   const renderMapView = () => (
     <MapView
-      style={styles.map}
-      region={region}
-      onRegionChangeComplete={setRegion}
+    style={styles.map}
+    region={region}
+    onRegionChangeComplete={setRegion}
+    // Add this line to enable clustering
+    showsMarkerClusters={true}
+  >
+    <Marker
+      coordinate={{
+        latitude: parseFloat(bookDetails.customer_latitude),
+        longitude: parseFloat(bookDetails.customer_longitude)
+      }}
+      title="Your Location"
     >
-      <Marker
-        coordinate={{
-          latitude: customerCoords.latitude,
-          longitude: customerCoords.longitude,
-        }}
-        title="Your Location"
-      >
-        <Image source={customerMarker} style={styles.markerIcon} />
-      </Marker>
+      <Image source={customerMarker} style={styles.markerIcon} />
+    </Marker>
 
-      {riderLocs.map((rider, index) => {
-          // Ensure ridelocations exist
-          if (!rider.rider_latitude || !rider.rider_longitude) {
-            console.warn(`Ride ${rider.rider_id} has no ridelocations.`);
-            return null; // Skip this ride
-          }
+    {riderLocs.map((rider, index) => {
+      // Ensure ridelocations exist
+      if (!rider.rider_latitude || !rider.rider_longitude) {
+        console.warn(`Ride ${rider.rider_id} has no ridelocations.`);
+        return null; // Skip this ride
+      }
 
-          // Parse coordinates
-          const riderLat = parseFloat(rider.rider_latitude);
-          const riderLong = parseFloat(rider.rider_longitude);
+      // Parse coordinates
+      const riderLat = parseFloat(rider.rider_latitude);
+      const riderLong = parseFloat(rider.rider_longitude);
 
-          // Check for valid coordinates
-          if (isNaN(riderLat) || isNaN(riderLong)) {
-            console.warn(`Invalid coordinates for ride ${rider.ride_id}:`, riderLat, riderLong);
-            return null; // Skip if invalid
-          }
+      // Check for valid coordinates
+      if (isNaN(riderLat) || isNaN(riderLong)) {
+        console.warn(`Invalid coordinates for ride ${rider.ride_id}:`, riderLat, riderLong);
+        return null; // Skip if invalid
+      }
 
-          return (
-            <Marker
-              key={rider.ride_id || `ride-marker-${index}`}
-              coordinate={{
-                latitude: riderLat,
-                longitude: riderLong,
-              }}
-              title={`${rider.user.first_name} ${rider.user.last_name}`}
-              // description={rider.ride_type}
-              onCalloutPress={() => handleMarkerPress(rider)}
-            >
-              <Image source={riderMarker} style={styles.markerIcon} />
-            </Marker>
-          );
-        })}
-    </MapView>
+      return (
+        <Marker
+          key={rider.ride_id || `ride-marker-${index}`}
+          coordinate={{
+            latitude: riderLat,
+            longitude: riderLong,
+          }}
+          title={`${rider.user.first_name} ${rider.user.last_name}`}
+          description="Tap for rider details"
+          onCalloutPress={() => handleMarkerPress(rider)}
+        >
+          <Image source={riderMarker} style={styles.markerIcon} />
+        </Marker>
+      );
+    })}
+  </MapView>
+
   );
 
   if (isLoading || !bookDetails) {
     return renderLoadingScreen();
   }
+
+  const renderMatchModal = () => (
+    <Modal
+      visible={showMatchModal}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={() => setShowMatchModal(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContainer}>
+          <Text style={styles.modalTitle}>Ride Match Found!</Text>
+          {matchedRide && (
+            <>
+              <Text style={styles.modalText}>
+                A rider has been matched with your ride request.
+              </Text>
+              <Text style={styles.modalText}>
+                Rider Name: {matchedRide.rider_name}
+              </Text>
+              <Text style={styles.modalText}>
+                Contact: {matchedRide.rider_contact}
+              </Text>
+              <Button
+                mode="contained"
+                onPress={() => setShowMatchModal(false)}
+                style={styles.closeButton}
+              >
+                Close
+              </Button>
+            </>
+          )}
+        </View>
+      </View>
+    </Modal>
+  );
 
   return (
     <View style={styles.container}>
@@ -349,6 +568,8 @@ const WaitingRider = ({ navigation }) => {
       </ScrollView>
 
       {renderRiderApplicationsModal()}
+      {renderRiderInfoModal()}
+      {renderMatchModal()}
     </View>
   );
 };
@@ -514,6 +735,22 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  modalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 20,
+  },
+  applyButton: {
+    backgroundColor: '#4CAF50',
+  },
+  cancelButton: {
+    borderColor: '#FF5722',
+    borderWidth: 1,
   },
   
 });

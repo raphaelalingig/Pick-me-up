@@ -9,6 +9,8 @@ export const AuthProvider = ({ children }) => {
   const [userRole, setUserRole] = useState(null);
   const [userStatus, setUserStatus] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(null);
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
     const checkAuthState = async () => {
@@ -16,13 +18,17 @@ export const AuthProvider = ({ children }) => {
         const token = await AsyncStorage.getItem("token");
         const role = await AsyncStorage.getItem("role");
         const status = await AsyncStorage.getItem("status");
+        const user_id = await AsyncStorage.getItem("user_id");
         console.log("Retrieved token:", token);
         console.log("Retrieved role:", role);
         console.log("Retrieved status:", status);
+        console.log("Retrieved id:", userId);
         if (token && role) {
           setIsAuthenticated(true);
           setUserRole(parseInt(role));
           setUserStatus(status);
+          setToken(token);
+          setUserId(user_id);
         } else {
           setIsAuthenticated(false);
         }
@@ -43,10 +49,14 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated, 
       userRole, 
       setUserRole, 
+      userId,
+      setUserId,
       userStatus, 
       setUserStatus, 
       loading, 
-      setLoading 
+      setLoading,
+      token, 
+      setToken
     }}>
       {children}
     </AuthContext.Provider>

@@ -10,6 +10,8 @@ import { AuthProvider } from "./src/services/AuthContext";
 import { RiderProvider } from "./src/context/riderContext";
 import { CustomerProvider } from "./src/context/customerContext";
 import Pusher from 'pusher-js';
+import userService from "./src/services/auth&services";
+
 
 // Initialize Pusher with your app key and cluster
 const pusher = new Pusher('1b95c94058a5463b0b08', {
@@ -17,6 +19,8 @@ const pusher = new Pusher('1b95c94058a5463b0b08', {
 });
 
 export default function App() {
+
+  const userId = userService.getUserId();
   useEffect(() => {
     // Subscribe to the channel you want to listen to
     const channel = pusher.subscribe('rides');
