@@ -48,11 +48,14 @@ const BookingDetailsScreen = ({ route, navigation }) => {
       const response = await userService.apply_ride(ride_id, customer);
       console.log("Accept ride response:", response.data);
       if (response.data.message === "exist") {
-        Alert.alert("Message", 'You have already applied for this ride.');
-        navigation.goBack();
+        setRiderModalVisible(false);
+        Alert.alert("Message", 'You have already applied for this rider.');
+      }else if (response.data.message === "applied"){
+        Alert.alert("Message", 'Applied Successfully!');
+        navigation.navigate("Home");
       }else if (response.data && response.data.message){
-        Alert.alert("Success", response.data.message);
-        navigation.goBack();
+        Alert.alert("Ride Match", 'You have found a Match!');
+        navigation.navigate("Home");
       } else {
         Alert.alert("Error", "Failed to accept the ride. Please try again.");
       }

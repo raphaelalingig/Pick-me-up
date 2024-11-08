@@ -1,0 +1,83 @@
+const NearbyCustomerScreen = ({ navigation }) => {
+  const [showSpinner, setShowSpinner] = useState(true);
+  const [availableRides, setAvailableRides] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [showMap, setShowMap] = useState(false);
+  const [showMatchModal, setShowMatchModal] = useState(false);
+  const [showApplyModal, setShowApplyModal] = useState(false);
+  const [matchedRide, setMatchedRide] = useState(null);
+  const [applyRide, setApplyRide] = useState(null);
+  const [user_id, setUser_id] = useState();
+  const [rider, setRider] = useState();
+  const { userId } = useAuth();
+
+  const pusher = usePusher();
+
+  const fetchAvailableRides = useCallback(async () => {
+    try {
+      setShowSpinner(true);
+      const response = await userService.getAvailableRides();
+      const id = await userService.fetchRider();
+
+      setRider(id);
+      setUser_id(id.user_id);
+
+      const appResponse = await userService.getApplications(userId);
+      console.log(appResponse);
+
+      if (appResponse.data && appResponse.data.length > 0) {
+        const firstApplication = appResponse.data[0];
+        console.log("Application data:", appResponse.data);
+        setApplyRide(firstApplication);
+        setShowApplyModal(true);
+      }
+
+      const sortedRides = response.data.sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      );
+
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      setAvailableRides(sortedRides);
+
+    } catch (error) {
+      console.error("Failed to fetch available rides:", error);
+      Alert.alert("Error", "Failed to fetch available rides. Please try again.");
+    } finally {
+      setShowSpinner(false);
+    }
+  }, [userId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchAvailableRides();
+      setShowApplyModal(false); // Reset modal visibility
+      setShowMatchModal(false); // Reset modal visibility
+    }, [fetchAvailableRides])
+  );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchAvailableRides();
+    setRefreshing(false);
+  }, [fetchAvailableRides]);
+
+  const handleShowMap = () => {
+    if (availableRides.length > 0) {
+      setShowMap(true);
+    } else {
+      Toast.show('No available rides to show on the map.', {
+        duration: Toast.durations.LONG,
+        position: Toast.positions.BOTTOM,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        backgroundColor: '#333',
+        textColor: '#fff'
+      });
+    }
+  };
+
+  const handleViewButton = () => {
+    setShowApplyModal(false);
+    navigation.navigate("BookingDetails", { ride: applyRide });
+  };
