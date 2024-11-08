@@ -71,6 +71,7 @@ const Home = ({ navigation }) => {
 
 
       const response = await userService.checkActiveRide();
+      console.log(response)
       if (response && response.hasActiveRide) {
         const { status } = response.rideDetails;
         console.log(status)

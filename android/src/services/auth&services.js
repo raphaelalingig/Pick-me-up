@@ -187,6 +187,16 @@ const userService = {
     }
   },
 
+  fetchRiderLoc: async (rider_id) => {
+    try {
+      const response = await axios.get(API_URL + "rider_loc_id/" + rider_id );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching locations:", error);
+      throw error;
+    }
+  },
+
   getApplications: async (userId) => {
     try {
       const response = await axios.get(`${API_URL}apply/${userId}`);
@@ -353,6 +363,16 @@ const userService = {
     try {
       // Ensure the key in the request body matches what the backend expects
       const response = await axios.post(`${API_URL}apply_ride/${ride_id}`, { user_id: userId, customer_id: customer });
+      return response;
+    } catch (error) {
+      console.error("Error accepting ride:", error);
+      throw error;
+    }
+  },
+
+  decline_ride: async (apply_id) => { 
+    try {
+      const response = await axios.put(`${API_URL}decline_ride/${apply_id}`);
       return response;
     } catch (error) {
       console.error("Error accepting ride:", error);

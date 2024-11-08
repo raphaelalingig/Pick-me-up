@@ -95,15 +95,15 @@ const WaitingRider = ({ navigation }) => {
       }
   
       const response = await userService.getRideApplications(bookDetails.ride_id);
-      console.log("All applications:", response);
+      // console.log("All applications:", response);
   
       // Filter out applications where the applier_details.user_id matches the current user's ID
       const filteredApplications = response.filter(application => 
         application.applier_details.user_id !== parseInt(userId)
       );
       
-      console.log("Current User ID:", userId);
-      console.log("Filtered applications:", filteredApplications);
+      // console.log("Current User ID:", userId);
+      // console.log("Filtered applications:", filteredApplications);
       setApplications(filteredApplications);
       setModalVisible(true);
     } catch (error) {
@@ -128,14 +128,15 @@ const WaitingRider = ({ navigation }) => {
         const bookedChannel = pusher.subscribe('booked');
 
         bookedChannel.bind('BOOKED', data => {
-          console.log("Data received:", data);
-          if (data && data.ride && data.ride.length > 0) {
-            const book = data.ride[0];
-            if (book.apply_to === userId) {
-              setMatchedRide(book);
-              setShowMatchModal(true);
+          console.log("MATCHED DATA received:", data);
+          console.log(userId)
+          console.log("APPLIER", data.ride.applier)
+            if (data.ride.applier === userId) {
+              Alert.alert("Ride Match", 'You have found a Match!');
+              navigation.navigate("Home");
+              // setMatchedRide(book);
+              // setShowMatchModal(true);
             }
-          }
         });
 
         return () => {
@@ -178,8 +179,11 @@ const WaitingRider = ({ navigation }) => {
       if (response.data.message === "exist") {
         setRiderModalVisible(false);
         Alert.alert("Message", 'You have already applied for this rider.');
+      }else if (response.data.message === "applied"){
+        Alert.alert("Message", 'Applied Successfully!');
+        setRiderModalVisible(false);
       }else if (response.data && response.data.message){
-        Alert.alert("Success", 'Applied Successfully!');
+        Alert.alert("Ride Match", 'You have found a Match!');
         navigation.navigate("Home");
       } else {
         Alert.alert("Error", "Failed to accept the ride. Please try again.");

@@ -26,7 +26,7 @@ import BookingDetailsScreen from "../rider/pages/BookingDetailsScreen";
 import MotorTaxiOptionScreen from "../customer/pages/MotorTaxiOp";
 import PakyawOptionScreen from "../customer/pages/PakyawOp";
 import DeliveryOptionScreen from "../customer/pages/DeliveryOp";
-import DeliveryConfirmationScreen from "../customer/pages/TrackingRider";
+import TrackingRider from "../customer/pages/TrackingRider";
 import AccountSettingsScreen from "../customer/pages/Settings";
 import InTransit from "../customer/pages/InTransit";
 import CompleteRide from "../customer/pages/Complete Ride";
@@ -193,7 +193,7 @@ const CustomerStack = () => {
       <Stack.Screen name="WaitingForRider" component={WaitingRider} />
       <Stack.Screen
         name="Tracking Rider"
-        component={DeliveryConfirmationScreen}
+        component={TrackingRider}
       />
       <Stack.Screen name="In Transit" component={InTransit} />
       <Stack.Screen name="To Review" component={CompleteRide} />

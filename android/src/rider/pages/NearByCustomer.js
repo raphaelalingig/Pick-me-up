@@ -41,21 +41,21 @@ const NearbyCustomerScreen = ({ navigation }) => {
 
   const pusher = usePusher();
 
-  const fetchAvailableRides = useCallback(async () => {
+    const fetchAvailableRides = useCallback(async () => {
     try {
       setShowSpinner(true);
       const response = await userService.getAvailableRides();
       const id = await userService.fetchRider();
-      
+
       setRider(id);
       setUser_id(id.user_id);
-  
+
       const appResponse = await userService.getApplications(userId);
-      console.log(appResponse)
-  
+      console.log(appResponse);
+
       if (appResponse.data && appResponse.data.length > 0) {
         const firstApplication = appResponse.data[0];
-        console.log("dsadfsf",appResponse.data)
+        console.log("Application data:", appResponse.data);
         setApplyRide(firstApplication);
         setShowApplyModal(true);
       }
@@ -63,10 +63,10 @@ const NearbyCustomerScreen = ({ navigation }) => {
       const sortedRides = response.data.sort(
         (a, b) => new Date(b.created_at) - new Date(a.created_at)
       );
-  
+
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setAvailableRides(sortedRides);
-  
+
     } catch (error) {
       console.error("Failed to fetch available rides:", error);
       Alert.alert("Error", "Failed to fetch available rides. Please try again.");
@@ -129,57 +129,65 @@ const NearbyCustomerScreen = ({ navigation }) => {
     };
 
     setupPusher();
-    fetchAvailableRides();
   }, [user_id]);
 
-  // const handleApply = async (applyRide) => {
-  //   if (!user_id) {
-  //     Alert.alert("Error", "User ID is not available.");
-  //     return;
-  //   }
+  const handleDecline = async () => {
+    try {
+      setShowSpinner(true);
 
-  //   const ride_id = applyRide.ride_id;
-  //   const customer = applyRide.user_id;
-  //   try {
-  //     const response = await userService.apply_ride(ride_id, customer);
-  //     if (response.data.message === "exist") {
-  //       Alert.alert("Message", 'You have already applied for this ride.');
-  //     } else if (response.data && response.data.message) {
-  //       Alert.alert("Success", response.data.message);
-  //       navigation.goBack();
-  //       setApplyRide(null);
-  //     } else {
-  //       Alert.alert("Error", "Failed to accept the ride. Please try again.");
-  //     }
-  //   } catch (error) {
-  //     console.error(
-  //       "Failed to Accept Ride",
-  //       error.response ? error.response.data : error.message
-  //     );
-  //     if (error.response && error.response.status === 404) {
-  //     Alert.alert(
-  //       "Error",
-  //         "Ride or ride location not found. Please try again."
-  //       );
-  //     } else if (error.response && error.response.status === 400) {
-  //       Alert.alert(
-  //         "Error",
-  //         error.response.data.error || "This ride is no longer available."
-  //       );
-  //     } else {
-  //       Alert.alert(
-  //         "Error",
-  //         "An error occurred while getting location or accepting the ride. Please try again."
-  //     );
-  //     }
-  //   } finally {
-  //     setShowApplyModal(false);
-  //   }
-  // };
+      const apply_id = applyRide.apply_id;
+      const response = await userService.decline_ride(apply_id);
 
-  const handleDecline = async (applyRide) => {
-    
-  }
+      if (response.data.message == "Declined"){
+        Toast.show('Declined Ride Successfully', {
+          duration: Toast.durations.LONG,
+          position: Toast.positions.BOTTOM,
+          shadow: true,
+          animation: true,
+          hideOnPress: true,
+          backgroundColor: '#333',
+          textColor: '#fff'
+        });
+        setShowApplyModal(false);
+        setApplyRide(null);
+
+      }else if (response.data.message == "Unavailable"){
+        Toast.show('Ride no longer available', {
+          duration: Toast.durations.LONG,
+          position: Toast.positions.BOTTOM,
+          shadow: true,
+          animation: true,
+          hideOnPress: true,
+          backgroundColor: '#333',
+          textColor: '#fff'
+        });
+        setShowApplyModal(false);
+        setApplyRide(null);
+      }
+
+
+    } catch (error) {
+      console.error("Failed to decline ride:", error);
+      Alert.alert("Error", "Failed to decline ride. Please try again.");
+    } finally {
+      setShowSpinner(false);
+    }
+  };
+
+  const handleCancelConfirmation = useCallback(() => {
+    Alert.alert(
+      "Decline Ride",
+      "Are you sure you want to decline this ride?",
+      [
+        { text: "No", style: "cancel" },
+        {
+          text: "Yes",
+          onPress: handleDecline,
+          style: "destructive",
+        },
+      ]
+    );
+  }, [handleDecline]);
 
   const closeModal = () => {
     setShowMatchModal(false);
@@ -191,19 +199,19 @@ const NearbyCustomerScreen = ({ navigation }) => {
     setApplyRide(null);
   };
 
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchAvailableRides();
-    setRefreshing(false);
-  }, [fetchAvailableRides]);
-
   useFocusEffect(
     useCallback(() => {
       fetchAvailableRides();
       setShowApplyModal(false); // Reset modal visibility
-      setShowMatchModal(false);      // Reset modal visibility
-    }, [fetchAvailableRides])
+      setShowMatchModal(false); // Reset modal visibility
+    }, [])
   );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchAvailableRides();
+    setRefreshing(false);
+  }, []);
 
   const handleShowMap = () => {
     if (availableRides.length > 0) {
@@ -309,7 +317,7 @@ const NearbyCustomerScreen = ({ navigation }) => {
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[styles.actionButton, styles.declineButton]}
-                      onPress={closeApplyModal}
+                      onPress={handleCancelConfirmation}
                     >
                       <Text style={styles.buttonText}>Decline</Text>
                     </TouchableOpacity>
