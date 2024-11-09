@@ -179,6 +179,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 20,
+    
   },
   logoContainer: {
     marginBottom: 50,
@@ -187,6 +188,7 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     borderWidth: 2,
+    
   },
   button: {
     marginTop: 20,
