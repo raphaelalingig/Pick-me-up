@@ -6,6 +6,7 @@ import {
   Alert,
   Dimensions,
   Image,
+  Linking
 } from "react-native";
 import { MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 import { Text } from "react-native-paper";
@@ -60,6 +61,9 @@ const TrackingCustomer = ({ route, navigation }) => {
               latitude: newLocation.coords.latitude,
               longitude: newLocation.coords.longitude,
             });
+            const rider_lat = newLocation.coords.latitude;
+            const rider_long = newLocation.coords.longitude;
+            uploadRiderLocation(rider_lat, rider_long)
           }
         );
       } catch (error) {
@@ -77,6 +81,15 @@ const TrackingCustomer = ({ route, navigation }) => {
       }
     };
   }, [ride]);
+
+  const uploadRiderLocation = async (rider_lat, rider_long) => {
+    console.log(rider_lat, rider_long)
+    try {
+      await userService.updateRiderLocation(rider_lat, rider_long);
+    } catch (error) {
+      console.error("Error uploading rider location:", error);
+    }
+  };
 
   useEffect(() => {
     if (riderLocation && customerLocation) {
@@ -241,6 +254,15 @@ const TrackingCustomer = ({ route, navigation }) => {
     }
   };
 
+  const handleContactPress = () => {
+    if (ride && ride.user && ride.user.mobile_number) {
+      const phoneNumber = `tel:${ride.user.mobile_number}`;
+      Linking.openURL(phoneNumber).catch((err) =>
+        Alert.alert("Error", "Failed to open the dialer.")
+      );
+    }
+  };
+
   if (isLoading || !ride || !riderLocation) {
     return (
       <View style={styles.loadingContainer}>
@@ -302,7 +324,7 @@ const TrackingCustomer = ({ route, navigation }) => {
         </View>
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={() => {}}>
+          <TouchableOpacity style={styles.button} onPress={handleContactPress}>
             <Text style={styles.buttonText}>Contact</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={startRide}>
