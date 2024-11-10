@@ -20,6 +20,7 @@ const TrackingRider = ({ navigation }) => {
   const [rider_id, setRiderId] = useState(null);
   const [riderLoc, setRiderLoc] = useState(null);
   const [locationInterval, setLocationInterval] = useState(null);
+  const [initialFetchDone, setInitialFetchDone] = useState(false);
 
   const fetchLatestAvailableRide = useCallback(async () => {
     try {
@@ -51,6 +52,7 @@ const TrackingRider = ({ navigation }) => {
     } finally {
       setIsLoading(false);
       setRefreshing(false);
+      setInitialFetchDone(true);
     }
   }, [calculateMapRegion, fetchDirections]);
 
@@ -58,57 +60,49 @@ const TrackingRider = ({ navigation }) => {
     fetchLatestAvailableRide();
   }, [fetchLatestAvailableRide]);
 
+
+
+
   const riderRefresh = useCallback(async () => {
     try {
-      setRefreshing(true);
-      const ride = await userService.checkActiveBook();
-      console.log("RIDERRRRRRRR:", ride.rideDetails.rider)
-      setRiderId(ride.rideDetails.rider_id);
-      setBookDetails(ride.rideDetails);
-      const rider = await userService.fetchRiderLoc(ride.rideDetails.rider_id);
+      const rider = await userService.fetchRiderLoc(rider_id);
       setRiderLoc(rider);
-      console.log("DATAAAAA:", rider)
+      console.log("RIDER REFRESSSHHh:", rider)
 
       // Update the rider and customer locations
       setRiderLocation({
         latitude: parseFloat(rider.rider_latitude),
         longitude: parseFloat(rider.rider_longitude),
       });
-      setCustomerLocation({
-        latitude: parseFloat(ride.rideDetails.customer_latitude),
-        longitude: parseFloat(ride.rideDetails.customer_longitude),
-      });
 
       // Recalculate the map region and fetch directions
       calculateMapRegion();
       fetchDirections();
     } catch (error) {
-      Alert.alert("Error", "Failed to retrieve the latest available ride.");
+      Alert.alert("Error", "Failed to refresh rider location.");
     } finally {
-      setIsLoading(false);
-      setRefreshing(false);
     }
-  }, [calculateMapRegion, fetchDirections]);
-
-
+  }, []);
 
   // useEffect(() => {
-  //   if (bookDetails) {
-  //     setCustomerLocation({
-  //       latitude: parseFloat(bookDetails.customer_latitude),
-  //       longitude: parseFloat(bookDetails.customer_longitude),
-  //     });
+  //   if (initialFetchDone) {
+  //     // Set an interval to call riderRefresh every 1 minute (60000 ms) after initial fetch
+  //     const intervalId = setInterval(riderRefresh, 60000);
+  
+  //     // Clean up the interval when the component unmounts
+  //     return () => clearInterval(intervalId);
   //   }
-  // }, [bookDetails]);
+  // }, [riderRefresh, initialFetchDone]);
 
-  // useEffect(() => {
-  //   if (riderLoc) {
-  //     setRiderLocation({
-  //       latitude: parseFloat(riderLoc.rider_latitude),
-  //       longitude: parseFloat(riderLoc.rider_longitude),
-  //     });
-  //   }
-  // }, [riderLoc]);
+
+  const handleContactPress = () => {
+    if (bookDetails && bookDetails.rider && bookDetails.rider.mobile_number) {
+      const phoneNumber = `tel:${bookDetails.rider.mobile_number}`;
+      Linking.openURL(phoneNumber).catch((err) =>
+        Alert.alert("Error", "Failed to open the dialer.")
+      );
+    }
+  };
   
 
   useEffect(() => {
