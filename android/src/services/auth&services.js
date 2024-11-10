@@ -46,7 +46,7 @@ const userService = {
   getUserStatus: async () => {
     try {
       const userStatus = await AsyncStorage.getItem("status");
-      console.log("Retrieved user_id:", userStatus); // Debug log
+      console.log("Retrieved status:", userStatus); // Debug log
       return userStatus;
     } catch (error) {
       console.error("Error retrieving user_id:", error);
@@ -57,6 +57,7 @@ const userService = {
   updateRiderStatusAndLocation: async (locationData) =>{
     try {
       const user_id = await userService.getUserId();
+      console.log(user_id);
 
       const response = await axios.put(API_URL + "rider_available", {
         longitude: locationData.longitude,
@@ -67,6 +68,23 @@ const userService = {
       return response.data;
     } catch (error) {
       console.error("Failed to update rider status and location:", error);
+      throw error;
+    }
+  },
+
+  updateRiderLocation: async (rider_lat, rider_long) =>{
+    try {
+      const user_id = await userService.getUserId();
+      console.log(user_id);
+
+      const response = await axios.put(API_URL + "update_rider_loc", {
+        longitude: rider_long.longitude,
+        latitude: rider_lat.latitude,
+        user_id: user_id
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Failed to update rider and location:", error);
       throw error;
     }
   },
