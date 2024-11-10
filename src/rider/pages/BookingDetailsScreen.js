@@ -52,7 +52,7 @@ const BookingDetailsScreen = ({ route, navigation }) => {
         Alert.alert("Message", 'You have already applied for this rider.');
       }else if (response.data.message === "applied"){
         Alert.alert("Message", 'Applied Successfully!');
-        navigation.navigate("Home");
+        navigation.goBack();
       }else if (response.data && response.data.message){
         Alert.alert("Ride Match", 'You have found a Match!');
         navigation.navigate("Home");

@@ -95,15 +95,15 @@ const WaitingRider = ({ navigation }) => {
       }
   
       const response = await userService.getRideApplications(bookDetails.ride_id);
-      // console.log("All applications:", response);
+      console.log("All applications:", response);
   
       // Filter out applications where the applier_details.user_id matches the current user's ID
       const filteredApplications = response.filter(application => 
         application.applier_details.user_id !== parseInt(userId)
       );
       
-      // console.log("Current User ID:", userId);
-      // console.log("Filtered applications:", filteredApplications);
+      console.log("Current User ID:", userId);
+      console.log("Filtered applications:", filteredApplications);
       setApplications(filteredApplications);
       setModalVisible(true);
     } catch (error) {
@@ -112,13 +112,34 @@ const WaitingRider = ({ navigation }) => {
     }
   }, [bookDetails]);
 
-  const fetchLoc = useCallback(async () => {
+  const fetchRiderLocations = async () => {
     try {
       const response = await userService.fetchLoc();
-      setRiderLocations(response);
+      // Filter out riders with invalid locations or disabled status
+      const activeRiders = response.filter(rider => 
+        rider.availability === 'Available' &&
+        rider.verification_status === 'Verified' &&
+        rider.user.status === 'Active'
+      );
+      setRiderLocations(activeRiders);
     } catch (error) {
-      Alert.alert("Error", "Failed to retrieve rider locations.");
+      console.error('Error fetching rider locations:', error);
+      Alert.alert(
+        'Error',
+        'Failed to retrieve rider locations. Please try again.'
+      );
     }
+  };
+  
+  // Update the useEffect hook that fetches locations
+  useEffect(() => {
+    const locationInterval = setInterval(fetchRiderLocations, 30000); // Update every 30 seconds
+    
+    // Initial fetch
+    fetchRiderLocations();
+    
+    // Cleanup
+    return () => clearInterval(locationInterval);
   }, []);
 
   useEffect(() => {
@@ -134,8 +155,6 @@ const WaitingRider = ({ navigation }) => {
             if (data.ride.applier === userId) {
               Alert.alert("Ride Match", 'You have found a Match!');
               navigation.navigate("Home");
-              // setMatchedRide(book);
-              // setShowMatchModal(true);
             }
         });
 
@@ -152,10 +171,10 @@ const WaitingRider = ({ navigation }) => {
     fetchLatestRide();
   }, [userId]);
 
-  useEffect(() => {
-    fetchLatestRide();
-    fetchLoc();
-  }, [fetchLatestRide]);
+  // useEffect(() => {
+  //   fetchLatestRide();
+  //   fetchLoc();
+  // }, [fetchLatestRide]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -440,59 +459,72 @@ const WaitingRider = ({ navigation }) => {
     </Modal>
   );
 
-  const renderMapView = () => (
-    <MapView
-    style={styles.map}
-    region={region}
-    onRegionChangeComplete={setRegion}
-    // Add this line to enable clustering
-    showsMarkerClusters={true}
-  >
-    <Marker
-      coordinate={{
-        latitude: parseFloat(bookDetails.customer_latitude),
-        longitude: parseFloat(bookDetails.customer_longitude)
-      }}
-      title="Your Location"
-    >
-      <Image source={customerMarker} style={styles.markerIcon} />
-    </Marker>
-
-    {riderLocs.map((rider, index) => {
-      // Ensure ridelocations exist
-      if (!rider.rider_latitude || !rider.rider_longitude) {
-        console.warn(`Ride ${rider.rider_id} has no ridelocations.`);
-        return null; // Skip this ride
+  const renderMapView = () => {
+    // Early return if no bookDetails
+    if (!bookDetails) return null;
+  
+    // Filter out riders with invalid locations before rendering
+    const validRiders = riderLocs.filter(rider => {
+      const hasValidLocation = 
+        rider.rider_latitude != null && 
+        rider.rider_longitude != null &&
+        !isNaN(parseFloat(rider.rider_latitude)) && 
+        !isNaN(parseFloat(rider.rider_longitude));
+      
+      if (!hasValidLocation) {
+        console.log(`Skipping rider ${rider.rider_id} - Invalid location data`);
       }
-
-      // Parse coordinates
-      const riderLat = parseFloat(rider.rider_latitude);
-      const riderLong = parseFloat(rider.rider_longitude);
-
-      // Check for valid coordinates
-      if (isNaN(riderLat) || isNaN(riderLong)) {
-        console.warn(`Invalid coordinates for ride ${rider.ride_id}:`, riderLat, riderLong);
-        return null; // Skip if invalid
-      }
-
-      return (
-        <Marker
-          key={rider.ride_id || `ride-marker-${index}`}
-          coordinate={{
-            latitude: riderLat,
-            longitude: riderLong,
-          }}
-          title={`${rider.user.first_name} ${rider.user.last_name}`}
-          description="Tap for rider details"
-          onCalloutPress={() => handleMarkerPress(rider)}
-        >
-          <Image source={riderMarker} style={styles.markerIcon} />
-        </Marker>
-      );
-    })}
-  </MapView>
-
-  );
+      return hasValidLocation;
+    });
+  
+    // Parse customer coordinates once
+    const customerLat = parseFloat(bookDetails.customer_latitude);
+    const customerLng = parseFloat(bookDetails.customer_longitude);
+  
+    return (
+      <MapView
+        style={styles.map}
+        region={region}
+        onRegionChangeComplete={setRegion}
+        showsMarkerClusters={true}
+      >
+        {/* Customer Marker */}
+        {!isNaN(customerLat) && !isNaN(customerLng) && (
+          <Marker
+            coordinate={{
+              latitude: customerLat,
+              longitude: customerLng
+            }}
+            title="Your Location"
+          >
+            <Image source={customerMarker} style={styles.markerIcon} />
+          </Marker>
+        )}
+  
+        {/* Rider Markers */}
+        {validRiders.map((rider) => {
+          const riderLat = parseFloat(rider.rider_latitude);
+          const riderLng = parseFloat(rider.rider_longitude);
+          
+          return (
+            <Marker
+              key={`rider-${rider.rider_id}`}
+              coordinate={{
+                latitude: riderLat,
+                longitude: riderLng
+              }}
+              title={`${rider.user.first_name} ${rider.user.last_name}`}
+              description={`Status: ${rider.verification_status}`}
+              onCalloutPress={() => handleMarkerPress(rider)}
+            >
+              <Image source={riderMarker} style={styles.markerIcon} />
+            </Marker>
+          );
+        })}
+      </MapView>
+    );
+  };
+  
 
   if (isLoading || !bookDetails) {
     return renderLoadingScreen();
@@ -551,7 +583,7 @@ const WaitingRider = ({ navigation }) => {
             viewMode === 'map' ? styles.activeToggle : styles.inactiveToggle
           ]}
           onPress={async () => {
-            await fetchLoc();
+            await fetchRiderLocations();
             setViewMode('map');
           }}
         >
