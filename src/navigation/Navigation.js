@@ -198,7 +198,7 @@ const CustomerStack = () => {
       <Stack.Screen name="In Transit" component={InTransit} />
       <Stack.Screen name="To Review" component={CompleteRide} />
       <Stack.Screen name="Location" component={CustomerMap} />
-      {userRole === 3 && (
+      {userRole === 3 || userRole === 1 || userRole === 2 && (
         <Stack.Screen
           name="RiderStack"
           component={RiderStack}
