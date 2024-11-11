@@ -19,7 +19,13 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.aldrexabdul.pickmeup"
+      "package": "com.pickmeup.app",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyAekXSq_b4GaHneUKEBVsl4UTGlaskobFo"
+        }
+      },
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"]
     },
     "web": {
       "favicon": "./assets/favicon.png"
