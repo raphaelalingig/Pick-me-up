@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Text } from 'react-native-paper';
 import { RiderContext } from "../../context/riderContext";
 import riderMarker from "../../../assets/rider.png";
@@ -25,6 +25,7 @@ const NearbyCustomersMap = ({ availableRides, onClose, navigation }) => {
         style={styles.map}
         region={region}
         onRegionChangeComplete={setRegion}
+        provider={PROVIDER_GOOGLE}
       >
         {/* Rider Marker */}
         <Marker

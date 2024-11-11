@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 import { Text } from "react-native-paper";
-import MapView, { Marker, Polyline } from "react-native-maps";
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
 import * as Location from "expo-location";
 import userService from "../../services/auth&services";
 import riderMarker from "../../../assets/rider.png";
@@ -370,6 +370,7 @@ const TrackingCustomer = ({ route, navigation }) => {
           style={styles.map}
           region={mapRegion}
           onMapReady={calculateMapRegion}
+          provider={PROVIDER_GOOGLE}
         >
           {riderLocation && (
             <Marker coordinate={riderLocation} title="Rider Location">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 
 const MapPicker = ({ route, navigation }) => {
@@ -72,6 +72,7 @@ const MapPicker = ({ route, navigation }) => {
             style={styles.map}
             onPress={handleMapPress}
             initialRegion={initialRegion}
+            provider={PROVIDER_GOOGLE}
         >
             {selectedLocation && <Marker coordinate={selectedLocation} />}
         </MapView>

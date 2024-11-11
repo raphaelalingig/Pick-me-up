@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import React, { useState, useContext } from "react";
-import MapView, { Marker } from "react-native-maps";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { Button } from "react-native-paper";
 import { RiderContext } from "../../context/riderContext";
 
@@ -15,7 +15,11 @@ const Map = () => {
 
   return (
     <View style={styles.container}>
-      <MapView style={styles.map} region={riderLocation}>
+      <MapView
+        style={styles.map}
+        region={riderLocation}
+        provider={PROVIDER_GOOGLE}
+      >
         <Marker coordinate={riderLocation} title="Rider Marker" />
       </MapView>
     </View>

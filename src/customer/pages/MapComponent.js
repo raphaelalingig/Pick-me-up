@@ -1,7 +1,7 @@
 // MapComponent.js
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View, Image } from "react-native";
-import MapView, { Marker, Polyline } from "react-native-maps";
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
 import riderMarker from "../../../assets/rider.png";
 import customerMarker from "../../../assets/customer.png";
 
@@ -14,7 +14,7 @@ const MapComponent = ({ riderLocation, customerLocation, routeCoordinates, mapRe
 
   return (
     <View style={styles.mapContainer}>
-      <MapView style={styles.map} region={localRegion}>
+      <MapView style={styles.map} region={localRegion} provider={PROVIDER_GOOGLE}>
         {riderLocation && (
           <Marker coordinate={riderLocation} title="Rider Location">
             <Image source={riderMarker} style={styles.riderIconStyle} />

@@ -18,7 +18,7 @@ import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityI
 import Ionicons from "react-native-vector-icons/Ionicons";
 import userService from "../../services/auth&services";
 import { BlurView } from "expo-blur";
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import riderMarker from "../../../assets/rider.png";
 import customerMarker from "../../../assets/customer.png";
 import { CustomerContext } from "../../context/customerContext";
@@ -487,6 +487,7 @@ const WaitingRider = ({ navigation }) => {
         region={region}
         onRegionChangeComplete={setRegion}
         showsMarkerClusters={true}
+        provider={PROVIDER_GOOGLE}
       >
         {/* Customer Marker */}
         {!isNaN(customerLat) && !isNaN(customerLng) && (

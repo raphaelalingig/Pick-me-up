@@ -1,8 +1,15 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { StyleSheet, TouchableOpacity, View, Alert, Linking, Image } from "react-native";
+import {
+  StyleSheet,
+  TouchableOpacity,
+  View,
+  Alert,
+  Linking,
+  Image,
+} from "react-native";
 import { MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 import { Text } from "react-native-paper";
-import MapView, { Marker, Polyline } from "react-native-maps";
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
 import userService from "../../services/auth&services";
 import riderMarker from "../../../assets/rider.png";
 import customerMarker from "../../../assets/customer.png";
@@ -22,9 +29,12 @@ const TrackingRider = ({ navigation }) => {
   const validateCoordinates = (lat, lng) => {
     const parsedLat = parseFloat(lat);
     const parsedLng = parseFloat(lng);
-    return !isNaN(parsedLat) && !isNaN(parsedLng) && 
-           parsedLat >= -90 && parsedLat <= 90 && 
-           parsedLng >= -180 && parsedLng <= 180
+    return !isNaN(parsedLat) &&
+      !isNaN(parsedLng) &&
+      parsedLat >= -90 &&
+      parsedLat <= 90 &&
+      parsedLng >= -180 &&
+      parsedLng <= 180
       ? { latitude: parsedLat, longitude: parsedLng }
       : null;
   };
@@ -33,7 +43,7 @@ const TrackingRider = ({ navigation }) => {
     try {
       setRefreshing(true);
       const ride = await userService.checkActiveBook();
-      
+
       if (!ride?.rideDetails) {
         throw new Error("No active ride found");
       }
@@ -46,7 +56,7 @@ const TrackingRider = ({ navigation }) => {
         ride.rideDetails.customer_latitude,
         ride.rideDetails.customer_longitude
       );
-      
+
       if (!customerCoords) {
         throw new Error("Invalid customer coordinates");
       }
@@ -54,12 +64,12 @@ const TrackingRider = ({ navigation }) => {
 
       // Fetch and validate rider location
       const rider = await userService.fetchRiderLoc(ride.rideDetails.rider_id);
-      console.log(rider)
+      console.log(rider);
       const riderCoords = validateCoordinates(
         rider.rider_latitude,
         rider.rider_longitude
       );
-      
+
       if (riderCoords) {
         setRiderLocation(riderCoords);
       }
@@ -76,7 +86,6 @@ const TrackingRider = ({ navigation }) => {
           longitudeDelta: 0.02,
         });
       }
-
     } catch (error) {
       console.error("Fetch ride error:", error);
       Alert.alert(
@@ -239,17 +248,21 @@ const TrackingRider = ({ navigation }) => {
           onPress={fetchLatestAvailableRide}
           disabled={refreshing}
         >
-          <MaterialCommunityIcons 
-            name={refreshing ? "loading" : "refresh"} 
-            size={24} 
-            color="black" 
+          <MaterialCommunityIcons
+            name={refreshing ? "loading" : "refresh"}
+            size={24}
+            color="black"
           />
         </TouchableOpacity>
       </View>
 
       <View style={styles.mapContainer}>
         {mapRegion && (
-          <MapView style={styles.map} region={mapRegion}>
+          <MapView
+            style={styles.map}
+            region={mapRegion}
+            provider={PROVIDER_GOOGLE}
+          >
             {riderLocation && (
               <Marker coordinate={riderLocation} title="Rider Location">
                 <Image source={riderMarker} style={styles.riderIconStyle} />
@@ -257,7 +270,10 @@ const TrackingRider = ({ navigation }) => {
             )}
             {customerLocation && (
               <Marker coordinate={customerLocation} title="Customer Location">
-                <Image source={customerMarker} style={styles.customerIconStyle} />
+                <Image
+                  source={customerMarker}
+                  style={styles.customerIconStyle}
+                />
               </Marker>
             )}
             {routeCoordinates.length > 0 && (
@@ -277,7 +293,11 @@ const TrackingRider = ({ navigation }) => {
           {bookDetails?.rider && (
             <>
               <View style={styles.detailRow}>
-                <MaterialCommunityIcons name="account" size={24} color="black" />
+                <MaterialCommunityIcons
+                  name="account"
+                  size={24}
+                  color="black"
+                />
                 <Text style={styles.detailText}>
                   {`${bookDetails.rider.first_name} ${bookDetails.rider.last_name}`}
                 </Text>
@@ -293,8 +313,8 @@ const TrackingRider = ({ navigation }) => {
         </View>
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity 
-            style={styles.button} 
+          <TouchableOpacity
+            style={styles.button}
             onPress={handleContactPress}
             disabled={!bookDetails?.rider?.mobile_number}
           >
@@ -312,8 +332,8 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   header: {
     flexDirection: "row",

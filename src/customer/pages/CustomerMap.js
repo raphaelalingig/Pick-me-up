@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import React, { useState, useContext } from "react";
-import MapView, { Marker } from "react-native-maps";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { Button } from "react-native-paper";
 import { CustomerContext } from "../../context/customerContext";
 
@@ -15,7 +15,7 @@ const CustomerMap = () => {
 
   return (
     <View style={styles.container}>
-      <MapView style={styles.map} region={customerLocation}>
+      <MapView style={styles.map} region={customerLocation} provider={PROVIDER_GOOGLE}>
         <Marker coordinate={customerLocation} title="Customer Marker" />
       </MapView>
     </View>

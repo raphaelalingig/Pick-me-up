@@ -1,11 +1,16 @@
 import React, { useState, useEffect, useContext } from "react";
-import { StyleSheet, TouchableOpacity, View, Alert, Image, 
+import {
+  StyleSheet,
+  TouchableOpacity,
+  View,
+  Alert,
+  Image,
   Modal,
   Pressable,
-  Animated
- } from "react-native";
+  Animated,
+} from "react-native";
 import { Text } from "react-native-paper";
-import MapView, { Marker, Polyline } from "react-native-maps";
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
 import userService from "../../services/auth&services";
 import { RiderContext } from "../../context/riderContext";
 
@@ -168,7 +173,6 @@ const TrackingDestination = ({ route, navigation }) => {
     );
   }
 
-
   const handleArrivePress = () => {
     setShowArriveModal(true);
   };
@@ -202,8 +206,10 @@ const TrackingDestination = ({ route, navigation }) => {
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Finish Ride</Text>
-          <Text style={styles.modalText}>Press and hold to finish the ride</Text>
-          
+          <Text style={styles.modalText}>
+            Press and hold to finish the ride
+          </Text>
+
           <Pressable
             onPressIn={handlePressIn}
             onPressOut={handlePressOut}
@@ -216,9 +222,9 @@ const TrackingDestination = ({ route, navigation }) => {
                   {
                     width: pressProgress.interpolate({
                       inputRange: [0, 1],
-                      outputRange: ['0%', '100%']
-                    })
-                  }
+                      outputRange: ["0%", "100%"],
+                    }),
+                  },
                 ]}
               />
               <Text style={styles.longPressButtonText}>Hold to Confirm</Text>
@@ -243,6 +249,7 @@ const TrackingDestination = ({ route, navigation }) => {
           style={styles.map}
           region={mapRegion}
           onMapReady={calculateMapRegion}
+          provider={PROVIDER_GOOGLE}
         >
           <Marker coordinate={customerLocation} title="Customer Location">
             <Image
@@ -367,51 +374,51 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContent: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 20,
     padding: 20,
-    width: '80%',
-    alignItems: 'center',
+    width: "80%",
+    alignItems: "center",
   },
   modalTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 15,
   },
   modalText: {
     fontSize: 16,
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   longPressButton: {
-    width: '100%',
+    width: "100%",
     height: 50,
-    backgroundColor: '#28a745',
+    backgroundColor: "#28a745",
     borderRadius: 10,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: 15,
   },
   progressContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   progressBar: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     top: 0,
     bottom: 0,
-    backgroundColor: '#1a752f',
+    backgroundColor: "#1a752f",
   },
   longPressButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     zIndex: 1,
   },
 });

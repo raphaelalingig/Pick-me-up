@@ -32,16 +32,6 @@ const BookedMap = ({ navigation, route }) => {
   const mapStyle = [
     {
       featureType: "all",
-      elementType: "geometry",
-      stylers: [{ color: "#242f3e" }],
-    },
-    {
-      featureType: "all",
-      elementType: "labels.text.stroke",
-      stylers: [{ color: "#242f3e" }],
-    },
-    {
-      featureType: "all",
       elementType: "labels.text.fill",
       stylers: [{ color: "#746855" }],
     },
@@ -145,7 +135,6 @@ const BookedMap = ({ navigation, route }) => {
       <MapView
         provider={PROVIDER_GOOGLE}
         style={styles.map}
-        customMapStyle={mapStyle}
         region={{
           ...customerLocation,
           latitudeDelta: Math.max(
