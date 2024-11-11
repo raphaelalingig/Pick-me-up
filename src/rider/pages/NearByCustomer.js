@@ -41,6 +41,21 @@ const NearbyCustomerScreen = ({ navigation }) => {
 
   const pusher = usePusher();
 
+  // useEffect(() => {
+  //   const fetchUserId = async () => {
+  //     try {
+  //       const response = await userService.getUserId();
+  //       const id = parseInt(response, 10);
+  //       console.log("Fetched user_id:", id);
+  //       setUserId(id);
+  //     } catch (error) {
+  //       console.error("Error fetching user_id:", error);
+  //     }
+  //   };
+
+  //   fetchUserId();
+  // }, []);
+
     const fetchAvailableRides = useCallback(async () => {
     try {
       setShowSpinner(true);
@@ -79,7 +94,7 @@ const NearbyCustomerScreen = ({ navigation }) => {
   useEffect(() => {
     const setupPusher = async () => {
       try {
-        if (!userId) return;
+        // if (!userId) return;
 
         const ridesChannel = pusher.subscribe('rides');
         const appliedChannel = pusher.subscribe('application');

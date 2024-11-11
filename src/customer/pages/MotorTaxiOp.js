@@ -9,6 +9,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import * as Location from "expo-location";
 import { CustomerContext } from "../../context/customerContext";
@@ -39,6 +40,8 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
   const [dropoffSuggestions, setDropoffSuggestions] = useState([]);
   const pickupTimeoutRef = useRef(null);
   const dropoffTimeoutRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
+
 
   useEffect(() => {
     const fetchUserId = async () => {
@@ -156,6 +159,10 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
   };
 
   const handleConfirm = async () => {
+    if (isLoading) return;
+
+    setIsLoading(true);
+
     const currentDate = new Date();
     const formattedCurrentDate = currentDate
       .toISOString()
@@ -192,6 +199,8 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
     } catch (error) {
       console.error("Failed to add ride history or save ride location:", error);
       Alert.alert("Booking Failed", "Please try again later.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -402,32 +411,49 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
             <TouchableOpacity
               style={styles.cancelButton}
               onPress={() => {
-                Alert.alert(
-                  "Confirm Cancel",
-                  "Are you sure you want to cancel?",
-                  [
-                    { text: "No", style: "cancel" },
-                    { text: "Yes", onPress: () => navigation.goBack() },
-                  ]
-                );
+                if (!isLoading) {
+                  Alert.alert(
+                    "Confirm Cancel",
+                    "Are you sure you want to cancel?",
+                    [
+                      { text: "No", style: "cancel" },
+                      { text: "Yes", onPress: () => navigation.goBack() },
+                    ]
+                  );
+                }
               }}
+              disabled={isLoading}
             >
-              <Text style={styles.cancelButtonText}>CANCEL</Text>
+              <Text style={[styles.cancelButtonText, isLoading && styles.disabledText]}>
+                CANCEL
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.confirmButton}
+              style={[styles.confirmButton, isLoading && styles.disabledButton]}
               onPress={() => {
-                Alert.alert(
-                  "Confirm Action",
-                  "Do you want to proceed with the confirmation?",
-                  [
-                    { text: "Cancel", style: "cancel" },
-                    { text: "OK", onPress: handleConfirm },
-                  ]
-                );
+                if (!isLoading) {
+                  Alert.alert(
+                    "Confirm Action",
+                    "Do you want to proceed with the confirmation?",
+                    [
+                      { text: "Cancel", style: "cancel" },
+                      { text: "OK", onPress: handleConfirm },
+                    ]
+                  );
+                }
               }}
+              disabled={isLoading}
             >
-              <Text style={styles.confirmButtonText}>Confirm</Text>
+              {isLoading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="small" color="#fff" />
+                  {/* <Text style={[styles.confirmButtonText, styles.loadingText]}>
+                    Processing...
+                  </Text> */}
+                </View>
+              ) : (
+                <Text style={styles.confirmButtonText}>Confirm</Text>
+              )}
             </TouchableOpacity>
           </View>
         </BlurView>

@@ -40,6 +40,7 @@ const TrackingDestination = ({ route, navigation }) => {
   useEffect(() => {
     fetchDirections();
     calculateMapRegion();
+    watchPosition();
   }, [customerLocation, destinationLocation]);
 
   useEffect(() => {
@@ -47,6 +48,29 @@ const TrackingDestination = ({ route, navigation }) => {
       setTotalDistanceRide(totalDistanceRide);
     }
   }, [totalDistanceRide]);
+
+  const watchPosition = () => {
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        setCustomerLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+        fetchDirections();
+      },
+      (error) => {
+        console.error("Error watching position:", error);
+      },
+      {
+        enableHighAccuracy: true,
+        distanceFilter: 10, // Update location every 10 meters
+      }
+    );
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
+  };
 
   const calculateMapRegion = () => {
     const minLat = Math.min(

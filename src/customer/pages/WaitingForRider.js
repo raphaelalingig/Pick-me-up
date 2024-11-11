@@ -122,6 +122,7 @@ const WaitingRider = ({ navigation }) => {
         rider.user.status === 'Active'
       );
       setRiderLocations(activeRiders);
+      console.log(response)
     } catch (error) {
       console.error('Error fetching rider locations:', error);
       Alert.alert(
@@ -176,10 +177,14 @@ const WaitingRider = ({ navigation }) => {
   //   fetchLoc();
   // }, [fetchLatestRide]);
 
+
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     fetchLatestRide().then(() => setRefreshing(false));
   }, [fetchLatestRide]);
+
+
 
   const handleApply = async (bookDetails, selectedRider) => {
     if (!userId) {

@@ -106,11 +106,11 @@ const Login = ({ navigation }) => {
   };
   
 
-  const handleRoleSelection = async (role) => {
-    await login(token, role, user, status);
-    setShowDialog(false);
-    navigation.replace(role === 3 ? "RiderStack" : "CustomerStack");
-  };
+  // const handleRoleSelection = async (role) => {
+  //   await login(token, role, user, status);
+  //   setShowDialog(false);
+  //   navigation.replace(role === 3 ? "RiderStack" : "CustomerStack");
+  // };
   
 
   const toggleSecureEntry = () => {
@@ -175,7 +175,7 @@ const Login = ({ navigation }) => {
           </View>
         </View>
 
-        <Portal>
+        {/* <Portal>
           <Dialog
             visible={showDialog}
             onDismiss={() => setShowDialog(false)}
@@ -199,7 +199,7 @@ const Login = ({ navigation }) => {
               </Button>
             </Dialog.Content>
           </Dialog>
-        </Portal>
+        </Portal> */}
       </View>
     </ImageBackground>
   );
