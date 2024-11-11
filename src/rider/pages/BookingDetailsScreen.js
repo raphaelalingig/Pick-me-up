@@ -32,7 +32,6 @@ const BookingDetailsScreen = ({ route, navigation }) => {
     fetchUserId();
   }, []);
 
-
   const handleApply = async (ride) => {
     if (!userId) {
       Alert.alert("Error", "User ID is not available.");
@@ -42,19 +41,19 @@ const BookingDetailsScreen = ({ route, navigation }) => {
     console.log("Attempting to accept ride with ID:", ride.ride_id);
     setIsLoading(true);
 
-    const ride_id = ride.ride_id
-    const customer = ride.user_id
+    const ride_id = ride.ride_id;
+    const customer = ride.user_id;
     try {
       const response = await userService.apply_ride(ride_id, customer);
       console.log("Accept ride response:", response.data);
       if (response.data.message === "exist") {
-        setRiderModalVisible(false);
-        Alert.alert("Message", 'You have already applied for this rider.');
-      }else if (response.data.message === "applied"){
-        Alert.alert("Message", 'Applied Successfully!');
+        Alert.alert("Message", "You have already applied for this ride.");
         navigation.goBack();
-      }else if (response.data && response.data.message){
-        Alert.alert("Ride Match", 'You have found a Match!');
+      } else if (response.data.message === "applied") {
+        Alert.alert("Message", "Applied Successfully!");
+        navigation.goBack();
+      } else if (response.data && response.data.message) {
+        Alert.alert("Ride Match", "You have found a Match!");
         navigation.navigate("Home");
       } else {
         Alert.alert("Error", "Failed to accept the ride. Please try again.");
@@ -122,37 +121,37 @@ const BookingDetailsScreen = ({ route, navigation }) => {
         </TouchableOpacity>
 
         <View style={styles.buttonContainer}>
-  <TouchableOpacity
-    style={styles.cancelButton}
-    onPress={() => navigation.goBack()}
-  >
-    <Text style={styles.cancelButtonText}>Back</Text>
-  </TouchableOpacity>
-  <TouchableOpacity
-    style={styles.acceptButton}
-    onPress={() => {
-      Alert.alert(
-        "Confirm Application",
-        "Are you sure you want to apply for this ride?",
-        [
-          {
-            text: "Cancel",
-            style: "cancel",
-          },
-          {
-            text: "OK",
-            onPress: () => handleApply(ride),
-          },
-        ]
-      );
-    }}
-    disabled={isLoading}
-  >
-    <Text style={styles.acceptButtonText}>
-      {isLoading ? "Accepting..." : "Apply"}
-    </Text>
-  </TouchableOpacity>
-</View>
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.cancelButtonText}>Back</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.acceptButton}
+            onPress={() => {
+              Alert.alert(
+                "Confirm Application",
+                "Are you sure you want to apply for this ride?",
+                [
+                  {
+                    text: "Cancel",
+                    style: "cancel",
+                  },
+                  {
+                    text: "OK",
+                    onPress: () => handleApply(ride),
+                  },
+                ]
+              );
+            }}
+            disabled={isLoading}
+          >
+            <Text style={styles.acceptButtonText}>
+              {isLoading ? "Accepting..." : "Apply"}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </BlurView>
     </ImageBackground>
   );

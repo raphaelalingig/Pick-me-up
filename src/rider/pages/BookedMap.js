@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useContext } from "react";
 import { StyleSheet, View, Image } from "react-native";
-import MapView, { Marker, Polyline } from "react-native-maps";
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
 import { RiderContext } from "../../context/riderContext";
 import { Button, Text } from "react-native-paper";
 import riderMarker from "../../../assets/rider.png";
 import customerMarker from "../../../assets/customer.png";
 
 const BookedMap = ({ navigation, route }) => {
-  const { ride } = route.params; // Assuming the ride data is passed as a route parameter
+  const { ride } = route.params;
   const { riderCoords, totalDistanceRide, setTotalDistanceRide } =
     useContext(RiderContext);
 
@@ -28,13 +28,37 @@ const BookedMap = ({ navigation, route }) => {
   const [routeCoordinates, setRouteCoordinates] = useState([]);
   const [totalFare, setTotalFare] = useState(parseFloat(ride.fare));
 
+  // Google Maps specific styling
+  const mapStyle = [
+    {
+      featureType: "all",
+      elementType: "geometry",
+      stylers: [{ color: "#242f3e" }],
+    },
+    {
+      featureType: "all",
+      elementType: "labels.text.stroke",
+      stylers: [{ color: "#242f3e" }],
+    },
+    {
+      featureType: "all",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#746855" }],
+    },
+    {
+      featureType: "poi",
+      elementType: "labels",
+      stylers: [{ visibility: "off" }],
+    },
+  ];
+
   useEffect(() => {
     fetchDirections();
   }, [riderLocation, customerLocation]);
 
   const fetchDirections = async () => {
     try {
-      const apiKey = "AIzaSyAekXSq_b4GaHneUKEBVsl4UTGlaskobFo";
+      const apiKey = "AIzaSyAekXSq_b4GaHneUKEBVsl4UTGlaskobFo"; // Your API key
       const origin = `${riderLocation.latitude},${riderLocation.longitude}`;
       const destination = `${customerLocation.latitude},${customerLocation.longitude}`;
       const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${apiKey}`;
@@ -53,30 +77,29 @@ const BookedMap = ({ navigation, route }) => {
         );
         const totalDistanceKm = (totalDistanceMeters / 1000).toFixed(2);
         setTotalDistanceRide(totalDistanceKm);
+        calculateFare(parseFloat(totalDistanceKm));
       }
     } catch (error) {
       console.error("Error fetching directions:", error);
     }
   };
 
-  // Function to calculate fare based on distance
   const calculateFare = (distance) => {
-    const baseFare = 40; // Base fare for the first 2 kilometers
-    const additionalFareRate = 10; // Fare per kilometer after 2 km
-    const thresholdKm = 2; // First 2 kilometers
+    const baseFare = 40;
+    const additionalFareRate = 10;
+    const thresholdKm = 2;
 
     let fare;
     if (distance <= thresholdKm) {
-      fare = baseFare; // If distance is within 2 km, base fare applies
+      fare = baseFare;
     } else {
-      const exceedingDistance = distance - thresholdKm; // Distance above 2 km
-      fare = baseFare + exceedingDistance * additionalFareRate; // Base fare + fare for exceeding distance
+      const exceedingDistance = distance - thresholdKm;
+      fare = baseFare + exceedingDistance * additionalFareRate;
     }
 
-    setTotalFare(fare.toFixed(2)); // Set the total fare and limit to 2 decimal places
+    setTotalFare(fare.toFixed(2));
   };
 
-  // Helper function to decode Google's encoded polyline
   const decodePolyline = (encoded) => {
     const poly = [];
     let index = 0,
@@ -120,7 +143,9 @@ const BookedMap = ({ navigation, route }) => {
   return (
     <View style={styles.container}>
       <MapView
+        provider={PROVIDER_GOOGLE}
         style={styles.map}
+        customMapStyle={mapStyle}
         region={{
           ...customerLocation,
           latitudeDelta: Math.max(
@@ -132,6 +157,10 @@ const BookedMap = ({ navigation, route }) => {
             Math.abs(customerLocation.longitude - riderLocation.longitude) * 2
           ),
         }}
+        showsUserLocation={true}
+        showsMyLocationButton={true}
+        showsCompass={true}
+        showsTraffic={true}
       >
         <Marker coordinate={riderLocation} title="Rider Location">
           <Image source={riderMarker} style={styles.riderIconStyle} />
@@ -145,7 +174,7 @@ const BookedMap = ({ navigation, route }) => {
         </Marker>
         <Polyline
           coordinates={routeCoordinates}
-          strokeColor="#FF0000"
+          strokeColor="#4285F4" // Google Maps blue color
           strokeWidth={3}
         />
       </MapView>
@@ -174,32 +203,29 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 10,
     left: 10,
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
     padding: 10,
-    borderRadius: 5,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   distanceText: {
     fontSize: 16,
     fontWeight: "bold",
+    color: "#333",
   },
   totalFare: {
     fontSize: 16,
     fontWeight: "bold",
+    color: "#333",
+    marginTop: 5,
   },
-
-  nextButtonContainer: {
-    position: "absolute",
-    bottom: 10,
-    right: 10,
-    padding: 5,
-    borderRadius: 5,
-  },
-
-  nextButtonStyle: {
-    backgroundColor: "#008000",
-    borderRadius: 5,
-  },
-
   riderIconStyle: {
     width: 40,
     height: 40,
