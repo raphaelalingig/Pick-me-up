@@ -6,7 +6,10 @@ import {
   Alert,
   Dimensions,
   Image,
-  Linking
+  Linking,
+  Modal,
+  Pressable,
+  Animated
 } from "react-native";
 import { MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 import { Text } from "react-native-paper";
@@ -25,6 +28,9 @@ const TrackingCustomer = ({ route, navigation }) => {
   const [totalFare, setTotalFare] = useState(0);
   const [mapRegion, setMapRegion] = useState(null);
   const [totalDistanceRide, setTotalDistanceRide] = useState(null);
+  const [showStartModal, setShowStartModal] = useState(false);
+  const [pressProgress] = useState(new Animated.Value(0));
+  const [isPressed, setIsPressed] = useState(false);
 
   useEffect(() => {
     let locationSubscription;
@@ -61,6 +67,7 @@ const TrackingCustomer = ({ route, navigation }) => {
               latitude: newLocation.coords.latitude,
               longitude: newLocation.coords.longitude,
             });
+            console.log(newLocation.coords.latitude, newLocation.coords.longitude)
             const rider_lat = newLocation.coords.latitude;
             const rider_long = newLocation.coords.longitude;
             uploadRiderLocation(rider_lat, rider_long)
@@ -83,9 +90,10 @@ const TrackingCustomer = ({ route, navigation }) => {
   }, [ride]);
 
   const uploadRiderLocation = async (rider_lat, rider_long) => {
-    console.log(rider_lat, rider_long)
+    console.log("COORDS",rider_lat, rider_long)
     try {
-      await userService.updateRiderLocation(rider_lat, rider_long);
+      const response = await userService.updateRiderLocation(rider_lat, rider_long);
+      console.log("Updated Succesfully:", response)
     } catch (error) {
       console.error("Error uploading rider location:", error);
     }
@@ -234,24 +242,40 @@ const TrackingCustomer = ({ route, navigation }) => {
   };
 
   const handleCancel = async () => {
-    setIsLoading(true);
-    try {
-      const response = await userService.cancel_ride(ride.ride_id);
-      if (response.data && response.data.message) {
-        Alert.alert("Success", response.data.message);
-        navigation.navigate("Home");
-      } else {
-        Alert.alert("Error", "Failed to cancel the ride. Please try again.");
-      }
-    } catch (error) {
-      console.error(
-        "Failed to Cancel Ride",
-        error.response ? error.response.data : error.message
-      );
-      Alert.alert("Error", "An error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    Alert.alert(
+      "Cancel Ride",
+      "Are you sure you want to cancel this ride?",
+      [
+        {
+          text: "No",
+          style: "cancel"
+        },
+        {
+          text: "Yes",
+          style: "destructive",
+          onPress: async () => {
+            setIsLoading(true);
+            try {
+              const response = await userService.cancel_ride(ride.ride_id);
+              if (response.data && response.data.message) {
+                Alert.alert("Success", response.data.message);
+                navigation.navigate("Home");
+              } else {
+                Alert.alert("Error", "Failed to cancel the ride. Please try again.");
+              }
+            } catch (error) {
+              console.error(
+                "Failed to Cancel Ride",
+                error.response ? error.response.data : error.message
+              );
+              Alert.alert("Error", "An error occurred. Please try again.");
+            } finally {
+              setIsLoading(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
   const handleContactPress = () => {
@@ -263,13 +287,81 @@ const TrackingCustomer = ({ route, navigation }) => {
     }
   };
 
-  if (isLoading || !ride || !riderLocation) {
+  if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <Text>Loading...</Text>
       </View>
     );
   }
+
+  const handleStartPress = () => {
+    setShowStartModal(true);
+  };
+
+  const handlePressIn = () => {
+    setIsPressed(true);
+    Animated.timing(pressProgress, {
+      toValue: 1,
+      duration: 2000, // 2 seconds for long press
+      useNativeDriver: false,
+    }).start(({ finished }) => {
+      if (finished && isPressed) {
+        startRide();
+        setShowStartModal(false);
+      }
+    });
+  };
+
+  const handlePressOut = () => {
+    setIsPressed(false);
+    pressProgress.setValue(0);
+  };
+
+  const StartRideModal = () => (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={showStartModal}
+      onRequestClose={() => setShowStartModal(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Start Ride</Text>
+          <Text style={styles.modalText}>Press and hold to start the ride</Text>
+          
+          <Pressable
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
+            style={styles.longPressButton}
+          >
+            <View style={styles.progressContainer}>
+              <Animated.View
+                style={[
+                  styles.progressBar,
+                  {
+                    width: pressProgress.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0%', '100%']
+                    })
+                  }
+                ]}
+              />
+              <Text style={styles.longPressButtonText}>Hold to Start</Text>
+            </View>
+          </Pressable>
+
+          <TouchableOpacity
+            style={styles.cancelModalButton}
+            onPress={() => setShowStartModal(false)}
+          >
+            <Text style={styles.cancelModalButtonText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+
 
   return (
     <View style={styles.container}>
@@ -324,19 +416,21 @@ const TrackingCustomer = ({ route, navigation }) => {
         </View>
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={handleContactPress}>
-            <Text style={styles.buttonText}>Contact</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={startRide}>
-            <Text style={styles.buttonText}>Start Ride</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.button, styles.cancelButton]}
-            onPress={handleCancel}
-          >
-            <Text style={styles.buttonText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.button} onPress={handleContactPress}>
+          <Text style={styles.buttonText}>Contact</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={handleStartPress}>
+          <Text style={styles.buttonText}>Start Ride</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, styles.cancelButton]}
+          onPress={handleCancel}
+        >
+          <Text style={styles.buttonText}>Cancel</Text>
+        </TouchableOpacity>
+      </View>
+
+      <StartRideModal />
       </View>
     </View>
   );
@@ -425,6 +519,64 @@ const styles = StyleSheet.create({
     height: 40,
     resizeMode: "contain",
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 20,
+    width: '80%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  longPressButton: {
+    width: '100%',
+    height: 50,
+    backgroundColor: '#28a745',
+    borderRadius: 10,
+    overflow: 'hidden',
+    marginBottom: 15,
+  },
+  progressContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  progressBar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: '#1a752f',
+  },
+  longPressButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    zIndex: 1,
+  },
+  cancelModalButton: {
+    padding: 10,
+  },
+  cancelModalButtonText: {
+    color: '#dc3545',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
 });
 
 export default TrackingCustomer;

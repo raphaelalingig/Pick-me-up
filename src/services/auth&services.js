@@ -78,8 +78,8 @@ const userService = {
       console.log(user_id);
 
       const response = await axios.put(API_URL + "update_rider_loc", {
-        longitude: rider_long.longitude,
-        latitude: rider_lat.latitude,
+        longitude: rider_long,
+        latitude: rider_lat,
         user_id: user_id
       });
       return response.data;

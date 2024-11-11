@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useContext } from "react";
-import { StyleSheet, TouchableOpacity, View, Alert, Image } from "react-native";
+import { StyleSheet, TouchableOpacity, View, Alert, Image, 
+  Modal,
+  Pressable,
+  Animated
+ } from "react-native";
 import { Text } from "react-native-paper";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import userService from "../../services/auth&services";
@@ -24,6 +28,9 @@ const TrackingDestination = ({ route, navigation }) => {
   const [totalFare, setTotalFare] = useState(parseFloat(ride.fare));
   const [mapRegion, setMapRegion] = useState(null);
   const [totalDistanceRide, setLocalTotalDistanceRide] = useState(0);
+  const [showArriveModal, setShowArriveModal] = useState(false);
+  const [pressProgress] = useState(new Animated.Value(0));
+  const [isPressed, setIsPressed] = useState(false);
 
   useEffect(() => {
     fetchDirections();
@@ -161,6 +168,74 @@ const TrackingDestination = ({ route, navigation }) => {
     );
   }
 
+
+  const handleArrivePress = () => {
+    setShowArriveModal(true);
+  };
+
+  const handlePressIn = () => {
+    setIsPressed(true);
+    Animated.timing(pressProgress, {
+      toValue: 1,
+      duration: 2000, // 2 seconds for long press
+      useNativeDriver: false,
+    }).start(({ finished }) => {
+      if (finished && isPressed) {
+        completeRide();
+        setShowArriveModal(false);
+      }
+    });
+  };
+
+  const handlePressOut = () => {
+    setIsPressed(false);
+    pressProgress.setValue(0);
+  };
+
+  const FinishRideModal = () => (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={showArriveModal}
+      onRequestClose={() => setShowArriveModal(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Finish Ride</Text>
+          <Text style={styles.modalText}>Press and hold to finish the ride</Text>
+          
+          <Pressable
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
+            style={styles.longPressButton}
+          >
+            <View style={styles.progressContainer}>
+              <Animated.View
+                style={[
+                  styles.progressBar,
+                  {
+                    width: pressProgress.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0%', '100%']
+                    })
+                  }
+                ]}
+              />
+              <Text style={styles.longPressButtonText}>Hold to Confirm</Text>
+            </View>
+          </Pressable>
+
+          <TouchableOpacity
+            style={styles.cancelModalButton}
+            onPress={() => setShowArriveModal(false)}
+          >
+            <Text style={styles.cancelModalButtonText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.mapContainer}>
@@ -208,11 +283,12 @@ const TrackingDestination = ({ route, navigation }) => {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.button, styles.arrivedButton]}
-            onPress={completeRide}
+            onPress={handleArrivePress}
           >
             <Text style={styles.buttonText}>Arrived</Text>
           </TouchableOpacity>
         </View>
+        <FinishRideModal />
       </View>
     </View>
   );
@@ -288,6 +364,55 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     resizeMode: "contain",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 20,
+    width: '80%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  longPressButton: {
+    width: '100%',
+    height: 50,
+    backgroundColor: '#28a745',
+    borderRadius: 10,
+    overflow: 'hidden',
+    marginBottom: 15,
+  },
+  progressContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  progressBar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: '#1a752f',
+  },
+  longPressButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    zIndex: 1,
   },
 });
 

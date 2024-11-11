@@ -7,7 +7,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
 
-const GetVerified = () => {
+const GetVerified = ( navigation ) => {
   const [licenseNumber, setLicenseNumber] = useState("");
   const [licenseExpDate, setLicenseExpDate] = useState(new Date());
   const [orExpDate, setOrExpDate] = useState(new Date());
@@ -259,7 +259,7 @@ const GetVerified = () => {
         <View style={styles.buttonContainer}>
           <Button
             mode="contained"
-            onPress={() => console.log("Cancelled")}
+            onPress={() => navigation.navigate("Home")}
             style={[styles.button, styles.cancelButton]}
           >
             Cancel

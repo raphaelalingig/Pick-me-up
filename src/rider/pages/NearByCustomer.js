@@ -49,8 +49,9 @@ const NearbyCustomerScreen = ({ navigation }) => {
 
       setRider(id);
       setUser_id(id.user_id);
+      console.log("IDASHDIHAD",userId);
 
-      const appResponse = await userService.getApplications(userId);
+      const appResponse = await userService.getApplications(id.user_id);
       console.log(appResponse);
 
       if (appResponse.data && appResponse.data.length > 0) {
@@ -188,11 +189,6 @@ const NearbyCustomerScreen = ({ navigation }) => {
       ]
     );
   }, [handleDecline]);
-
-  const closeModal = () => {
-    setShowMatchModal(false);
-    setMatchedRide(null);
-  };
 
   const closeApplyModal = () => {
     setShowApplyModal(false);
