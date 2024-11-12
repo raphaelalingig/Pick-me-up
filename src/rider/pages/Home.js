@@ -8,8 +8,11 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
-  Modal
+  Modal,
+  Alert,
 } from "react-native";
+import Toast from "react-native-root-toast";
+
 import { Button, Text, ActivityIndicator, MD2Colors } from "react-native-paper";
 import * as Location from "expo-location";
 import { RiderContext } from "../../context/riderContext";
@@ -46,10 +49,10 @@ const Home = ({ navigation }) => {
     const setupPusher = async () => {
       try {
         if (!user_id) return;
-        const appliedChannel = pusher.subscribe('application');
-        const bookedChannel = pusher.subscribe('booked');
+        const appliedChannel = pusher.subscribe("application");
+        const bookedChannel = pusher.subscribe("booked");
 
-        appliedChannel.bind('RIDES_APPLY', data => {
+        appliedChannel.bind("RIDES_APPLY", (data) => {
           console.log("Data received:", data);
           if (data && data.applicationData && data.applicationData.length > 0) {
             const apply = data.applicationData[0];
@@ -62,7 +65,7 @@ const Home = ({ navigation }) => {
           }
         });
 
-        bookedChannel.bind('BOOKED', data => {
+        bookedChannel.bind("BOOKED", (data) => {
           if (data && data.ride && data.ride.length > 0) {
             const book = data.ride[0];
             if (book.apply_to === user_id) {
@@ -74,11 +77,11 @@ const Home = ({ navigation }) => {
 
         return () => {
           appliedChannel.unbind_all();
-          pusher.unsubscribe('application');
-          pusher.unsubscribe('booked');
+          pusher.unsubscribe("application");
+          pusher.unsubscribe("booked");
         };
       } catch (error) {
-        console.error('Error setting up Pusher:', error);
+        console.error("Error setting up Pusher:", error);
       }
     };
 
@@ -87,66 +90,59 @@ const Home = ({ navigation }) => {
 
   const handleDecline = async () => {
     try {
-      setShowSpinner(true);
+      // setShowSpinner(true);
 
       const apply_id = applyRide.apply_id;
       const response = await userService.decline_ride(apply_id);
 
-      if (response.data.message == "Declined"){
-        Toast.show('Declined Ride Successfully', {
+      if (response.data.message == "Declined") {
+        Toast.show("Declined Ride Successfully", {
           duration: Toast.durations.LONG,
           position: Toast.positions.BOTTOM,
           shadow: true,
           animation: true,
           hideOnPress: true,
-          backgroundColor: '#333',
-          textColor: '#fff'
+          backgroundColor: "#333",
+          textColor: "#fff",
         });
         setShowApplyModal(false);
         setApplyRide(null);
-
-      }else if (response.data.message == "Unavailable"){
-        Toast.show('Ride no longer available', {
+      } else if (response.data.message == "Unavailable") {
+        Toast.show("Ride no longer available", {
           duration: Toast.durations.LONG,
           position: Toast.positions.BOTTOM,
           shadow: true,
           animation: true,
           hideOnPress: true,
-          backgroundColor: '#333',
-          textColor: '#fff'
+          backgroundColor: "#333",
+          textColor: "#fff",
         });
         setShowApplyModal(false);
         setApplyRide(null);
       }
-
-
     } catch (error) {
       console.error("Failed to decline ride:", error);
       Alert.alert("Error", "Failed to decline ride. Please try again.");
     } finally {
-      setShowSpinner(false);
+      // setShowSpinner(false);
     }
   };
 
   const handleCancelConfirmation = useCallback(() => {
-    Alert.alert(
-      "Decline Ride",
-      "Are you sure you want to decline this ride?",
-      [
-        { text: "No", style: "cancel" },
-        {
-          text: "Yes",
-          onPress: handleDecline,
-          style: "destructive",
-        },
-      ]
-    );
+    Alert.alert("Decline Ride", "Are you sure you want to decline this ride?", [
+      { text: "No", style: "cancel" },
+      {
+        text: "Yes",
+        onPress: handleDecline,
+        style: "destructive",
+      },
+    ]);
   }, [handleDecline]);
 
   const handleViewButton = () => {
     setShowApplyModal(false);
-    navigation.navigate("BookingDetails", { ride: applyRide })
-  }
+    navigation.navigate("BookingDetails", { ride: applyRide });
+  };
 
   const closeApplyModal = () => {
     setShowApplyModal(false);
@@ -158,7 +154,9 @@ const Home = ({ navigation }) => {
     try {
       const user_status = await userService.fetchRider();
       if (user_status.message === "Get Verified") {
-        alert("Please complete your verification process before booking a ride.");
+        alert(
+          "Please complete your verification process before booking a ride."
+        );
         return "Cannot Book";
       }
       if (user_status.message === "Account Disabled") {
@@ -168,7 +166,6 @@ const Home = ({ navigation }) => {
       console.log("User is verified and account is active.");
       navigation.navigate("Nearby Customer");
       return "Proceed";
-  
     } catch (error) {
       console.error("Error in Finding Customer:", error);
       alert("An error occurred while checking your status. Please try again.");
@@ -177,12 +174,8 @@ const Home = ({ navigation }) => {
     }
   };
 
-  
-
-
   const checkRideAndLocation = useCallback(async () => {
     try {
-
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         setErrorMsg("Permission to access location was denied");
@@ -202,28 +195,27 @@ const Home = ({ navigation }) => {
       });
 
       const response = await userService.checkActiveRide();
-      console.log(response)
+      console.log(response);
       if (response && response.hasActiveRide) {
         const { status } = response.rideDetails;
-        console.log(status)
-        const ride = response.rideDetails; 
+        console.log(status);
+        const ride = response.rideDetails;
         switch (status) {
-          case 'Booked':
-            navigation.navigate("Tracking Customer", {ride});
+          case "Booked":
+            navigation.navigate("Tracking Customer", { ride });
             return "existing_ride";
-          case 'In Transit':
-            navigation.navigate("Tracking Destination", {ride});
+          case "In Transit":
+            navigation.navigate("Tracking Destination", { ride });
             return "in_transit";
         }
       }
 
-      
       return "proceed";
     } catch (error) {
       setErrorMsg("Error fetching location or ride status");
-      } finally {
-        setLoading(false);
-      }
+    } finally {
+      setLoading(false);
+    }
   }, [navigation, setRiderCoords]);
 
   const onRefresh = useCallback(async () => {
@@ -266,7 +258,11 @@ const Home = ({ navigation }) => {
           </View>
           <TouchableOpacity onPress={handleFind} disabled={loading}>
             <View
-              style={{ padding: 15, backgroundColor: "black", borderRadius: 10 }}
+              style={{
+                padding: 15,
+                backgroundColor: "black",
+                borderRadius: 10,
+              }}
             >
               <Text variant="titleMedium" style={styles.titleText}>
                 {loading ? "Checking..." : "START FINDING CUSTOMER"}
@@ -293,19 +289,27 @@ const Home = ({ navigation }) => {
           </Button>
 
           {applyRide && (
-            <Modal 
-              visible={showApplyModal} 
-              transparent={true} 
+            <Modal
+              visible={showApplyModal}
+              transparent={true}
               animationType="slide"
               onRequestClose={closeApplyModal}
             >
               <View style={styles.modalContainer}>
                 <View style={styles.modalContent}>
                   <Text style={styles.modalTitle}>New Ride Application!</Text>
-                  <Text style={styles.modalText}>Passenger: {applyRide.applier_name}</Text>
-                  <Text style={styles.modalText}>Calculated Fare: {applyRide.calculated_fare}</Text>
-                  <Text style={styles.modalText}>Offered Fare: {applyRide.fare}</Text>
-                  <Text style={styles.modalText}>Date: {new Date(applyRide.ride_date).toLocaleString()}</Text>
+                  <Text style={styles.modalText}>
+                    Passenger: {applyRide.applier_name}
+                  </Text>
+                  <Text style={styles.modalText}>
+                    Calculated Fare: {applyRide.calculated_fare}
+                  </Text>
+                  <Text style={styles.modalText}>
+                    Offered Fare: {applyRide.fare}
+                  </Text>
+                  <Text style={styles.modalText}>
+                    Date: {new Date(applyRide.ride_date).toLocaleString()}
+                  </Text>
                   <View style={styles.buttonContainer}>
                     <TouchableOpacity
                       style={[styles.actionButton, styles.acceptButton]}
@@ -324,7 +328,6 @@ const Home = ({ navigation }) => {
               </View>
             </Modal>
           )}
-
         </View>
       </ScrollView>
     </ImageBackground>
@@ -345,7 +348,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 20,
-    
   },
   logoContainer: {
     marginBottom: 50,
@@ -354,7 +356,6 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     borderWidth: 2,
-    
   },
   button: {
     marginTop: 20,

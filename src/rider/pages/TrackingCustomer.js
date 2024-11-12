@@ -1,15 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   StyleSheet,
   TouchableOpacity,
   View,
   Alert,
-  Dimensions,
   Image,
   Linking,
   Modal,
   Pressable,
-  Animated
+  Animated,
 } from "react-native";
 import { MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 import { Text } from "react-native-paper";
@@ -31,6 +30,26 @@ const TrackingCustomer = ({ route, navigation }) => {
   const [showStartModal, setShowStartModal] = useState(false);
   const [pressProgress] = useState(new Animated.Value(0));
   const [isPressed, setIsPressed] = useState(false);
+
+  const pressAnimationRef = useRef(null);
+  const hasCompletedRef = useRef(false);
+  const locationSubscriptionRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (locationSubscriptionRef.current) {
+        locationSubscriptionRef.current.remove();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (pressAnimationRef.current) {
+        pressAnimationRef.current.stop();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let locationSubscription;
@@ -67,10 +86,13 @@ const TrackingCustomer = ({ route, navigation }) => {
               latitude: newLocation.coords.latitude,
               longitude: newLocation.coords.longitude,
             });
-            console.log(newLocation.coords.latitude, newLocation.coords.longitude)
+            console.log(
+              newLocation.coords.latitude,
+              newLocation.coords.longitude
+            );
             const rider_lat = newLocation.coords.latitude;
             const rider_long = newLocation.coords.longitude;
-            uploadRiderLocation(rider_lat, rider_long)
+            uploadRiderLocation(rider_lat, rider_long);
           }
         );
       } catch (error) {
@@ -90,10 +112,13 @@ const TrackingCustomer = ({ route, navigation }) => {
   }, [ride]);
 
   const uploadRiderLocation = async (rider_lat, rider_long) => {
-    console.log("COORDS",rider_lat, rider_long)
+    console.log("COORDS", rider_lat, rider_long);
     try {
-      const response = await userService.updateRiderLocation(rider_lat, rider_long);
-      console.log("Updated Succesfully:", response)
+      const response = await userService.updateRiderLocation(
+        rider_lat,
+        rider_long
+      );
+      console.log("Updated Succesfully:", response);
     } catch (error) {
       console.error("Error uploading rider location:", error);
     }
@@ -242,40 +267,39 @@ const TrackingCustomer = ({ route, navigation }) => {
   };
 
   const handleCancel = async () => {
-    Alert.alert(
-      "Cancel Ride",
-      "Are you sure you want to cancel this ride?",
-      [
-        {
-          text: "No",
-          style: "cancel"
-        },
-        {
-          text: "Yes",
-          style: "destructive",
-          onPress: async () => {
-            setIsLoading(true);
-            try {
-              const response = await userService.cancel_ride(ride.ride_id);
-              if (response.data && response.data.message) {
-                Alert.alert("Success", response.data.message);
-                navigation.navigate("Home");
-              } else {
-                Alert.alert("Error", "Failed to cancel the ride. Please try again.");
-              }
-            } catch (error) {
-              console.error(
-                "Failed to Cancel Ride",
-                error.response ? error.response.data : error.message
+    Alert.alert("Cancel Ride", "Are you sure you want to cancel this ride?", [
+      {
+        text: "No",
+        style: "cancel",
+      },
+      {
+        text: "Yes",
+        style: "destructive",
+        onPress: async () => {
+          setIsLoading(true);
+          try {
+            const response = await userService.cancel_ride(ride.ride_id);
+            if (response.data && response.data.message) {
+              Alert.alert("Success", response.data.message);
+              navigation.navigate("Home");
+            } else {
+              Alert.alert(
+                "Error",
+                "Failed to cancel the ride. Please try again."
               );
-              Alert.alert("Error", "An error occurred. Please try again.");
-            } finally {
-              setIsLoading(false);
             }
+          } catch (error) {
+            console.error(
+              "Failed to Cancel Ride",
+              error.response ? error.response.data : error.message
+            );
+            Alert.alert("Error", "An error occurred. Please try again.");
+          } finally {
+            setIsLoading(false);
           }
-        }
-      ]
-    );
+        },
+      },
+    ]);
   };
 
   const handleContactPress = () => {
@@ -300,13 +324,25 @@ const TrackingCustomer = ({ route, navigation }) => {
   };
 
   const handlePressIn = () => {
+    // Reset completion flag
+    hasCompletedRef.current = false;
     setIsPressed(true);
-    Animated.timing(pressProgress, {
+
+    // Cancel any existing animation
+    if (pressAnimationRef.current) {
+      pressAnimationRef.current.stop();
+    }
+
+    // Store animation reference
+    pressAnimationRef.current = Animated.timing(pressProgress, {
       toValue: 1,
-      duration: 2000, // 2 seconds for long press
+      duration: 2000,
       useNativeDriver: false,
-    }).start(({ finished }) => {
-      if (finished && isPressed) {
+    });
+
+    pressAnimationRef.current.start(({ finished }) => {
+      if (finished && isPressed && !hasCompletedRef.current) {
+        hasCompletedRef.current = true; // Set flag to prevent double execution
         startRide();
         setShowStartModal(false);
       }
@@ -315,8 +351,14 @@ const TrackingCustomer = ({ route, navigation }) => {
 
   const handlePressOut = () => {
     setIsPressed(false);
+    // Cancel animation on press out
+    if (pressAnimationRef.current) {
+      pressAnimationRef.current.stop();
+    }
     pressProgress.setValue(0);
   };
+
+ 
 
   const StartRideModal = () => (
     <Modal
@@ -329,7 +371,7 @@ const TrackingCustomer = ({ route, navigation }) => {
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Start Ride</Text>
           <Text style={styles.modalText}>Press and hold to start the ride</Text>
-          
+
           <Pressable
             onPressIn={handlePressIn}
             onPressOut={handlePressOut}
@@ -342,9 +384,9 @@ const TrackingCustomer = ({ route, navigation }) => {
                   {
                     width: pressProgress.interpolate({
                       inputRange: [0, 1],
-                      outputRange: ['0%', '100%']
-                    })
-                  }
+                      outputRange: ["0%", "100%"],
+                    }),
+                  },
                 ]}
               />
               <Text style={styles.longPressButtonText}>Hold to Start</Text>
@@ -361,8 +403,6 @@ const TrackingCustomer = ({ route, navigation }) => {
       </View>
     </Modal>
   );
-
-
   return (
     <View style={styles.container}>
       <View style={styles.mapContainer}>
@@ -417,21 +457,21 @@ const TrackingCustomer = ({ route, navigation }) => {
         </View>
 
         <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={handleContactPress}>
-          <Text style={styles.buttonText}>Contact</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={handleStartPress}>
-          <Text style={styles.buttonText}>Start Ride</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.button, styles.cancelButton]}
-          onPress={handleCancel}
-        >
-          <Text style={styles.buttonText}>Cancel</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity style={styles.button} onPress={handleContactPress}>
+            <Text style={styles.buttonText}>Contact</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={handleStartPress}>
+            <Text style={styles.buttonText}>Start Ride</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.cancelButton]}
+            onPress={handleCancel}
+          >
+            <Text style={styles.buttonText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
 
-      <StartRideModal />
+        <StartRideModal />
       </View>
     </View>
   );
@@ -522,60 +562,60 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContent: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 20,
     padding: 20,
-    width: '80%',
-    alignItems: 'center',
+    width: "80%",
+    alignItems: "center",
   },
   modalTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 15,
   },
   modalText: {
     fontSize: 16,
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   longPressButton: {
-    width: '100%',
+    width: "100%",
     height: 50,
-    backgroundColor: '#28a745',
+    backgroundColor: "#28a745",
     borderRadius: 10,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: 15,
   },
   progressContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   progressBar: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     top: 0,
     bottom: 0,
-    backgroundColor: '#1a752f',
+    backgroundColor: "#1a752f",
   },
   longPressButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     zIndex: 1,
   },
   cancelModalButton: {
     padding: 10,
   },
   cancelModalButtonText: {
-    color: '#dc3545',
+    color: "#dc3545",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
 });

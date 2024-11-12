@@ -5,14 +5,46 @@ import {
   ScrollView,
   TouchableOpacity,
   ImageBackground,
+  ToastAndroid,
 } from "react-native";
-import { TextInput, Text, Button, Keyboard, HelperText } from "react-native-paper";
+import {
+  TextInput,
+  Text,
+  Button,
+  Keyboard,
+  HelperText,
+} from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
 import Animated, { FadeInRight, FadeOutLeft } from "react-native-reanimated";
-import { BlurView } from "expo-blur";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import Toast from "react-native-root-toast";
 import userService from "../services/auth&services";
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.log("Error:", error);
+    console.log("Error Info:", errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={styles.errorContainer}>
+          <Text>Something went wrong. Please try again.</Text>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const FirstForm = memo(
   ({
@@ -52,7 +84,7 @@ const FirstForm = memo(
               onChangeText={setFirstName}
               outlineStyle={[
                 styles.textinputs,
-                errors.first_name && styles.errorInput
+                errors.first_name && styles.errorInput,
               ]}
             />
             {errors.first_name && (
@@ -69,7 +101,7 @@ const FirstForm = memo(
               onChangeText={setLastName}
               outlineStyle={[
                 styles.textinputs,
-                errors.last_name && styles.errorInput
+                errors.last_name && styles.errorInput,
               ]}
             />
             {errors.last_name && (
@@ -80,7 +112,7 @@ const FirstForm = memo(
           </View>
         </View>
       </View>
-      
+
       <View>
         <Text variant="bodyLarge" style={styles.labels}>
           Username
@@ -91,7 +123,7 @@ const FirstForm = memo(
           onChangeText={setUsername}
           outlineStyle={[
             styles.textinputs,
-            errors.user_name && styles.errorInput
+            errors.user_name && styles.errorInput,
           ]}
         />
         {errors.user_name && (
@@ -110,7 +142,7 @@ const FirstForm = memo(
           mode="outlined"
           style={[
             styles.datePickerButton,
-            errors.date_of_birth && styles.errorInput
+            errors.date_of_birth && styles.errorInput,
           ]}
           labelStyle={{ color: "#000" }}
         >
@@ -141,10 +173,9 @@ const FirstForm = memo(
         <Text variant="bodyLarge" style={styles.labels}>
           Gender
         </Text>
-        <View style={[
-          styles.pickerContainer,
-          errors.gender && styles.errorInput
-        ]}>
+        <View
+          style={[styles.pickerContainer, errors.gender && styles.errorInput]}
+        >
           <Picker
             selectedValue={gender}
             onValueChange={(value) => setGender(value)}
@@ -165,10 +196,9 @@ const FirstForm = memo(
         <Text variant="bodyLarge" style={styles.labels}>
           User Type
         </Text>
-        <View style={[
-          styles.pickerContainer,
-          errors.role_id && styles.errorInput
-        ]}>
+        <View
+          style={[styles.pickerContainer, errors.role_id && styles.errorInput]}
+        >
           <Picker
             selectedValue={userType}
             onValueChange={(itemValue) => setUserType(itemValue)}
@@ -233,7 +263,7 @@ const SecondForm = memo(
           onChangeText={setMobileNumber}
           outlineStyle={[
             styles.textinputs,
-            errors.mobile_number && styles.errorInput
+            errors.mobile_number && styles.errorInput,
           ]}
           keyboardType="phone-pad"
         />
@@ -253,10 +283,7 @@ const SecondForm = memo(
           mode="outlined"
           value={email}
           onChangeText={setEmail}
-          outlineStyle={[
-            styles.textinputs,
-            errors.email && styles.errorInput
-          ]}
+          outlineStyle={[styles.textinputs, errors.email && styles.errorInput]}
           keyboardType="email-address"
           autoCapitalize="none"
         />
@@ -280,7 +307,7 @@ const SecondForm = memo(
               onChangeText={setPassword}
               outlineStyle={[
                 styles.textinputs,
-                errors.password && styles.errorInput
+                errors.password && styles.errorInput,
               ]}
               secureTextEntry
             />
@@ -298,7 +325,7 @@ const SecondForm = memo(
               onChangeText={setRepassword}
               outlineStyle={[
                 styles.textinputs,
-                password !== repassword && styles.errorInput
+                password !== repassword && styles.errorInput,
               ]}
               secureTextEntry
             />
@@ -340,7 +367,6 @@ const SecondForm = memo(
   )
 );
 
-
 const Register = ({ navigation }) => {
   const [first_name, setFirstName] = useState("");
   const [last_name, setLastName] = useState("");
@@ -364,7 +390,11 @@ const Register = ({ navigation }) => {
   const [date_of_birth, setDateOfBirth] = useState(new Date());
 
   const showToast = (message = "Something went wrong") => {
-    Toast.show(message, { duration: Toast.durations.LONG });
+    ToastAndroid.showWithGravity(
+      message,
+      ToastAndroid.LONG,
+      ToastAndroid.CENTER
+    );
   };
 
   const handleRegistration = async () => {
@@ -382,14 +412,13 @@ const Register = ({ navigation }) => {
         email === "" ||
         password === "" ||
         mobile_number === "" ||
-        userType === "" 
+        userType === ""
       ) {
         showToast("Please input required data");
         setIsError(true);
         setLoading(false);
         return;
       }
-      
 
       // Check if passwords match
       if (password !== repassword) {
@@ -432,27 +461,23 @@ const Register = ({ navigation }) => {
       }, 1000);
 
       resetForm();
-
-
     } catch (error) {
-        if (error.response?.status === 422) {
-            // Handle validation errors quietly, without extra console logging
-            setErrors(error.response.data.errors || {});
-            const firstError = Object.values(error.response.data.errors)[0];
-            if (firstError && firstError[0]) {
-                showToast(firstError[0]);
-            }
-        } else {
-            // Log and handle unexpected errors only
-            console.error("Unexpected registration error:", error.message);
-            showToast("An unexpected error occurred during registration.");
+      if (error.response?.status === 422) {
+        // Handle validation errors quietly, without extra console logging
+        setErrors(error.response.data.errors || {});
+        const firstError = Object.values(error.response.data.errors)[0];
+        if (firstError && firstError[0]) {
+          showToast(firstError[0]);
         }
+      } else {
+        // Log and handle unexpected errors only
+        console.error("Unexpected registration error:", error.message);
+        showToast("An unexpected error occurred during registration.");
+      }
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-};
-
-
+  };
 
   const resetForm = () => {
     setUsername("");
@@ -474,95 +499,97 @@ const Register = ({ navigation }) => {
   };
 
   return (
-    <ImageBackground
-      source={require("../pictures/PMU_Rider_Back.png")}
-      style={styles.background}
-      blurRadius={3}
-    >
-      <ScrollView contentContainerStyle={styles.container}>
-        <BlurView intensity={50} style={styles.containerForms}>
-          <View style={{ marginBottom: 20 }}>
-            <Text
-              variant="titleLarge"
-              style={{ fontWeight: "bold", color: "black" }}
-            >
-              Create an Account
-            </Text>
-            <Text
-              variant="titleMedium"
-              style={{ fontWeight: "semiBold", color: "black" }}
-            >
-              Welcome! Please enter your details
-            </Text>
-          </View>
+    <ErrorBoundary>
+      <ImageBackground
+        source={require("../pictures/PMU_Rider_Back.png")}
+        style={styles.background}
+        blurRadius={3}
+      >
+        <ScrollView contentContainerStyle={styles.container}>
+          <View style={styles.containerForms}>
+            <View style={{ marginBottom: 20 }}>
+              <Text
+                variant="titleLarge"
+                style={{ fontWeight: "bold", color: "black" }}
+              >
+                Create an Account
+              </Text>
+              <Text
+                variant="titleMedium"
+                style={{ fontWeight: "semiBold", color: "black" }}
+              >
+                Welcome! Please enter your details
+              </Text>
+            </View>
 
-          {currentForm === "first" ? (
-            <FirstForm
-              first_name={first_name}
-              setFirstName={setFirstName}
-              last_name={last_name}
-              setLastName={setLastName}
-              user_name={user_name}
-              setUsername={setUsername}
-              selectedSex={selectedSex}
-              setSelectedSex={setSelectedSex}
-              selectedUserType={selectedUserType}
-              setSelectedUserType={setSelectedUserType}
-              setCurrentForm={setCurrentForm}
-              date_of_birth={date_of_birth}
-              setDateOfBirth={setDateOfBirth}
-              showDatePicker={showDatePicker}
-              setShowDatePicker={setShowDatePicker}
-              onDateChange={onDateChange}
-              datePickerRef={datePickerRef}
-              gender={gender}
-              setGender={setGender}
-              email={email}
-              setEmail={setEmail}
-              showToast={showToast}
-              isError={isError}
-              loading={loading}
-              HideEntry={HideEntry}
-              setHideEntry={setHideEntry}
-              mobile_number={mobile_number}
-              setMobileNumber={setMobileNumber}
-              userType={userType}
-              setUserType={setUserType}
-              errors={errors}
-            />
-          ) : (
-            <SecondForm
-              setCurrentForm={setCurrentForm}
-              email={email}
-              setEmail={setEmail}
-              showToast={showToast}
-              loading={loading}
-              isError={isError}
-              repassword={repassword}
-              setRepassword={setRepassword}
-              password={password}
-              setPassword={setPassword}
-              mobile_number={mobile_number}
-              setMobileNumber={setMobileNumber}
-              user_name={user_name}
-              setUsername={setUsername}
-              selectedUserType={selectedUserType}
-              setSelectedUserType={setSelectedUserType}
-              date_of_birth={date_of_birth}
-              setDateOfBirth={setDateOfBirth}
-              gender={gender}
-              setGender={setGender}
-              first_name={first_name}
-              setFirstName={setFirstName}
-              last_name={last_name}
-              setLastName={setLastName}
-              handleRegistration={handleRegistration}
-              errors={errors}
-            />
-          )}
-        </BlurView>
-      </ScrollView>
-    </ImageBackground>
+            {currentForm === "first" ? (
+              <FirstForm
+                first_name={first_name}
+                setFirstName={setFirstName}
+                last_name={last_name}
+                setLastName={setLastName}
+                user_name={user_name}
+                setUsername={setUsername}
+                selectedSex={selectedSex}
+                setSelectedSex={setSelectedSex}
+                selectedUserType={selectedUserType}
+                setSelectedUserType={setSelectedUserType}
+                setCurrentForm={setCurrentForm}
+                date_of_birth={date_of_birth}
+                setDateOfBirth={setDateOfBirth}
+                showDatePicker={showDatePicker}
+                setShowDatePicker={setShowDatePicker}
+                onDateChange={onDateChange}
+                datePickerRef={datePickerRef}
+                gender={gender}
+                setGender={setGender}
+                email={email}
+                setEmail={setEmail}
+                showToast={showToast}
+                isError={isError}
+                loading={loading}
+                HideEntry={HideEntry}
+                setHideEntry={setHideEntry}
+                mobile_number={mobile_number}
+                setMobileNumber={setMobileNumber}
+                userType={userType}
+                setUserType={setUserType}
+                errors={errors}
+              />
+            ) : (
+              <SecondForm
+                setCurrentForm={setCurrentForm}
+                email={email}
+                setEmail={setEmail}
+                showToast={showToast}
+                loading={loading}
+                isError={isError}
+                repassword={repassword}
+                setRepassword={setRepassword}
+                password={password}
+                setPassword={setPassword}
+                mobile_number={mobile_number}
+                setMobileNumber={setMobileNumber}
+                user_name={user_name}
+                setUsername={setUsername}
+                selectedUserType={selectedUserType}
+                setSelectedUserType={setSelectedUserType}
+                date_of_birth={date_of_birth}
+                setDateOfBirth={setDateOfBirth}
+                gender={gender}
+                setGender={setGender}
+                first_name={first_name}
+                setFirstName={setFirstName}
+                last_name={last_name}
+                setLastName={setLastName}
+                handleRegistration={handleRegistration}
+                errors={errors}
+              />
+            )}
+          </View>
+        </ScrollView>
+      </ImageBackground>
+    </ErrorBoundary>
   );
 };
 
@@ -571,7 +598,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
-    padding: 5,
+    padding: 15,
   },
   containerForms: {
     padding: 15,
@@ -608,12 +635,12 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   errorInput: {
-    borderColor: 'red',
+    borderColor: "red",
     borderWidth: 1,
   },
   pickerContainer: {
     borderWidth: 1,
-    borderColor: '#000',
+    borderColor: "#000",
     borderRadius: 4,
     marginTop: 5,
   },

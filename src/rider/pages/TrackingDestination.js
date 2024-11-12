@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import {
   StyleSheet,
   TouchableOpacity,
@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { Text } from "react-native-paper";
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
+import * as Location from "expo-location";
 import userService from "../../services/auth&services";
 import { RiderContext } from "../../context/riderContext";
 
@@ -36,11 +37,50 @@ const TrackingDestination = ({ route, navigation }) => {
   const [showArriveModal, setShowArriveModal] = useState(false);
   const [pressProgress] = useState(new Animated.Value(0));
   const [isPressed, setIsPressed] = useState(false);
+  const [locationSubscription, setLocationSubscription] = useState(null);
+  
+  const pressAnimationRef = useRef(null);
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Denied",
+          "Location permission is required for this feature."
+        );
+        return;
+      }
+
+      const subscription = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.High,
+          distanceInterval: 10,
+          timeInterval: 5000,
+        },
+        (location) => {
+          setCustomerLocation({
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          });
+        }
+      );
+
+      setLocationSubscription(subscription);
+      fetchDirections();
+      calculateMapRegion();
+
+      return () => {
+        if (locationSubscription) {
+          locationSubscription.remove();
+        }
+      };
+    })();
+  }, []);
 
   useEffect(() => {
     fetchDirections();
     calculateMapRegion();
-    watchPosition();
   }, [customerLocation, destinationLocation]);
 
   useEffect(() => {
@@ -48,29 +88,6 @@ const TrackingDestination = ({ route, navigation }) => {
       setTotalDistanceRide(totalDistanceRide);
     }
   }, [totalDistanceRide]);
-
-  const watchPosition = () => {
-    const watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        setCustomerLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-        fetchDirections();
-      },
-      (error) => {
-        console.error("Error watching position:", error);
-      },
-      {
-        enableHighAccuracy: true,
-        distanceFilter: 10, // Update location every 10 meters
-      }
-    );
-
-    return () => {
-      navigator.geolocation.clearWatch(watchId);
-    };
-  };
 
   const calculateMapRegion = () => {
     const minLat = Math.min(
@@ -128,11 +145,36 @@ const TrackingDestination = ({ route, navigation }) => {
     }
   };
 
+  const getCurrentLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === "granted") {
+        const location = await Location.getCurrentPositionAsync({});
+        console.log("Location fetched successfully:", location);
+
+        // Update rider status and location
+        await userService.updateRiderStatusAndLocation({
+          longitude: location.coords.longitude,
+          latitude: location.coords.latitude,
+          status: "Online",
+        });
+        console.log("Location updated successfully in the database");
+      } else {
+        console.error("Location permission not granted");
+        setError("Location permission is required to proceed.");
+      }
+    } catch (error) {
+      console.error("Error fetching location:", error);
+      setError("An error occurred while fetching location.");
+    }
+  };
+
   const completeRide = async () => {
     setIsLoading(true);
     try {
       const response = await userService.complete_ride(ride.ride_id);
       if (response.data && response.data.message) {
+        await getCurrentLocation();
         Alert.alert("Success", response.data.message);
         navigation.navigate("Home");
       } else {
@@ -189,25 +231,25 @@ const TrackingDestination = ({ route, navigation }) => {
     return poly;
   };
 
-  if (isLoading || !ride) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
-
   const handleArrivePress = () => {
     setShowArriveModal(true);
   };
 
   const handlePressIn = () => {
     setIsPressed(true);
-    Animated.timing(pressProgress, {
+    // Cancel any existing animation
+    if (pressAnimationRef.current) {
+      pressAnimationRef.current.stop();
+    }
+
+    // Store animation reference
+    pressAnimationRef.current = Animated.timing(pressProgress, {
       toValue: 1,
-      duration: 2000, // 2 seconds for long press
+      duration: 2000,
       useNativeDriver: false,
-    }).start(({ finished }) => {
+    });
+
+    pressAnimationRef.current.start(({ finished }) => {
       if (finished && isPressed) {
         completeRide();
         setShowArriveModal(false);
@@ -217,6 +259,10 @@ const TrackingDestination = ({ route, navigation }) => {
 
   const handlePressOut = () => {
     setIsPressed(false);
+    // Cancel animation on press out
+    if (pressAnimationRef.current) {
+      pressAnimationRef.current.stop();
+    }
     pressProgress.setValue(0);
   };
 
@@ -265,6 +311,14 @@ const TrackingDestination = ({ route, navigation }) => {
       </View>
     </Modal>
   );
+
+  if (isLoading || !ride) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -330,14 +384,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   mapContainer: {
-    flex: 3, // Takes up 3/4 of the screen
+    flex: 3,
   },
   map: {
     width: "100%",
     height: "100%",
   },
   contentContainer: {
-    flex: 1, // Takes up 1/4 of the screen
+    flex: 1,
     backgroundColor: "#FFC533",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
@@ -444,6 +498,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     zIndex: 1,
+  },
+  cancelModalButton: {
+    padding: 10,
+  },
+  cancelModalButtonText: {
+    color: "#dc3545",
+    fontSize: 16,
   },
 });
 

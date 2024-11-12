@@ -149,7 +149,7 @@ const NearbyCustomerScreen = ({ navigation }) => {
 
   const handleDecline = async () => {
     try {
-      setShowSpinner(true);
+      // setShowSpinner(true);
 
       const apply_id = applyRide.apply_id;
       const response = await userService.decline_ride(apply_id);
@@ -186,7 +186,7 @@ const NearbyCustomerScreen = ({ navigation }) => {
       console.error("Failed to decline ride:", error);
       Alert.alert("Error", "Failed to decline ride. Please try again.");
     } finally {
-      setShowSpinner(false);
+      // setShowSpinner(false);
     }
   };
 
