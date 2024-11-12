@@ -15,36 +15,8 @@ import {
   HelperText,
 } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
-import Animated, { FadeInRight, FadeOutLeft } from "react-native-reanimated";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import userService from "../services/auth&services";
-
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    console.log("Error:", error);
-    console.log("Error Info:", errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <View style={styles.errorContainer}>
-          <Text>Something went wrong. Please try again.</Text>
-        </View>
-      );
-    }
-    return this.props.children;
-  }
-}
 
 const FirstForm = memo(
   ({
@@ -66,11 +38,7 @@ const FirstForm = memo(
     setUserType,
     errors, // Add errors prop
   }) => (
-    <Animated.View
-      entering={FadeInRight}
-      exiting={FadeOutLeft}
-      style={styles.formContainer}
-    >
+    <View style={styles.formContainer}>
       <View style={{ width: "100%" }}>
         <Text variant="bodyLarge" style={styles.labels}>
           Name
@@ -229,7 +197,7 @@ const FirstForm = memo(
           </Button>
         </TouchableOpacity>
       </View>
-    </Animated.View>
+    </View>
   )
 );
 const SecondForm = memo(
@@ -247,11 +215,7 @@ const SecondForm = memo(
     setMobileNumber,
     errors,
   }) => (
-    <Animated.View
-      entering={FadeInRight}
-      exiting={FadeOutLeft}
-      style={styles.formContainer}
-    >
+    <View style={styles.formContainer}>
       <View>
         <Text variant="bodyLarge" style={styles.labels}>
           Mobile Number
@@ -363,7 +327,7 @@ const SecondForm = memo(
           </TouchableOpacity>
         </View>
       </View>
-    </Animated.View>
+    </View>
   )
 );
 
@@ -499,97 +463,95 @@ const Register = ({ navigation }) => {
   };
 
   return (
-    <ErrorBoundary>
-      <ImageBackground
-        source={require("../pictures/PMU_Rider_Back.png")}
-        style={styles.background}
-        blurRadius={3}
-      >
-        <ScrollView contentContainerStyle={styles.container}>
-          <View style={styles.containerForms}>
-            <View style={{ marginBottom: 20 }}>
-              <Text
-                variant="titleLarge"
-                style={{ fontWeight: "bold", color: "black" }}
-              >
-                Create an Account
-              </Text>
-              <Text
-                variant="titleMedium"
-                style={{ fontWeight: "semiBold", color: "black" }}
-              >
-                Welcome! Please enter your details
-              </Text>
-            </View>
-
-            {currentForm === "first" ? (
-              <FirstForm
-                first_name={first_name}
-                setFirstName={setFirstName}
-                last_name={last_name}
-                setLastName={setLastName}
-                user_name={user_name}
-                setUsername={setUsername}
-                selectedSex={selectedSex}
-                setSelectedSex={setSelectedSex}
-                selectedUserType={selectedUserType}
-                setSelectedUserType={setSelectedUserType}
-                setCurrentForm={setCurrentForm}
-                date_of_birth={date_of_birth}
-                setDateOfBirth={setDateOfBirth}
-                showDatePicker={showDatePicker}
-                setShowDatePicker={setShowDatePicker}
-                onDateChange={onDateChange}
-                datePickerRef={datePickerRef}
-                gender={gender}
-                setGender={setGender}
-                email={email}
-                setEmail={setEmail}
-                showToast={showToast}
-                isError={isError}
-                loading={loading}
-                HideEntry={HideEntry}
-                setHideEntry={setHideEntry}
-                mobile_number={mobile_number}
-                setMobileNumber={setMobileNumber}
-                userType={userType}
-                setUserType={setUserType}
-                errors={errors}
-              />
-            ) : (
-              <SecondForm
-                setCurrentForm={setCurrentForm}
-                email={email}
-                setEmail={setEmail}
-                showToast={showToast}
-                loading={loading}
-                isError={isError}
-                repassword={repassword}
-                setRepassword={setRepassword}
-                password={password}
-                setPassword={setPassword}
-                mobile_number={mobile_number}
-                setMobileNumber={setMobileNumber}
-                user_name={user_name}
-                setUsername={setUsername}
-                selectedUserType={selectedUserType}
-                setSelectedUserType={setSelectedUserType}
-                date_of_birth={date_of_birth}
-                setDateOfBirth={setDateOfBirth}
-                gender={gender}
-                setGender={setGender}
-                first_name={first_name}
-                setFirstName={setFirstName}
-                last_name={last_name}
-                setLastName={setLastName}
-                handleRegistration={handleRegistration}
-                errors={errors}
-              />
-            )}
+    <ImageBackground
+      source={require("../pictures/PMU_Rider_Back.png")}
+      style={styles.background}
+      blurRadius={3}
+    >
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.containerForms}>
+          <View style={{ marginBottom: 20 }}>
+            <Text
+              variant="titleLarge"
+              style={{ fontWeight: "bold", color: "black" }}
+            >
+              Create an Account
+            </Text>
+            <Text
+              variant="titleMedium"
+              style={{ fontWeight: "semiBold", color: "black" }}
+            >
+              Welcome! Please enter your details
+            </Text>
           </View>
-        </ScrollView>
-      </ImageBackground>
-    </ErrorBoundary>
+
+          {currentForm === "first" ? (
+            <FirstForm
+              first_name={first_name}
+              setFirstName={setFirstName}
+              last_name={last_name}
+              setLastName={setLastName}
+              user_name={user_name}
+              setUsername={setUsername}
+              selectedSex={selectedSex}
+              setSelectedSex={setSelectedSex}
+              selectedUserType={selectedUserType}
+              setSelectedUserType={setSelectedUserType}
+              setCurrentForm={setCurrentForm}
+              date_of_birth={date_of_birth}
+              setDateOfBirth={setDateOfBirth}
+              showDatePicker={showDatePicker}
+              setShowDatePicker={setShowDatePicker}
+              onDateChange={onDateChange}
+              datePickerRef={datePickerRef}
+              gender={gender}
+              setGender={setGender}
+              email={email}
+              setEmail={setEmail}
+              showToast={showToast}
+              isError={isError}
+              loading={loading}
+              HideEntry={HideEntry}
+              setHideEntry={setHideEntry}
+              mobile_number={mobile_number}
+              setMobileNumber={setMobileNumber}
+              userType={userType}
+              setUserType={setUserType}
+              errors={errors}
+            />
+          ) : (
+            <SecondForm
+              setCurrentForm={setCurrentForm}
+              email={email}
+              setEmail={setEmail}
+              showToast={showToast}
+              loading={loading}
+              isError={isError}
+              repassword={repassword}
+              setRepassword={setRepassword}
+              password={password}
+              setPassword={setPassword}
+              mobile_number={mobile_number}
+              setMobileNumber={setMobileNumber}
+              user_name={user_name}
+              setUsername={setUsername}
+              selectedUserType={selectedUserType}
+              setSelectedUserType={setSelectedUserType}
+              date_of_birth={date_of_birth}
+              setDateOfBirth={setDateOfBirth}
+              gender={gender}
+              setGender={setGender}
+              first_name={first_name}
+              setFirstName={setFirstName}
+              last_name={last_name}
+              setLastName={setLastName}
+              handleRegistration={handleRegistration}
+              errors={errors}
+            />
+          )}
+        </View>
+      </ScrollView>
+    </ImageBackground>
   );
 };
 

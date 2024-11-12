@@ -19,7 +19,7 @@
     "@react-native-community/blur": "^4.4.1",
     "@react-native-community/datetimepicker": "8.0.1",
     "@react-native-community/netinfo": "11.3.1",
-    "@react-native-picker/picker": "^2.9.0",
+    "@react-native-picker/picker": "2.7.5",
     "@react-navigation/drawer": "^6.7.0",
     "@react-navigation/native": "^6.1.17",
     "@react-navigation/native-stack": "^6.10.0",
