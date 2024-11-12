@@ -13,6 +13,7 @@ import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
 import userService from "../../services/auth&services";
 import riderMarker from "../../../assets/rider.png";
 import customerMarker from "../../../assets/customer.png";
+import usePusher from "../../services/pusher";
 
 const TrackingRider = ({ navigation }) => {
   const [bookDetails, setBookDetails] = useState(null);
@@ -25,6 +26,23 @@ const TrackingRider = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [riderId, setRiderId] = useState(null);
   const [initialFetchDone, setInitialFetchDone] = useState(false);
+  const [userId, setUserId] = useState(null);
+  const pusher = usePusher();
+
+  useEffect(() => {
+    const fetchUserId = async () => {
+      try {
+        const response = await userService.getUserId();
+        const id = parseInt(response, 10);
+        console.log("Fetched user_id:", id);
+        setUserId(id);
+      } catch (error) {
+        console.error("Error fetching user_id:", error);
+      }
+    };
+
+    fetchUserId();
+  }, []);
 
   const validateCoordinates = (lat, lng) => {
     const parsedLat = parseFloat(lat);
@@ -38,6 +56,37 @@ const TrackingRider = ({ navigation }) => {
       ? { latitude: parsedLat, longitude: parsedLng }
       : null;
   };
+
+  useEffect(() => {
+    const setupPusher = async () => {
+      try {
+        console.log("IDDDDD:",userId)
+        if (!userId) return;
+        const progressChannel = pusher.subscribe('progress');
+
+        progressChannel.bind('RIDE_PROG', data => {
+          console.log("Progress DATA received:", data);
+          console.log("id & status:", data.update.id, data.update.status)
+            if (data.update.id === userId) {
+              if(data.update.status === "Start"){
+                Alert.alert("Starting Ride", 'Your Rider Has Arrived!');
+                navigation.navigate("Home");
+              }else if(data.update.status === "Cancel"){
+                Alert.alert("Sorry", 'This Ride has been cancelled.');
+                navigation.navigate("Home");
+              }
+            }
+        });
+        return () => {
+          progressChannel.unbind_all();
+          pusher.unsubscribe('progress');
+        };
+      } catch (error) {
+        console.error('Error setting up Pusher:', error);
+      }
+    };
+    setupPusher();
+  }, [userId]);
 
   const fetchLatestAvailableRide = useCallback(async () => {
     try {

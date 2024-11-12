@@ -65,14 +65,14 @@ const Home = ({ navigation }) => {
           }
         });
 
-        bookedChannel.bind("BOOKED", (data) => {
-          if (data && data.ride && data.ride.length > 0) {
-            const book = data.ride[0];
-            if (book.apply_to === user_id) {
-              setMatchedRide(book);
-              setShowMatchModal(true);
+        bookedChannel.bind('BOOKED', data => {
+          console.log("MATCHED DATA received:", data);
+          console.log(user_id)
+          console.log("APPLIER", data.ride.applier)
+            if (data.ride.applier === user_id) {
+              Alert.alert("Ride Match", 'You have found a Match!');
+              checkRideAndLocation()
             }
-          }
         });
 
         return () => {

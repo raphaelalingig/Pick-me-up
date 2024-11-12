@@ -13,11 +13,57 @@ import {
 import { Button } from "react-native-paper";
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';  // Importing icons
 import userService from '../../services/auth&services';
+import usePusher from "../../services/pusher";
 
 const Intransit = ({ navigation }) => {
   const [bookDetails, setBookDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [userId, setUserId] = useState(null);
+  const pusher = usePusher();
+
+  useEffect(() => {
+    const fetchUserId = async () => {
+      try {
+        const response = await userService.getUserId();
+        const id = parseInt(response, 10);
+        console.log("Fetched user_id:", id);
+        setUserId(id);
+      } catch (error) {
+        console.error("Error fetching user_id:", error);
+      }
+    };
+
+    fetchUserId();
+  }, []);
+
+  useEffect(() => {
+    const setupPusher = async () => {
+      try {
+        console.log("IDDDDD:",userId)
+        if (!userId) return;
+        const progressChannel = pusher.subscribe('progress');
+
+        progressChannel.bind('RIDE_PROG', data => {
+          console.log("Progress DATA received:", data);
+          console.log("id & status:", data.update.id, data.update.status)
+            if (data.update.id === userId) {
+              if(data.update.status === "Completed"){
+                Alert.alert("Yey", 'You have arrived at your destination!');
+                navigation.navigate("Home");
+              }
+            }
+        });
+        return () => {
+          progressChannel.unbind_all();
+          pusher.unsubscribe('progress');
+        };
+      } catch (error) {
+        console.error('Error setting up Pusher:', error);
+      }
+    };
+    setupPusher();
+  }, [userId]);
 
   const fetchLatestRide = async () => {
     try {
