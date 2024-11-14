@@ -152,7 +152,7 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={[
               styles.serviceButton,
               selectedService === "Delivery" && styles.selectedButton,
@@ -196,7 +196,7 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
             <Text style={styles.serviceDescription}>
               Ride with friend & family
             </Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
         </View>
         <View style={styles.actionContainer}>
