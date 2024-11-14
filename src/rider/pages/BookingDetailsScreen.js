@@ -6,10 +6,16 @@ import {
   TouchableOpacity,
   ImageBackground,
   Alert,
+  ActivityIndicator,
+  SafeAreaView,
+  ScrollView,
 } from "react-native";
 import * as Location from "expo-location";
-import userService from "../../services/auth&services";
 import { BlurView } from "expo-blur";
+import { MaterialIcons } from "@expo/vector-icons";
+import userService from "../../services/auth&services";
+import { usePusher } from '../../context/PusherContext';
+import ApplyRideModal from './ApplyRideModal';
 
 const BookingDetailsScreen = ({ route, navigation }) => {
   const { ride } = route.params;
@@ -17,12 +23,18 @@ const BookingDetailsScreen = ({ route, navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [userId, setUserId] = useState(null);
 
+  const { 
+    applyRide, 
+    setApplyRide,
+    showApplyModal, 
+    setShowApplyModal 
+  } = usePusher();
+
   useEffect(() => {
     const fetchUserId = async () => {
       try {
         const response = await userService.getUserId();
         const id = parseInt(response, 10);
-        console.log("Fetched user_id:", id);
         setUserId(id);
       } catch (error) {
         console.error("Error fetching user_id:", error);
@@ -38,47 +50,25 @@ const BookingDetailsScreen = ({ route, navigation }) => {
       return;
     }
 
-    console.log("Attempting to accept ride with ID:", ride.ride_id);
     setIsLoading(true);
-
     const ride_id = ride.ride_id;
     const customer = ride.user_id;
+
     try {
       const response = await userService.apply_ride(ride_id, customer);
-      console.log("Accept ride response:", response.data);
       if (response.data.message === "exist") {
-        Alert.alert("Message", "You have already applied for this ride.");
+        Alert.alert("Already Applied", "You have already applied for this ride.");
         navigation.goBack();
       } else if (response.data.message === "applied") {
-        Alert.alert("Message", "Applied Successfully!");
+        Alert.alert("Success", "Applied Successfully! 🎉");
         navigation.goBack();
       } else if (response.data && response.data.message) {
-        Alert.alert("Ride Match", "You have found a Match!");
+        Alert.alert("Match Found! 🎯", "You have found a Match!");
         navigation.navigate("Home");
-      } else {
-        Alert.alert("Error", "Failed to accept the ride. Please try again.");
       }
     } catch (error) {
-      console.error(
-        "Failed to Accept Ride",
-        error.response ? error.response.data : error.message
-      );
-      if (error.response && error.response.status === 404) {
-        Alert.alert(
-          "Error",
-          "Ride or ride location not found. Please try again."
-        );
-      } else if (error.response && error.response.status === 400) {
-        Alert.alert(
-          "Error",
-          error.response.data.error || "This ride is no longer available."
-        );
-      } else {
-        Alert.alert(
-          "Error",
-          "An error occurred while getting location or accepting the ride. Please try again."
-        );
-      }
+      const errorMessage = error.response?.data?.error || "An error occurred. Please try again.";
+      Alert.alert("Error", errorMessage);
       navigation.goBack();
     } finally {
       setIsLoading(false);
@@ -86,148 +76,230 @@ const BookingDetailsScreen = ({ route, navigation }) => {
   };
 
   const handleViewLocation = () => {
-    console.log("Navigating to Booked Location with ride data:", ride);
     navigation.navigate("Booked Location", { ride });
   };
 
+  const DetailItem = ({ icon, label, value }) => (
+    <View style={styles.detailItem}>
+      <MaterialIcons name={icon} size={24} color="#666" style={styles.icon} />
+      <View style={styles.detailContent}>
+        <Text style={styles.label}>{label}</Text>
+        <Text style={styles.value}>{value}</Text>
+      </View>
+    </View>
+  );
+
   return (
-    <ImageBackground
-      source={require("../../pictures/4.png")}
-      style={styles.background}
-    >
-      <BlurView style={styles.container} intensity={800} tint="light">
-        <Text style={styles.title}>Booking Details</Text>
-        <View style={styles.inputContainer}>
-          <Text style={styles.conntext}>Name: </Text>
-          <Text>{`${ride.first_name} ${ride.last_name}`}</Text>
-          <Text style={styles.conntext}>Location: </Text>
-          <Text>{ride.pickup_location}</Text>
-        </View>
-        <View style={styles.inputContainer}>
-          <Text style={styles.conntext}>Service:</Text>
-          <Text>{ride.ride_type}</Text>
-          <Text style={styles.conntext}>Drop off:</Text>
-          <Text>{ride.dropoff_location}</Text>
-        </View>
+    <SafeAreaView style={styles.safeArea}>
+      <ImageBackground
+        source={require("../../pictures/4.png")}
+        style={styles.background}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <BlurView intensity={80} tint="light" style={styles.blurContainer}>
+            <View style={styles.header}>
+              <Text style={styles.title}>Booking Details</Text>
+              <View style={styles.fareTag}>
+                <Text style={styles.fareText}>₱{ride.fare}</Text>
+              </View>
+            </View>
 
-        <View style={styles.inputContainerFee}>
-          <Text style={styles.conntext}>Fee: ₱{ride.fare}</Text>
-        </View>
-        <TouchableOpacity
-          style={styles.viewLocationButton}
-          onPress={handleViewLocation}
-        >
-          <Text style={styles.viewLocationButtonText}>View Location</Text>
-        </TouchableOpacity>
+            <View style={styles.card}>
+              <DetailItem
+                icon="person"
+                label="Passenger"
+                value={`${ride.first_name} ${ride.last_name}`}
+              />
+              <DetailItem
+                icon="location-on"
+                label="Pickup Location"
+                value={ride.pickup_location}
+              />
+              <DetailItem
+                icon="location-off"
+                label="Drop-off Location"
+                value={ride.dropoff_location}
+              />
+              <DetailItem
+                icon="local-taxi"
+                label="Service Type"
+                value={ride.ride_type}
+              />
+            </View>
 
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.cancelButtonText}>Back</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.acceptButton}
-            onPress={() => {
-              Alert.alert(
-                "Confirm Application",
-                "Are you sure you want to apply for this ride?",
-                [
-                  {
-                    text: "Cancel",
-                    style: "cancel",
-                  },
-                  {
-                    text: "OK",
-                    onPress: () => handleApply(ride),
-                  },
-                ]
-              );
-            }}
-            disabled={isLoading}
-          >
-            <Text style={styles.acceptButtonText}>
-              {isLoading ? "Accepting..." : "Apply"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </BlurView>
-    </ImageBackground>
+            <TouchableOpacity
+              style={styles.locationButton}
+              onPress={handleViewLocation}
+            >
+              <MaterialIcons name="map" size={20} color="#007AFF" />
+              <Text style={styles.locationButtonText}>View on Map</Text>
+            </TouchableOpacity>
+
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => navigation.goBack()}
+              >
+                <Text style={styles.buttonText}>Back</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.applyButton, isLoading && styles.disabledButton]}
+                onPress={() => {
+                  Alert.alert(
+                    "Confirm Application",
+                    "Are you sure you want to apply for this ride?",
+                    [
+                      { text: "Cancel", style: "cancel" },
+                      { text: "Apply", onPress: () => handleApply(ride) },
+                    ]
+                  );
+                }}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  <Text style={styles.buttonText}>Apply Now</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+            {applyRide && (
+              <ApplyRideModal
+                visible={showApplyModal}
+                ride={applyRide}
+                userService={userService} 
+                navigation={navigation} 
+                onClose={() => setShowApplyModal(false)}
+              />
+            )}
+
+          </BlurView>
+        </ScrollView>
+      </ImageBackground>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   background: {
     flex: 1,
     resizeMode: "cover",
-    justifyContent: "center",
   },
-  container: {
-    margin: 20,
-    borderRadius: 10,
+  scrollContainer: {
+    flexGrow: 1,
+    padding: 16,
+  },
+  blurContainer: {
+    borderRadius: 20,
+    overflow: "hidden",
     padding: 20,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "rgba(255,215,0,0.5)", // For the semi-transparent background
+    marginBottom: 24,
   },
   title: {
-    fontSize: 25,
+    fontSize: 28,
     fontWeight: "bold",
-    marginBottom: 20,
+    color: "#1a1a1a",
   },
-
-  inputContainer: {
-    padding: 10,
-    width: "100%",
-    marginBottom: 10,
-    backgroundColor: "white",
-    borderRadius: 8,
+  fareTag: {
+    backgroundColor: "#007AFF",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
-
-  conntext: {
+  fareText: {
+    color: "#FFF",
+    fontSize: 18,
     fontWeight: "bold",
-    fontSize: 16,
   },
-
-  inputContainerFee: {
+  card: {
+    backgroundColor: "#FFF",
+    borderRadius: 16,
     padding: 16,
-    borderRadius: 10,
-    backgroundColor: "white",
-    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
-
+  detailItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  detailContent: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  icon: {
+    width: 24,
+    textAlign: "center",
+  },
+  label: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 4,
+  },
+  value: {
+    fontSize: 16,
+    color: "#1a1a1a",
+    fontWeight: "500",
+  },
+  locationButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F8F9FA",
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: 16,
+  },
+  locationButtonText: {
+    color: "#007AFF",
+    fontSize: 16,
+    fontWeight: "600",
+    marginLeft: 8,
+  },
   buttonContainer: {
     flexDirection: "row",
-    marginTop: 20,
+    justifyContent: "space-between",
+    marginTop: 24,
   },
   cancelButton: {
-    backgroundColor: "#b22222",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    marginRight: 10,
+    flex: 1,
+    backgroundColor: "#FF3B30",
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginRight: 8,
+    alignItems: "center",
   },
-  cancelButtonText: {
+  applyButton: {
+    flex: 1,
+    backgroundColor: "#34C759",
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginLeft: 8,
+    alignItems: "center",
+  },
+  disabledButton: {
+    opacity: 0.7,
+  },
+  buttonText: {
     color: "#FFF",
-  },
-  acceptButton: {
-    backgroundColor: "#158D01",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-  },
-  acceptButtonText: {
-    color: "#FFF",
-  },
-  viewLocationButton: {
-    marginTop: 10,
-  },
-  viewLocationButtonText: {
-    color: "black",
-    padding: 5,
-    backgroundColor: "white",
-    borderRadius: 10,
-    textDecorationLine: "underline",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
 

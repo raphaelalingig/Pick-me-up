@@ -4,31 +4,14 @@ import { Text } from "react-native-paper";
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'; // Importing icons
 import userService from "../../services/auth&services";
 
-const CompleteRide = ({ navigation, route }) => {
+const FinishRide = ({ navigation, route }) => {
   const { ride } = route.params;
   const [isLoading, setIsLoading] = useState(true);
-  const role = "Customer";
+  const role = "Rider";
 
-  const completeRide = async () => {
-    setIsLoading(true);
-    try {
-      const response = await userService.review_ride(ride.ride_id);
-      if (response.data && response.data.message) {
-        Alert.alert("Ride Complete", response.data.message);
-        navigation.navigate("Home");
-      } else {
-        Alert.alert("Error", "Failed to finish the ride. Please try again.");
-      }
-    } catch (error) {
-      console.error("Failed to finish ride", error.response ? error.response.data : error.message);
-      Alert.alert("Error", "An error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleReport = () => {
-    navigation.navigate("CustomerFeedback", {
+    navigation.navigate("Rider Feedback", {
       ride: ride,
       role: role
     });
@@ -45,7 +28,7 @@ const CompleteRide = ({ navigation, route }) => {
           <View style={styles.rideTypeIconContainer}>
             <MaterialCommunityIcons name="motorbike" size={40} color="#333" />
           </View>
-          <Text style={styles.rideTypeText}>MOTOR TAXI</Text>
+          <Text style={styles.rideTypeText}>{ride.ride_type}</Text>
         </View>
 
         {/* Circular Image Placeholder */}
@@ -58,8 +41,8 @@ const CompleteRide = ({ navigation, route }) => {
 
         {/* Arrival Message */}
         <View style={styles.messageContainer}>
-          <Text style={styles.messageText}>You have Arrived</Text>
-          <Text style={styles.subMessageText}>Thank you for using our services.</Text>
+          <Text style={styles.messageText}>You have Arrived at your Destination!</Text>
+          <Text style={styles.subMessageText}>Thank you for your hardwork.</Text>
         </View>
 
         {/* Buttons: Report and Return Home */}
@@ -68,13 +51,13 @@ const CompleteRide = ({ navigation, route }) => {
             style={styles.reportButton}
             onPress={handleReport}
           >
-            <Text style={styles.buttonText}>Submit Feedback</Text>
+            <Text style={styles.buttonText}>Send Customer Feedback</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.returnHomeButton}
             onPress={completeRide}
           >
-            <Text style={styles.buttonText}>Return Home</Text>
+            <Text style={styles.buttonText}>Find Paxx Again</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -82,7 +65,7 @@ const CompleteRide = ({ navigation, route }) => {
   );
 };
 
-export default CompleteRide;
+export default FinishRide;
 
 const styles = StyleSheet.create({
   background: {

@@ -30,7 +30,9 @@ import TrackingRider from "../customer/pages/TrackingRider";
 import AccountSettingsScreen from "../customer/pages/Settings";
 import InTransit from "../customer/pages/InTransit";
 import CompleteRide from "../customer/pages/Complete Ride";
-import SubmitReport from "../rider/pages/SubmitReport";
+import FinishRide from "../rider/pages/FinishRide";
+import SubmitFeedback_C from "../customer/pages/Creport";
+import SubmitFeedback_R from "../rider/pages/SubmitReport";
 import Map from "../rider/pages/Map";
 import CustomerMap from "../customer/pages/CustomerMap";
 import BookedMap from "../rider/pages/BookedMap";
@@ -198,6 +200,7 @@ const CustomerStack = () => {
       <Stack.Screen name="In Transit" component={InTransit} />
       <Stack.Screen name="To Review" component={CompleteRide} />
       <Stack.Screen name="Location" component={CustomerMap} />
+      <Stack.Screen name="CustomerFeedback" component={SubmitFeedback_C} />
       {userRole === 3 || userRole === 1 || userRole === 2 && (
         <Stack.Screen
           name="RiderStack"
@@ -229,13 +232,15 @@ const RiderStack = () => {
       <Stack.Screen name="Nearby Customer" component={NearbyCustomerScreen} />
       <Stack.Screen name="BookingDetails" component={BookingDetailsScreen} />
       <Stack.Screen name="InTransit" component={InTransit} />
-      <Stack.Screen name="Submit Report" component={SubmitReport} />
       <Stack.Screen name="Current Location" component={Map} />
       <Stack.Screen name="Tracking Customer" component={TrackingCustomer} />
+      <Stack.Screen name="Rider Feedback" component={SubmitFeedback_R} />
       <Stack.Screen
         name="Tracking Destination"
         component={TrackingDestination}
       />
+      
+      <Stack.Screen name="Finish" component={FinishRide} />
       <Stack.Screen name="Booked Location" component={BookedMap} />
       <Stack.Screen
         name="CustomerStack"

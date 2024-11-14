@@ -11,7 +11,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { Button } from "react-native-paper";
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';  // Importing icons
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import userService from '../../services/auth&services';
 import usePusher from "../../services/pusher";
 
@@ -21,6 +21,18 @@ const Intransit = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [userId, setUserId] = useState(null);
   const pusher = usePusher();
+  const role = "Customer";
+
+  const fetchLatestRide = async () => {
+    try {
+      const ride = await userService.checkActiveBook();
+      setBookDetails(ride.rideDetails);
+    } catch (error) {
+      Alert.alert("Error", "Failed to retrieve the latest available ride.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchUserId = async () => {
@@ -40,19 +52,17 @@ const Intransit = ({ navigation }) => {
   useEffect(() => {
     const setupPusher = async () => {
       try {
-        console.log("IDDDDD:",userId)
         if (!userId) return;
         const progressChannel = pusher.subscribe('progress');
 
         progressChannel.bind('RIDE_PROG', data => {
           console.log("Progress DATA received:", data);
-          console.log("id & status:", data.update.id, data.update.status)
-            if (data.update.id === userId) {
-              if(data.update.status === "Completed"){
-                Alert.alert("Yey", 'You have arrived at your destination!');
-                navigation.navigate("Home");
-              }
+          if (data.update.id === userId) {
+            if(data.update.status === "Completed"){
+              Alert.alert("Yey", 'You have arrived at your destination!');
+              navigation.navigate("To Review",{ride: bookDetails});
             }
+          }
         });
         return () => {
           progressChannel.unbind_all();
@@ -65,26 +75,22 @@ const Intransit = ({ navigation }) => {
     setupPusher();
   }, [userId]);
 
-  const fetchLatestRide = async () => {
-    try {
-      const ride = await userService.checkActiveBook();
-      setBookDetails(ride.rideDetails);
-    } catch (error) {
-      Alert.alert("Error", "Failed to retrieve the latest available ride.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
     fetchLatestRide();
   }, []);
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    navigation.navigate("Home");
+    await fetchLatestRide(); // Refresh the ride details instead of navigating
     setRefreshing(false);
-  }, [navigation]);
+  }, []);
+
+  const handleReport = () => {
+    navigation.navigate("CustomerFeedback", {
+      ride: bookDetails,
+      role: role,
+    });
+  };
   
   if (isLoading || !bookDetails) {
     return (
@@ -101,8 +107,6 @@ const Intransit = ({ navigation }) => {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-      
-      {/* Header with menu icon */}
       <View style={styles.header}>
         <MaterialCommunityIcons
           name="menu"
@@ -111,36 +115,35 @@ const Intransit = ({ navigation }) => {
         />
       </View>
 
-      {/* Ride Type Section */}
       <View style={styles.rideTypeContainer}>
         <View style={styles.rideTypeIconContainer}>
           <MaterialCommunityIcons
             name="motorbike"
             size={40}
-            color="#333" // Icon color
+            color="#333"
           />
         </View>
-        <Text style={styles.rideTypeText}>MOTOR TAXI</Text>
+        <Text style={styles.rideTypeText}>{bookDetails.ride_type}</Text>
       </View>
 
-      {/* Image Section */}
       <View style={styles.imagePlaceholder}>
         <Image
-          source={require("../../pictures/7.png")} // Replace with your image URL
+          source={require("../../pictures/7.png")}
           style={styles.image}
         />
       </View>
 
-      {/* Message Section */}
       <View style={styles.messageContainer}>
         <Text style={styles.messageText}>
-          Let us not use our phone during the ride to avoid unnecessary accident in the road.
+          In transit ta bay. Please do not use your phone!
         </Text>
       </View>
 
-      {/* Report Button */}
-      <TouchableOpacity>
-        <Button mode="contained" style={styles.reportButton}>
+      <TouchableOpacity onPress={handleReport}>
+        <Button 
+          mode="contained" 
+          style={styles.reportButton}
+        >
           REPORT
         </Button>
       </TouchableOpacity>

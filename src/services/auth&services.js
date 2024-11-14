@@ -96,6 +96,7 @@ const userService = {
     
     return response.data;
   },
+  
 
   fetchCustomer: async () => {
     const user_id = await userService.getUserId();
@@ -105,6 +106,41 @@ const userService = {
     return response.data;
   },
 
+  fetchRiderDeets: async (rider) => {
+    const user_id = rider;
+    console.log("rider_id:" , user_id, rider)
+    const response = await axios.get(API_URL + `riderId/${user_id}`);
+    
+    return response.data;
+  },
+
+  fetchCustomerDeets: async (user) => {
+    const user_id = user;
+    console.log("user_id:" , user_id, user)
+    const response = await axios.get(API_URL + `customerId/${user_id}`);
+    
+    return response.data;
+  },
+  feedback: async (feedbackData) => {
+    try {
+      const response = await axios.post(API_URL+'submit_feedback', feedbackData, {
+        headers: {
+          'Content-Type': 'application/json',
+          // Include any necessary authorization headers
+        },
+      });
+      return response;
+    } catch (error) {
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error('Error response:', error.response.data);
+        console.error('Error status:', error.response.status);
+        console.error('Error headers:', error.response.headers);
+      }
+      throw error; // Re-throw to be handled by the component
+    }
+  },
 
   upload: async (formData) => {
     try {

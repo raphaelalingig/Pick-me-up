@@ -6,7 +6,6 @@ import {
   Alert,
   Image,
   Linking,
-  Modal,
   Pressable,
   Animated,
 } from "react-native";
@@ -282,6 +281,22 @@ const TrackingCustomer = ({ route, navigation }) => {
             if (response.data && response.data.message) {
               Alert.alert("Success", response.data.message);
               navigation.navigate("Home");
+              Alert.alert(
+                "Cancelled",
+                response.data.message,
+                [
+                  {
+                    text: "Report",
+                    onPress: () => navigation.navigate("Rider Feedback", {ride: ride, role: "Rider"}), 
+                    style: "destructive",
+                  },
+                  {
+                    text: "Home",
+                    onPress: () => navigation.navigate("Home"),
+                    style: "cancel",
+                  },
+                ]
+              );
             } else {
               Alert.alert(
                 "Error",
@@ -319,21 +334,14 @@ const TrackingCustomer = ({ route, navigation }) => {
     );
   }
 
-  const handleStartPress = () => {
-    setShowStartModal(true);
-  };
-
   const handlePressIn = () => {
-    // Reset completion flag
     hasCompletedRef.current = false;
     setIsPressed(true);
 
-    // Cancel any existing animation
     if (pressAnimationRef.current) {
       pressAnimationRef.current.stop();
     }
 
-    // Store animation reference
     pressAnimationRef.current = Animated.timing(pressProgress, {
       toValue: 1,
       duration: 2000,
@@ -341,68 +349,41 @@ const TrackingCustomer = ({ route, navigation }) => {
     });
 
     pressAnimationRef.current.start(({ finished }) => {
-      if (finished && isPressed && !hasCompletedRef.current) {
-        hasCompletedRef.current = true; // Set flag to prevent double execution
-        startRide();
-        setShowStartModal(false);
+      if (finished && !hasCompletedRef.current) {
+        hasCompletedRef.current = true;
+        Alert.alert(
+          "Start Ride",
+          "Are you sure you want to start this ride?",
+          [
+            {
+              text: "Cancel",
+              style: "cancel",
+              onPress: () => {
+                setIsPressed(false);
+                pressProgress.setValue(0);
+              },
+            },
+            {
+              text: "Yes",
+              onPress: startRide,
+            },
+          ]
+        );
       }
     });
   };
 
   const handlePressOut = () => {
-    setIsPressed(false);
-    // Cancel animation on press out
-    if (pressAnimationRef.current) {
-      pressAnimationRef.current.stop();
+    // Only reset if the animation hasn't completed
+    if (!hasCompletedRef.current) {
+      setIsPressed(false);
+      if (pressAnimationRef.current) {
+        pressAnimationRef.current.stop();
+      }
+      pressProgress.setValue(0);
     }
-    pressProgress.setValue(0);
   };
 
- 
-
-  const StartRideModal = () => (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={showStartModal}
-      onRequestClose={() => setShowStartModal(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Start Ride</Text>
-          <Text style={styles.modalText}>Press and hold to start the ride</Text>
-
-          <Pressable
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-            style={styles.longPressButton}
-          >
-            <View style={styles.progressContainer}>
-              <Animated.View
-                style={[
-                  styles.progressBar,
-                  {
-                    width: pressProgress.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ["0%", "100%"],
-                    }),
-                  },
-                ]}
-              />
-              <Text style={styles.longPressButtonText}>Hold to Start</Text>
-            </View>
-          </Pressable>
-
-          <TouchableOpacity
-            style={styles.cancelModalButton}
-            onPress={() => setShowStartModal(false)}
-          >
-            <Text style={styles.cancelModalButtonText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
   return (
     <View style={styles.container}>
       <View style={styles.mapContainer}>
@@ -460,9 +441,31 @@ const TrackingCustomer = ({ route, navigation }) => {
           <TouchableOpacity style={styles.button} onPress={handleContactPress}>
             <Text style={styles.buttonText}>Contact</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={handleStartPress}>
-            <Text style={styles.buttonText}>Start Ride</Text>
-          </TouchableOpacity>
+          
+          <View style={styles.startButtonContainer}>
+            <Text style={styles.hintText}>Long press to start ride</Text>
+            <Pressable
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
+              style={styles.longPressButton}
+            >
+              <View style={styles.progressContainer}>
+                <Animated.View
+                  style={[
+                    styles.progressBar,
+                    {
+                      width: pressProgress.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ["0%", "100%"],
+                      }),
+                    },
+                  ]}
+                />
+                <Text style={styles.buttonText}>Start Ride</Text>
+              </View>
+            </Pressable>
+          </View>
+
           <TouchableOpacity
             style={[styles.button, styles.cancelButton]}
             onPress={handleCancel}
@@ -470,8 +473,6 @@ const TrackingCustomer = ({ route, navigation }) => {
             <Text style={styles.buttonText}>Cancel</Text>
           </TouchableOpacity>
         </View>
-
-        <StartRideModal />
       </View>
     </View>
   );
@@ -560,42 +561,31 @@ const styles = StyleSheet.create({
     height: 40,
     resizeMode: "contain",
   },
-  modalOverlay: {
+  startButtonContainer: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
+    marginHorizontal: 5,
   },
-  modalContent: {
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 20,
-    width: "80%",
-    alignItems: "center",
+  
+  hintText: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 4,
   },
-  modalTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 15,
-  },
-  modalText: {
-    fontSize: 16,
-    marginBottom: 20,
-    textAlign: "center",
-  },
+  
   longPressButton: {
-    width: "100%",
-    height: 50,
     backgroundColor: "#28a745",
-    borderRadius: 10,
+    height: 40,
+    borderRadius: 5,
     overflow: "hidden",
-    marginBottom: 15,
   },
+  
   progressContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
+  
   progressBar: {
     position: "absolute",
     left: 0,
@@ -603,19 +593,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: "#1a752f",
   },
-  longPressButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-    zIndex: 1,
-  },
-  cancelModalButton: {
-    padding: 10,
-  },
-  cancelModalButtonText: {
-    color: "#dc3545",
-    fontSize: 16,
-    fontWeight: "bold",
+
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: 'flex-end',
   },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
 });

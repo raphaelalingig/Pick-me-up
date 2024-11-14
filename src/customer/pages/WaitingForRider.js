@@ -22,7 +22,7 @@ import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import riderMarker from "../../../assets/rider.png";
 import customerMarker from "../../../assets/customer.png";
 import { CustomerContext } from "../../context/customerContext";
-import usePusher from "../../services/pusher";
+import usePusher1 from "../../services/pusher";
 
 const { width, height } = Dimensions.get('window');
 
@@ -48,7 +48,7 @@ const WaitingRider = ({ navigation }) => {
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [matchedRide, setMatchedRide] = useState(null);
 
-  const pusher = usePusher();
+  const pusher = usePusher1();
 
   const fetchLatestRide = useCallback(async () => {
     setIsLoading(true);
@@ -95,7 +95,7 @@ const WaitingRider = ({ navigation }) => {
       }
   
       const response = await userService.getRideApplications(bookDetails.ride_id);
-      console.log("All applications:", response);
+      // console.log("All applications:", response);
   
       // Filter out applications where the applier_details.user_id matches the current user's ID
       const filteredApplications = response.filter(application => 
@@ -103,7 +103,7 @@ const WaitingRider = ({ navigation }) => {
       );
       
       console.log("Current User ID:", userId);
-      console.log("Filtered applications:", filteredApplications);
+      // console.log("Filtered applications:", filteredApplications);
       setApplications(filteredApplications);
       setModalVisible(true);
     } catch (error) {
@@ -122,7 +122,7 @@ const WaitingRider = ({ navigation }) => {
         rider.user.status === 'Active'
       );
       setRiderLocations(activeRiders);
-      console.log(response)
+      // console.log(response)
     } catch (error) {
       console.error('Error fetching rider locations:', error);
       Alert.alert(
@@ -536,40 +536,40 @@ const WaitingRider = ({ navigation }) => {
     return renderLoadingScreen();
   }
 
-  const renderMatchModal = () => (
-    <Modal
-      visible={showMatchModal}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={() => setShowMatchModal(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Ride Match Found!</Text>
-          {matchedRide && (
-            <>
-              <Text style={styles.modalText}>
-                A rider has been matched with your ride request.
-              </Text>
-              <Text style={styles.modalText}>
-                Rider Name: {matchedRide.rider_name}
-              </Text>
-              <Text style={styles.modalText}>
-                Contact: {matchedRide.rider_contact}
-              </Text>
-              <Button
-                mode="contained"
-                onPress={() => setShowMatchModal(false)}
-                style={styles.closeButton}
-              >
-                Close
-              </Button>
-            </>
-          )}
-        </View>
-      </View>
-    </Modal>
-  );
+  // const renderMatchModal = () => (
+  //   <Modal
+  //     visible={showMatchModal}
+  //     transparent={true}
+  //     animationType="slide"
+  //     onRequestClose={() => setShowMatchModal(false)}
+  //   >
+  //     <View style={styles.modalOverlay}>
+  //       <View style={styles.modalContainer}>
+  //         <Text style={styles.modalTitle}>Ride Match Found!</Text>
+  //         {matchedRide && (
+  //           <>
+  //             <Text style={styles.modalText}>
+  //               A rider has been matched with your ride request.
+  //             </Text>
+  //             <Text style={styles.modalText}>
+  //               Rider Name: {matchedRide.rider_name}
+  //             </Text>
+  //             <Text style={styles.modalText}>
+  //               Contact: {matchedRide.rider_contact}
+  //             </Text>
+  //             <Button
+  //               mode="contained"
+  //               onPress={() => setShowMatchModal(false)}
+  //               style={styles.closeButton}
+  //             >
+  //               Close
+  //             </Button>
+  //           </>
+  //         )}
+  //       </View>
+  //     </View>
+  //   </Modal>
+  // );
 
   return (
     <View style={styles.container}>
@@ -611,7 +611,7 @@ const WaitingRider = ({ navigation }) => {
 
       {renderRiderApplicationsModal()}
       {renderRiderInfoModal()}
-      {renderMatchModal()}
+      {/* {renderMatchModal()} */}
     </View>
   );
 };

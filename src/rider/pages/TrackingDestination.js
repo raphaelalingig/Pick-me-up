@@ -5,7 +5,6 @@ import {
   View,
   Alert,
   Image,
-  Modal,
   Pressable,
   Animated,
 } from "react-native";
@@ -34,12 +33,13 @@ const TrackingDestination = ({ route, navigation }) => {
   const [totalFare, setTotalFare] = useState(parseFloat(ride.fare));
   const [mapRegion, setMapRegion] = useState(null);
   const [totalDistanceRide, setLocalTotalDistanceRide] = useState(0);
-  const [showArriveModal, setShowArriveModal] = useState(false);
-  const [pressProgress] = useState(new Animated.Value(0));
-  const [isPressed, setIsPressed] = useState(false);
   const [locationSubscription, setLocationSubscription] = useState(null);
   
+  const [pressProgress] = useState(new Animated.Value(0));
+  const [isPressed, setIsPressed] = useState(false);
+
   const pressAnimationRef = useRef(null);
+  const hasCompletedRef = useRef(false);
 
   useEffect(() => {
     (async () => {
@@ -175,8 +175,22 @@ const TrackingDestination = ({ route, navigation }) => {
       const response = await userService.complete_ride(ride.ride_id);
       if (response.data && response.data.message) {
         await getCurrentLocation();
-        Alert.alert("Success", response.data.message);
-        navigation.navigate("Home");
+        Alert.alert(
+          "Success",
+          response.data.message,
+          [
+            {
+              text: "Submit Feedback",
+              onPress: () => navigation.navigate("Rider Feedback", {ride: ride, role: "Rider"}), // Replace with the report screen navigation or function
+              style: "destructive",
+            },
+            {
+              text: "Home",
+              onPress: () => navigation.navigate("Home"),
+              style: "cancel",
+            },
+          ]
+        );
       } else {
         Alert.alert("Error", "Failed to finish the ride. Please try again.");
       }
@@ -231,18 +245,14 @@ const TrackingDestination = ({ route, navigation }) => {
     return poly;
   };
 
-  const handleArrivePress = () => {
-    setShowArriveModal(true);
-  };
-
   const handlePressIn = () => {
+    hasCompletedRef.current = false;
     setIsPressed(true);
-    // Cancel any existing animation
+
     if (pressAnimationRef.current) {
       pressAnimationRef.current.stop();
     }
 
-    // Store animation reference
     pressAnimationRef.current = Animated.timing(pressProgress, {
       toValue: 1,
       duration: 2000,
@@ -250,67 +260,40 @@ const TrackingDestination = ({ route, navigation }) => {
     });
 
     pressAnimationRef.current.start(({ finished }) => {
-      if (finished && isPressed) {
-        completeRide();
-        setShowArriveModal(false);
+      if (finished && !hasCompletedRef.current) {
+        hasCompletedRef.current = true;
+        Alert.alert(
+          "Finish Ride",
+          "Are you sure you want to finish this ride?",
+          [
+            {
+              text: "Cancel",
+              style: "cancel",
+              onPress: () => {
+                setIsPressed(false);
+                pressProgress.setValue(0);
+              },
+            },
+            {
+              text: "Yes",
+              onPress: completeRide,
+            },
+          ]
+        );
       }
     });
   };
 
   const handlePressOut = () => {
-    setIsPressed(false);
-    // Cancel animation on press out
-    if (pressAnimationRef.current) {
-      pressAnimationRef.current.stop();
+    // Only reset if the animation hasn't completed
+    if (!hasCompletedRef.current) {
+      setIsPressed(false);
+      if (pressAnimationRef.current) {
+        pressAnimationRef.current.stop();
+      }
+      pressProgress.setValue(0);
     }
-    pressProgress.setValue(0);
   };
-
-  const FinishRideModal = () => (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={showArriveModal}
-      onRequestClose={() => setShowArriveModal(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Finish Ride</Text>
-          <Text style={styles.modalText}>
-            Press and hold to finish the ride
-          </Text>
-
-          <Pressable
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-            style={styles.longPressButton}
-          >
-            <View style={styles.progressContainer}>
-              <Animated.View
-                style={[
-                  styles.progressBar,
-                  {
-                    width: pressProgress.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ["0%", "100%"],
-                    }),
-                  },
-                ]}
-              />
-              <Text style={styles.longPressButtonText}>Hold to Confirm</Text>
-            </View>
-          </Pressable>
-
-          <TouchableOpacity
-            style={styles.cancelModalButton}
-            onPress={() => setShowArriveModal(false)}
-          >
-            <Text style={styles.cancelModalButtonText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
 
   if (isLoading || !ride) {
     return (
@@ -357,23 +340,39 @@ const TrackingDestination = ({ route, navigation }) => {
         <Text style={styles.headerText}>Tracking Destination</Text>
         <View style={styles.infoContainer}>
           <Text style={styles.infoText}>Distance: {totalDistanceRide} km</Text>
-          <Text style={styles.infoText}>Fare: ₱{totalFare}</Text>
+          <Text style={styles.infoText}>Fare: ₱{ride.fare}</Text>
         </View>
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.button}
-            onPress={() => navigation.navigate("Submit Report")}
+            onPress={() => navigation.navigate("Rider Feedback", {ride: ride, role: "Rider"})}
           >
             <Text style={styles.buttonText}>Report</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.button, styles.arrivedButton]}
-            onPress={handleArrivePress}
-          >
-            <Text style={styles.buttonText}>Arrived</Text>
-          </TouchableOpacity>
+          <View style={styles.arriveButtonContainer}>
+            <Text style={styles.hintText}>Long press to Finish ride</Text>
+            <Pressable
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
+              style={styles.longPressButton}
+            >
+              <View style={styles.progressContainer}>
+                <Animated.View
+                  style={[
+                    styles.progressBar,
+                    {
+                      width: pressProgress.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ["0%", "100%"],
+                      }),
+                    },
+                  ]}
+                />
+                <Text style={styles.buttonText}>Finish Ride</Text>
+              </View>
+            </Pressable>
+          </View>
         </View>
-        <FinishRideModal />
       </View>
     </View>
   );
@@ -450,42 +449,31 @@ const styles = StyleSheet.create({
     height: 40,
     resizeMode: "contain",
   },
-  modalOverlay: {
+  arriveButtonContainer: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
+    marginHorizontal: 5,
   },
-  modalContent: {
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 20,
-    width: "80%",
-    alignItems: "center",
+  
+  hintText: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 4,
   },
-  modalTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 15,
-  },
-  modalText: {
-    fontSize: 16,
-    marginBottom: 20,
-    textAlign: "center",
-  },
+  
   longPressButton: {
-    width: "100%",
-    height: 50,
     backgroundColor: "#28a745",
-    borderRadius: 10,
+    height: 40,
+    borderRadius: 5,
     overflow: "hidden",
-    marginBottom: 15,
   },
+  
   progressContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
+  
   progressBar: {
     position: "absolute",
     left: 0,
@@ -493,19 +481,13 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: "#1a752f",
   },
-  longPressButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-    zIndex: 1,
+
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: 'flex-end',
   },
-  cancelModalButton: {
-    padding: 10,
-  },
-  cancelModalButtonText: {
-    color: "#dc3545",
-    fontSize: 16,
-  },
+  
 });
 
 export default TrackingDestination;

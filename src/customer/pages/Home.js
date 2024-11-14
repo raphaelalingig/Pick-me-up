@@ -152,12 +152,14 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
             </Text>
           </TouchableOpacity>
 
-          {/* <TouchableOpacity
+          <TouchableOpacity
             style={[
               styles.serviceButton,
               selectedService === "Delivery" && styles.selectedButton,
             ]}
-            onPress={() => handleServiceSelect("Delivery")}
+            // onPress={() => handleServiceSelect("Delivery")}
+            onPress={() =>
+              navigation.navigate("Delivery")}
           >
             <MaterialCommunityIcons name="bike" size={24} color="black" />
             <Text
@@ -178,7 +180,9 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
               styles.serviceButton,
               selectedService === "Pakyaw" && styles.selectedButton,
             ]}
-            onPress={() => handleServiceSelect("Pakyaw")}
+            // onPress={() => handleServiceSelect("Pakyaw")}
+            onPress={() =>
+              navigation.navigate("Pakyaw")}
           >
             <FontAwesome5 name="users" size={24} color="black" />
             <Text
@@ -192,7 +196,7 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
             <Text style={styles.serviceDescription}>
               Ride with friend & family
             </Text>
-          </TouchableOpacity> */}
+          </TouchableOpacity>
 
         </View>
         <View style={styles.actionContainer}>

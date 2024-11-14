@@ -8,16 +8,18 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
-  Modal,
+  Modal, 
   Alert,
 } from "react-native";
-import Toast from "react-native-root-toast";
-
+import Toast from 'react-native-root-toast';
 import { Button, Text, ActivityIndicator, MD2Colors } from "react-native-paper";
 import * as Location from "expo-location";
 import { RiderContext } from "../../context/riderContext";
 import userService from "../../services/auth&services";
-import usePusher from "../../services/pusher";
+// import usePusher from "../../services/pusher";
+import { usePusher } from "../../context/PusherContext";
+import ApplyRideModal from './ApplyRideModal';
+import MatchModal from "./MatchedRideModal";
 
 const Home = ({ navigation }) => {
   const [location, setLocation] = useState(null);
@@ -25,18 +27,19 @@ const Home = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
   const { riderCoords, setRiderCoords } = useContext(RiderContext);
-  const [user_id, setUserId] = useState();
-  const [showApplyModal, setShowApplyModal] = useState(false);
-  const [applyRide, setApplyRide] = useState(null);
-  const pusher = usePusher();
+  const [user_id, setUser_Id] = useState();
+  // const [showApplyModal, setShowApplyModal] = useState(false);
+  // const [applyRide, setApplyRide] = useState(null);
+  // const pusher = usePusher();
+  const { showApplyModal, setShowApplyModal, applyRide, setApplyRide, showMatchModal, setShowMatchModal, matchDetails, setMatchDetails } = usePusher();
 
   useEffect(() => {
     const fetchUserId = async () => {
       try {
         const response = await userService.getUserId();
         const id = parseInt(response, 10);
-        console.log("Fetched user_id:", id);
-        setUserId(id);
+        console.log("youvouyvouyFetched user_id:", id);
+        setUser_Id(id);
       } catch (error) {
         console.error("Error fetching user_id:", error);
       }
@@ -45,118 +48,56 @@ const Home = ({ navigation }) => {
     fetchUserId();
   }, []);
 
-  useEffect(() => {
-    const setupPusher = async () => {
-      try {
-        if (!user_id) return;
-        const appliedChannel = pusher.subscribe("application");
-        const bookedChannel = pusher.subscribe("booked");
+  // useEffect(() => {
+  //   const setupPusher = async () => {
+  //     try {
+  //       if (!user_id) return;
+  //       const appliedChannel = pusher.subscribe('application');
+  //       const bookedChannel = pusher.subscribe('booked');
 
-        appliedChannel.bind("RIDES_APPLY", (data) => {
-          console.log("Data received:", data);
-          if (data && data.applicationData && data.applicationData.length > 0) {
-            const apply = data.applicationData[0];
-            console.log("Applying user ID check", apply.apply_to, user_id);
-            if (apply.apply_to === user_id) {
-              setApplyRide(apply);
-              setShowApplyModal(true);
-              console.log("Modal should now be visible");
-            }
-          }
-        });
+  //       appliedChannel.bind('RIDES_APPLY', data => {
+  //         console.log("Data received:", data);
+  //         if (data && data.applicationData && data.applicationData.length > 0) {
+  //           const apply = data.applicationData[0];
+  //           console.log("Applying user ID check", apply.apply_to, user_id);
+  //           if (apply.apply_to === user_id) {
+  //             setApplyRide(apply);
+  //             setShowApplyModal(true);
+  //             console.log("Modal should now be visible");
+  //           }
+  //         }
+  //       });
 
-        bookedChannel.bind('BOOKED', data => {
-          console.log("MATCHED DATA received:", data);
-          console.log(user_id)
-          console.log("APPLIER", data.ride.applier)
-            if (data.ride.applier === user_id) {
-              Alert.alert("Ride Match", 'You have found a Match!');
-              checkRideAndLocation()
-            }
-        });
+  //       bookedChannel.bind('BOOKED', data => {
+  //         if (data && data.ride && data.ride.length > 0) {
+  //           const book = data.ride[0];
+  //           if (book.apply_to === user_id) {
+  //             setMatchedRide(book);
+  //             setShowMatchModal(true);
+  //           }
+  //         }
+  //       });
 
-        return () => {
-          appliedChannel.unbind_all();
-          pusher.unsubscribe("application");
-          pusher.unsubscribe("booked");
-        };
-      } catch (error) {
-        console.error("Error setting up Pusher:", error);
-      }
-    };
+  //       return () => {
+  //         appliedChannel.unbind_all();
+  //         pusher.unsubscribe('application');
+  //         pusher.unsubscribe('booked');
+  //       };
+  //     } catch (error) {
+  //       console.error('Error setting up Pusher:', error);
+  //     }
+  //   };
 
-    setupPusher();
-  }, [user_id]);
-
-  const handleDecline = async () => {
-    try {
-      // setShowSpinner(true);
-
-      const apply_id = applyRide.apply_id;
-      const response = await userService.decline_ride(apply_id);
-
-      if (response.data.message == "Declined") {
-        Toast.show("Declined Ride Successfully", {
-          duration: Toast.durations.LONG,
-          position: Toast.positions.BOTTOM,
-          shadow: true,
-          animation: true,
-          hideOnPress: true,
-          backgroundColor: "#333",
-          textColor: "#fff",
-        });
-        setShowApplyModal(false);
-        setApplyRide(null);
-      } else if (response.data.message == "Unavailable") {
-        Toast.show("Ride no longer available", {
-          duration: Toast.durations.LONG,
-          position: Toast.positions.BOTTOM,
-          shadow: true,
-          animation: true,
-          hideOnPress: true,
-          backgroundColor: "#333",
-          textColor: "#fff",
-        });
-        setShowApplyModal(false);
-        setApplyRide(null);
-      }
-    } catch (error) {
-      console.error("Failed to decline ride:", error);
-      Alert.alert("Error", "Failed to decline ride. Please try again.");
-    } finally {
-      // setShowSpinner(false);
-    }
-  };
-
-  const handleCancelConfirmation = useCallback(() => {
-    Alert.alert("Decline Ride", "Are you sure you want to decline this ride?", [
-      { text: "No", style: "cancel" },
-      {
-        text: "Yes",
-        onPress: handleDecline,
-        style: "destructive",
-      },
-    ]);
-  }, [handleDecline]);
-
-  const handleViewButton = () => {
-    setShowApplyModal(false);
-    navigation.navigate("BookingDetails", { ride: applyRide });
-  };
-
-  const closeApplyModal = () => {
-    setShowApplyModal(false);
-    setApplyRide(null);
-  };
+  //   setupPusher();
+  // }, [user_id]);
+  
 
   const handleFind = async () => {
     setLoading(true);
     try {
       const user_status = await userService.fetchRider();
       if (user_status.message === "Get Verified") {
-        alert(
-          "Please complete your verification process before booking a ride."
-        );
+        alert("Please complete your verification process before booking a ride.");
         return "Cannot Book";
       }
       if (user_status.message === "Account Disabled") {
@@ -166,6 +107,7 @@ const Home = ({ navigation }) => {
       console.log("User is verified and account is active.");
       navigation.navigate("Nearby Customer");
       return "Proceed";
+  
     } catch (error) {
       console.error("Error in Finding Customer:", error);
       alert("An error occurred while checking your status. Please try again.");
@@ -174,8 +116,22 @@ const Home = ({ navigation }) => {
     }
   };
 
+  const uploadRiderLocation = async (rider_lat, rider_long) => {
+    console.log("COORDS", rider_lat, rider_long);
+    try {
+      const response = await userService.updateRiderLocation(
+        rider_lat,
+        rider_long
+      );
+      console.log("Updated Succesfully:", response);
+    } catch (error) {
+      console.error("Error uploading rider location:", error);
+    }
+  };
+
   const checkRideAndLocation = useCallback(async () => {
     try {
+
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         setErrorMsg("Permission to access location was denied");
@@ -194,28 +150,34 @@ const Home = ({ navigation }) => {
         timestamp: location.timestamp,
       });
 
+      const rider_lat = location.coords.latitude;
+      const rider_long = location.coords.longitude;
+      uploadRiderLocation(rider_lat, rider_long);
+      
+
       const response = await userService.checkActiveRide();
-      console.log(response);
+      console.log(response)
       if (response && response.hasActiveRide) {
         const { status } = response.rideDetails;
-        console.log(status);
-        const ride = response.rideDetails;
+        console.log(status)
+        const ride = response.rideDetails; 
         switch (status) {
-          case "Booked":
-            navigation.navigate("Tracking Customer", { ride });
+          case 'Booked':
+            navigation.navigate("Tracking Customer", {ride});
             return "existing_ride";
-          case "In Transit":
-            navigation.navigate("Tracking Destination", { ride });
+          case 'In Transit':
+            navigation.navigate("Tracking Destination", {ride});
             return "in_transit";
         }
       }
 
+      
       return "proceed";
     } catch (error) {
       setErrorMsg("Error fetching location or ride status");
-    } finally {
-      setLoading(false);
-    }
+      } finally {
+        setLoading(false);
+      }
   }, [navigation, setRiderCoords]);
 
   const onRefresh = useCallback(async () => {
@@ -228,6 +190,7 @@ const Home = ({ navigation }) => {
     useCallback(() => {
       checkRideAndLocation();
       setShowApplyModal(false);
+      setShowMatchModal(false);
     }, [checkRideAndLocation])
   );
 
@@ -258,11 +221,7 @@ const Home = ({ navigation }) => {
           </View>
           <TouchableOpacity onPress={handleFind} disabled={loading}>
             <View
-              style={{
-                padding: 15,
-                backgroundColor: "black",
-                borderRadius: 10,
-              }}
+              style={{ padding: 15, backgroundColor: "black", borderRadius: 10 }}
             >
               <Text variant="titleMedium" style={styles.titleText}>
                 {loading ? "Checking..." : "START FINDING CUSTOMER"}
@@ -289,45 +248,25 @@ const Home = ({ navigation }) => {
           </Button>
 
           {applyRide && (
-            <Modal
+            <ApplyRideModal
               visible={showApplyModal}
-              transparent={true}
-              animationType="slide"
-              onRequestClose={closeApplyModal}
-            >
-              <View style={styles.modalContainer}>
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>New Ride Application!</Text>
-                  <Text style={styles.modalText}>
-                    Passenger: {applyRide.applier_name}
-                  </Text>
-                  <Text style={styles.modalText}>
-                    Calculated Fare: {applyRide.calculated_fare}
-                  </Text>
-                  <Text style={styles.modalText}>
-                    Offered Fare: {applyRide.fare}
-                  </Text>
-                  <Text style={styles.modalText}>
-                    Date: {new Date(applyRide.ride_date).toLocaleString()}
-                  </Text>
-                  <View style={styles.buttonContainer}>
-                    <TouchableOpacity
-                      style={[styles.actionButton, styles.acceptButton]}
-                      onPress={handleViewButton}
-                    >
-                      <Text style={styles.buttonText1}>View</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.actionButton, styles.declineButton]}
-                      onPress={handleCancelConfirmation}
-                    >
-                      <Text style={styles.buttonText1}>Decline</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            </Modal>
+              ride={applyRide}
+              userService={userService} 
+              navigation={navigation} 
+              onClose={() => setShowApplyModal(false)}
+            />
           )}
+          {matchDetails && (
+            <MatchModal
+            visible={showMatchModal}
+            userService={userService}
+            navigation={navigation}
+            onClose={() => setShowMatchModal(false)}
+            matchDetails={matchDetails}
+          />
+          )}
+            
+
         </View>
       </ScrollView>
     </ImageBackground>
@@ -348,6 +287,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 20,
+    
   },
   logoContainer: {
     marginBottom: 50,
@@ -356,6 +296,7 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     borderWidth: 2,
+    
   },
   button: {
     marginTop: 20,

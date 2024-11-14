@@ -34,6 +34,7 @@
     "js-tokens": "^9.0.0",
     "laravel-echo": "^1.16.1",
     "loose-envify": "^1.4.0",
+    "lucide-react": "^0.456.0",
     "pusher-js": "^8.4.0-rc2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

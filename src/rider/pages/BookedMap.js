@@ -5,9 +5,19 @@ import { RiderContext } from "../../context/riderContext";
 import { Button, Text } from "react-native-paper";
 import riderMarker from "../../../assets/rider.png";
 import customerMarker from "../../../assets/customer.png";
+import { usePusher } from '../../context/PusherContext';
+import ApplyRideModal from './ApplyRideModal';
 
 const BookedMap = ({ navigation, route }) => {
   const { ride } = route.params;
+
+  const { 
+    applyRide, 
+    setApplyRide,
+    showApplyModal, 
+    setShowApplyModal 
+  } = usePusher();
+
   const { riderCoords, totalDistanceRide, setTotalDistanceRide } =
     useContext(RiderContext);
 
@@ -174,6 +184,15 @@ const BookedMap = ({ navigation, route }) => {
         </Text>
         <Text style={styles.totalFare}>Total Fare: ₱{totalFare}</Text>
       </View>
+      {applyRide && (
+        <ApplyRideModal
+          visible={showApplyModal}
+          ride={applyRide}
+          userService={userService} 
+          navigation={navigation} 
+          onClose={() => setShowApplyModal(false)}
+        />
+      )}
     </View>
   );
 };

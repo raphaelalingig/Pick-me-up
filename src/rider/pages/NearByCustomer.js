@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useFocusEffect } from "@react-navigation/native";
+import ApplyRideModal from './ApplyRideModal';
 import {
   View,
   Text,
@@ -18,7 +19,8 @@ import Toast from 'react-native-root-toast';
 import FindingCustomerSpinner from "../spinner/FindingCustomerSpinner";
 import NearbyCustomersMap from "./NearbyCustomersMap";
 import userService from "../../services/auth&services";
-import usePusher from "../../services/pusher";
+import usePusher1 from "../../services/pusher";
+import { usePusher } from "../../context/PusherContext";
 import { useAuth } from "../../services/useAuth";
 
 // Enable LayoutAnimation on Android
@@ -31,15 +33,28 @@ const NearbyCustomerScreen = ({ navigation }) => {
   const [availableRides, setAvailableRides] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [showMap, setShowMap] = useState(false);
-  const [showMatchModal, setShowMatchModal] = useState(false);
   const [showApplyModal, setShowApplyModal] = useState(false);
-  const [matchedRide, setMatchedRide] = useState(null);
   const [applyRide, setApplyRide] = useState(null);
+  const pusher = usePusher1();
   const [user_id, setUser_id] = useState();
   const [rider, setRider] = useState();
   const { userId } = useAuth();
 
-  const pusher = usePusher();
+  
+
+  // const { showApplyModal, setShowApplyModal, applyRide, setApplyRide } = usePusher();
+
+  // const { 
+  //   availableRides: pusherRides,
+  // } = usePusher();
+
+  // // Update local rides when Pusher sends new data
+  // useEffect(() => {
+  //   if (pusherRides && pusherRides.length > 0) {
+  //     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+  //     setAvailableRides(pusherRides);
+  //   }
+  // }, [pusherRides]);
 
   // useEffect(() => {
   //   const fetchUserId = async () => {
@@ -64,14 +79,11 @@ const NearbyCustomerScreen = ({ navigation }) => {
 
       setRider(id);
       setUser_id(id.user_id);
-      console.log("IDASHDIHAD",userId);
 
       const appResponse = await userService.getApplications(id.user_id);
-      console.log(appResponse);
 
       if (appResponse.data && appResponse.data.length > 0) {
         const firstApplication = appResponse.data[0];
-        console.log("Application data:", appResponse.data);
         setApplyRide(firstApplication);
         setShowApplyModal(true);
       }
@@ -134,7 +146,9 @@ const NearbyCustomerScreen = ({ navigation }) => {
         });
 
         return () => {
+          ridesChannel.unbind_all();
           appliedChannel.unbind_all();
+          bookedChannel.unbind_all();
           pusher.unsubscribe('application');
           pusher.unsubscribe('rides');
           pusher.unsubscribe('booked');
@@ -214,7 +228,6 @@ const NearbyCustomerScreen = ({ navigation }) => {
     useCallback(() => {
       fetchAvailableRides();
       setShowApplyModal(false); // Reset modal visibility
-      setShowMatchModal(false); // Reset modal visibility
     }, [])
   );
 
@@ -305,72 +318,15 @@ const NearbyCustomerScreen = ({ navigation }) => {
             </>
           )}
 
-          {applyRide && (
-            <Modal 
-              visible={showApplyModal} 
-              transparent={true} 
-              animationType="slide"
-              onRequestClose={closeApplyModal}
-            >
-              <View style={styles.modalContainer}>
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>New Ride Application!</Text>
-                  <Text style={styles.modalText}>Passenger: {applyRide.applier_name}</Text>
-                  <Text style={styles.modalText}>Calculated Fare: {applyRide.calculated_fare}</Text>
-                  <Text style={styles.modalText}>Offered Fare: {applyRide.fare}</Text>
-                  <Text style={styles.modalText}>Date: {new Date(applyRide.ride_date).toLocaleString()}</Text>
-                  <View style={styles.buttonContainer}>
-                    <TouchableOpacity
-                      style={[styles.actionButton, styles.acceptButton]}
-                      onPress={handleViewButton}
-                    >
-                      <Text style={styles.buttonText}>View</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.actionButton, styles.declineButton]}
-                      onPress={handleCancelConfirmation}
-                    >
-                      <Text style={styles.buttonText}>Decline</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            </Modal>
+        {applyRide && (
+            <ApplyRideModal
+              visible={showApplyModal}
+              ride={applyRide}
+              userService={userService} 
+              navigation={navigation} 
+              onClose={() => setShowApplyModal(false)}
+            />
           )}
-
-
-          {/* {matchedRide && (
-            <Modal 
-              visible={showMatchModal} 
-              transparent={true} 
-              animationType="slide"
-              onRequestClose={closeModal}
-            >
-              <View style={styles.modalContainer}>
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>Ride Match!</Text>
-                  <Text style={styles.modalText}>Passenger: {matchedRide.applier_name}</Text>
-                  <Text style={styles.modalText}>Calculated Fare: {matchedRide.calculated_fare}</Text>
-                  <Text style={styles.modalText}>Offered Fare: {matchedRide.fare}</Text>
-                  <Text style={styles.modalText}>Date: {new Date(matchedRide.ride_date).toLocaleString()}</Text>
-                  <View style={styles.buttonContainer}>
-                    <TouchableOpacity
-                      style={[styles.actionButton, styles.acceptButton]}
-                      onPress={() => handleApply(applyRide)}
-                    >
-                      <Text style={styles.buttonText}>Accept</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.actionButton, styles.declineButton]}
-                      onPress={closeApplyModal}
-                    >
-                      <Text style={styles.buttonText}>Decline</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            </Modal>
-          )} */}
 
 
         </ImageBackground>

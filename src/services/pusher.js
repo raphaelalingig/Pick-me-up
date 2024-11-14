@@ -4,7 +4,7 @@ import Pusher from 'pusher-js/react-native';
 import API_URL from './api_url';
 import { useAuth } from './useAuth';
 
-const usePusher = () => {
+const usePusher1 = () => {
   const { token } = useAuth();
 
   const pusher = useMemo(() => {
@@ -35,4 +35,4 @@ const usePusher = () => {
   return pusher;
 };
 
-export default usePusher;
+export default usePusher1;

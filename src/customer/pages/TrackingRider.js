@@ -71,9 +71,23 @@ const TrackingRider = ({ navigation }) => {
               if(data.update.status === "Start"){
                 Alert.alert("Starting Ride", 'Your Rider Has Arrived!');
                 navigation.navigate("Home");
-              }else if(data.update.status === "Cancel"){
-                Alert.alert("Sorry", 'This Ride has been cancelled.');
-                navigation.navigate("Home");
+            } else if (data.update.status === "Cancel") {
+              Alert.alert(
+                "Sorry",
+                "This Ride has been cancelled.",
+                [
+                  {
+                    text: "Report",
+                    onPress: () => handleReport(),
+                    style: "destructive",
+                  },
+                  {
+                    text: "Home",
+                    onPress: () => navigation.navigate("Home"),
+                    style: "cancel",
+                  },
+                ]
+              );
               }
             }
         });
