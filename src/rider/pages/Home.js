@@ -16,7 +16,7 @@ import { Button, Text, ActivityIndicator, MD2Colors } from "react-native-paper";
 import * as Location from "expo-location";
 import { RiderContext } from "../../context/riderContext";
 import userService from "../../services/auth&services";
-// import usePusher from "../../services/pusher";
+import usePusher1 from "../../services/pusher";
 import { usePusher } from "../../context/PusherContext";
 import ApplyRideModal from './ApplyRideModal';
 import MatchModal from "./MatchedRideModal";
@@ -30,7 +30,7 @@ const Home = ({ navigation }) => {
   const [user_id, setUser_Id] = useState();
   // const [showApplyModal, setShowApplyModal] = useState(false);
   // const [applyRide, setApplyRide] = useState(null);
-  // const pusher = usePusher();
+  const pusher = usePusher1();
   const { showApplyModal, setShowApplyModal, applyRide, setApplyRide, showMatchModal, setShowMatchModal, matchDetails, setMatchDetails } = usePusher();
 
   useEffect(() => {
@@ -44,52 +44,37 @@ const Home = ({ navigation }) => {
         console.error("Error fetching user_id:", error);
       }
     };
-
     fetchUserId();
   }, []);
 
-  // useEffect(() => {
-  //   const setupPusher = async () => {
-  //     try {
-  //       if (!user_id) return;
-  //       const appliedChannel = pusher.subscribe('application');
-  //       const bookedChannel = pusher.subscribe('booked');
+  useEffect(() => {
+    const setupPusher = async () => {
+      try {
+        if (!user_id) return;
+        const bookedChannel = pusher.subscribe('booked');
 
-  //       appliedChannel.bind('RIDES_APPLY', data => {
-  //         console.log("Data received:", data);
-  //         if (data && data.applicationData && data.applicationData.length > 0) {
-  //           const apply = data.applicationData[0];
-  //           console.log("Applying user ID check", apply.apply_to, user_id);
-  //           if (apply.apply_to === user_id) {
-  //             setApplyRide(apply);
-  //             setShowApplyModal(true);
-  //             console.log("Modal should now be visible");
-  //           }
-  //         }
-  //       });
 
-  //       bookedChannel.bind('BOOKED', data => {
-  //         if (data && data.ride && data.ride.length > 0) {
-  //           const book = data.ride[0];
-  //           if (book.apply_to === user_id) {
-  //             setMatchedRide(book);
-  //             setShowMatchModal(true);
-  //           }
-  //         }
-  //       });
+        bookedChannel.bind('BOOKED', data => {
+          console.log("MATCHED DATA received:", data);
+          console.log(user_id)
+          console.log("APPLIER", data.ride.applier)
+            if (data.ride.applier === user_id) {
+              Alert.alert("Ride Match", 'You have found a Match!');
+              navigation.navigate("Home");
+            }
+        });
 
-  //       return () => {
-  //         appliedChannel.unbind_all();
-  //         pusher.unsubscribe('application');
-  //         pusher.unsubscribe('booked');
-  //       };
-  //     } catch (error) {
-  //       console.error('Error setting up Pusher:', error);
-  //     }
-  //   };
+        return () => {
+          bookedChannel.unbind_all();
+          pusher.unsubscribe('booked');
+        };
+      } catch (error) {
+        console.error('Error setting up Pusher:', error);
+      }
+    };
 
-  //   setupPusher();
-  // }, [user_id]);
+    setupPusher();
+  }, [user_id]);
   
 
   const handleFind = async () => {
@@ -256,7 +241,7 @@ const Home = ({ navigation }) => {
               onClose={() => setShowApplyModal(false)}
             />
           )}
-          {matchDetails && (
+          {/* {matchDetails && (
             <MatchModal
             visible={showMatchModal}
             userService={userService}
@@ -264,7 +249,7 @@ const Home = ({ navigation }) => {
             onClose={() => setShowMatchModal(false)}
             matchDetails={matchDetails}
           />
-          )}
+          )} */}
             
 
         </View>

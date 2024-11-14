@@ -123,25 +123,31 @@ const userService = {
   },
   feedback: async (feedbackData) => {
     try {
-      const response = await axios.post(API_URL+'submit_feedback', feedbackData, {
+      const response = await axios.post(API_URL + 'submit_feedback', feedbackData, {
         headers: {
           'Content-Type': 'application/json',
-          // Include any necessary authorization headers
         },
       });
-      return response;
+      return response.data;
     } catch (error) {
+      // Transform backend errors into a consistent format
       if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.error('Error response:', error.response.data);
-        console.error('Error status:', error.response.status);
-        console.error('Error headers:', error.response.headers);
+        const { status, data } = error.response;
+        throw {
+          status,
+          message: data.message || 'An error occurred while submitting feedback',
+          errors: data.errors,
+          code: 'FEEDBACK_ERROR'
+        };
       }
-      throw error; // Re-throw to be handled by the component
+      throw {
+        status: 500,
+        message: 'Network error occurred',
+        code: 'NETWORK_ERROR'
+      };
     }
   },
-
+  
   upload: async (formData) => {
     try {
       const token = await AsyncStorage.getItem('token');

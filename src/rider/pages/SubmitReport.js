@@ -12,6 +12,7 @@ const SubmitFeedback_R = ({ navigation, route }) => {
   const [message, setMessage] = useState("");
   const [rating, setRating] = useState(0);
   const [user_id, setUserId] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { userId, userRole } = useAuth();
 
@@ -33,7 +34,6 @@ const SubmitFeedback_R = ({ navigation, route }) => {
     const senderId = role === "Rider" ? ride.rider_id : ride.user_id;
     const recipientId = role === "Rider" ? ride.user_id : ride.rider_id;
   
-    // Validate rating before submission
     if (!rating || rating < 1) {
       Alert.alert(
         "Invalid Rating",
@@ -44,80 +44,44 @@ const SubmitFeedback_R = ({ navigation, route }) => {
     }
   
     try {
-      await userService.feedback({
+      setIsSubmitting(true);
+  
+      const response = await userService.submitFeedback({
         sender: senderId,
         ride_id: ride.ride_id,
         recipient: recipientId,
         rating,
         message,
       });
-      
-      // Show success message before navigating back
-      Alert.alert(
-        "Success",
-        "Thank you for your feedback!",
-        [
-          {
-            text: "OK",
-            onPress: () => navigation.goBack()
-          }
-        ]
-      );
-    } catch (error) {
-      // Handle specific error cases
-      if (error.response) {
-        const status = error.response.status;
-        const errorData = error.response.data;
   
-        switch (status) {
-          case 400:
-            if (errorData.message.includes("already submitted")) {
-              Alert.alert(
-                "Duplicate Feedback",
-                "You have already submitted feedback for this ride.",
-                [{ text: "OK" }]
-              );
-            } else {
-              Alert.alert(
-                "Submission Error",
-                errorData.message || "Unable to submit feedback. Please try again.",
-                [{ text: "OK" }]
-              );
-            }
-            break;
-  
-          case 422:
-            Alert.alert(
-              "Validation Error",
-              "Please check your feedback details and try again.",
-              [{ text: "OK" }]
-            );
-            break;
-  
-          case 500:
-            Alert.alert(
-              "Server Error",
-              "There was a problem submitting your feedback. Please try again later.",
-              [{ text: "OK" }]
-            );
-            break;
-  
-          default:
-            Alert.alert(
-              "Error",
-              "An unexpected error occurred. Please try again.",
-              [{ text: "OK" }]
-            );
-        }
-      } else {
-        // Handle network or other errors
+      if (response.success) {
         Alert.alert(
-          "Connection Error",
-          "Please check your internet connection and try again.",
-          [{ text: "OK" }]
+          "Success",
+          "Thank you for your feedback!",
+          [
+            {
+              text: "OK",
+              onPress: () => navigation.goBack()
+            }
+          ]
         );
+      } else {
+        // Handle known error responses
+        const errorMessage = response.message || "An unexpected error occurred. Please try again.";
+        Alert.alert("Error", errorMessage, [{ text: "OK" }]);
       }
-      console.error("Error submitting feedback:", error);
+    } catch (error) {
+      // Handle network or unexpected errors
+      let alertTitle = "Error";
+      let alertMessage = "An unexpected error occurred. Please try again.";
+  
+      if (error.response?.data) {
+        alertMessage = error.response.data.message || alertMessage;
+      }
+  
+      Alert.alert(alertTitle, alertMessage, [{ text: "OK" }]);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

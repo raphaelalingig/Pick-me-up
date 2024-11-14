@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ImageBackground, StyleSheet, TouchableOpacity, View } from "react-native";
+import { ImageBackground, StyleSheet, TouchableOpacity, View, Alert } from "react-native";
 import { TextInput, Text } from "react-native-paper";
 import { BlurView } from "expo-blur";
 import userService from "../../services/auth&services";
@@ -12,6 +12,7 @@ const SubmitFeedback_C = ({ navigation, route }) => {
   const [message, setMessage] = useState("");
   const [rating, setRating] = useState(0);
   const [user_id, setUserId] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { userId, userRole } = useAuth();
 
@@ -34,8 +35,8 @@ const SubmitFeedback_C = ({ navigation, route }) => {
   const onSubmit = async () => {
     const senderId = role === "Customer" ? ride.user_id : ride.rider_id;
     const recipientId = role === "Customer" ? ride.rider_id : ride.user_id;
-
-    // Validate rating before submission
+  
+    // Pre-submission validation
     if (!rating || rating < 1) {
       Alert.alert(
         "Invalid Rating",
@@ -46,15 +47,16 @@ const SubmitFeedback_C = ({ navigation, route }) => {
     }
   
     try {
-      await userService.feedback({
+      setIsSubmitting(true); // Add loading state
+  
+      const response = await userService.submitFeedback({
         sender: senderId,
         ride_id: ride.ride_id,
         recipient: recipientId,
         rating,
         message,
       });
-      
-      // Show success message before navigating back
+  
       Alert.alert(
         "Success",
         "Thank you for your feedback!",
@@ -66,60 +68,33 @@ const SubmitFeedback_C = ({ navigation, route }) => {
         ]
       );
     } catch (error) {
-      // Handle specific error cases
-      if (error.response) {
-        const status = error.response.status;
-        const errorData = error.response.data;
+      let alertTitle = "Error";
+      let alertMessage = "An unexpected error occurred. Please try again.";
   
-        switch (status) {
-          case 400:
-            if (errorData.message.includes("already submitted")) {
-              Alert.alert(
-                "Duplicate Feedback",
-                "You have already submitted feedback for this ride.",
-                [{ text: "OK" }]
-              );
-            } else {
-              Alert.alert(
-                "Submission Error",
-                errorData.message || "Unable to submit feedback. Please try again.",
-                [{ text: "OK" }]
-              );
-            }
-            break;
-  
-          case 422:
-            Alert.alert(
-              "Validation Error",
-              "Please check your feedback details and try again.",
-              [{ text: "OK" }]
-            );
-            break;
-  
-          case 500:
-            Alert.alert(
-              "Server Error",
-              "There was a problem submitting your feedback. Please try again later.",
-              [{ text: "OK" }]
-            );
-            break;
-  
-          default:
-            Alert.alert(
-              "Error",
-              "An unexpected error occurred. Please try again.",
-              [{ text: "OK" }]
-            );
-        }
-      } else {
-        // Handle network or other errors
-        Alert.alert(
-          "Connection Error",
-          "Please check your internet connection and try again.",
-          [{ text: "OK" }]
-        );
+      switch (error.status) {
+        case 400:
+          if (error.message.includes("already submitted")) {
+            alertTitle = "Already Submitted";
+            alertMessage = "You have already provided feedback for this ride.";
+          }
+          break;
+        case 422:
+          alertTitle = "Invalid Input";
+          alertMessage = "Please check your feedback details and try again.";
+          break;
+        case 404:
+          alertTitle = "Not Found";
+          alertMessage = "The ride information could not be found.";
+          break;
+        case 500:
+          alertTitle = "Server Error";
+          alertMessage = "There was a problem with the server. Please try again later.";
+          break;
       }
-      console.error("Error submitting feedback:", error);
+  
+      Alert.alert(alertTitle, alertMessage, [{ text: "OK" }]);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -194,10 +169,16 @@ const SubmitFeedback_C = ({ navigation, route }) => {
               <Text style={styles.buttonText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-              style={styles.confirmButton} 
+              style={[
+                styles.confirmButton,
+                isSubmitting && styles.disabledButton
+              ]} 
               onPress={onSubmit}
+              disabled={isSubmitting}
             >
-              <Text style={styles.buttonText}>Confirm</Text>
+              <Text style={styles.buttonText}>
+                {isSubmitting ? "Submitting..." : "Confirm"}
+              </Text>
             </TouchableOpacity>
           </View>
         </BlurView>
@@ -300,6 +281,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
+  disabledButton: {
+    opacity: 0.7,
+  }
 });
 
 export default SubmitFeedback_C;
