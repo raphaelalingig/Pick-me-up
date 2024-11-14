@@ -169,6 +169,7 @@ const WaitingRider = ({ navigation }) => {
     };
 
     setupPusher();
+    fetchLatestRide();
   }, [userId]);
 
   // useEffect(() => {
