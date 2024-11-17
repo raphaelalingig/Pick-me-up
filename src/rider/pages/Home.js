@@ -3,23 +3,28 @@ import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   StyleSheet,
+  TouchableOpacity,
   ImageBackground,
-  Image,
   ScrollView,
   RefreshControl,
-  TouchableOpacity,
-  Modal, 
   Alert,
+  StatusBar,
+  SafeAreaView,
+  Dimensions,
+  Animated,
 } from "react-native";
-import Toast from 'react-native-root-toast';
-import { Button, Text, ActivityIndicator, MD2Colors } from "react-native-paper";
-import * as Location from "expo-location";
+import { Text, Surface } from "react-native-paper";
 import { RiderContext } from "../../context/riderContext";
+import * as Location from "expo-location";
 import userService from "../../services/auth&services";
-import usePusher1 from "../../services/pusher";
-import { usePusher } from "../../context/PusherContext";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import ApplyRideModal from './ApplyRideModal';
-import MatchModal from "./MatchedRideModal";
+import { usePusher } from "../../context/PusherContext";
+import usePusher1 from "../../services/pusher";
+
+const { width } = Dimensions.get('window');
 
 const Home = ({ navigation }) => {
   const [location, setLocation] = useState(null);
@@ -28,10 +33,10 @@ const Home = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const { riderCoords, setRiderCoords } = useContext(RiderContext);
   const [user_id, setUser_Id] = useState();
-  // const [showApplyModal, setShowApplyModal] = useState(false);
-  // const [applyRide, setApplyRide] = useState(null);
+  const [isOnline, setIsOnline] = useState(false);
+  const [statusAnimation] = useState(new Animated.Value(0));
   const pusher = usePusher1();
-  const { showApplyModal, setShowApplyModal, applyRide, setApplyRide, showMatchModal, setShowMatchModal, matchDetails, setMatchDetails } = usePusher();
+  const { showApplyModal, setShowApplyModal, applyRide, setApplyRide } = usePusher();
 
   useEffect(() => {
     const fetchUserId = async () => {
@@ -46,6 +51,36 @@ const Home = ({ navigation }) => {
     };
     fetchUserId();
   }, []);
+
+  const handleStatusToggle = async (value) => {
+    try {
+      setLoading(true);
+      // Here you would typically make an API call to update the rider's status
+      // await userService.updateRiderStatus(value);
+      
+      // Animate the status change
+      Animated.sequence([
+        Animated.timing(statusAnimation, {
+          toValue: value ? 1 : 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+
+      setIsOnline(value);
+      
+      // Show feedback to user
+      if (value) {
+        Alert.alert("Status Updated", "You are now online and can receive ride requests!");
+      } else {
+        Alert.alert("Status Updated", "You are now offline and won't receive new requests.");
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to update status. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const setupPusher = async () => {
@@ -82,20 +117,17 @@ const Home = ({ navigation }) => {
     try {
       const user_status = await userService.fetchRider();
       if (user_status.message === "Get Verified") {
-        alert("Please complete your verification process before booking a ride.");
+        Alert.alert("Verification Required", "Please complete your verification process before looking for customers.");
         return "Cannot Book";
       }
       if (user_status.message === "Account Disabled") {
-        alert("Your account has been disabled! Contact Admin for more info.");
+        Alert.alert("Account Disabled", "Your account has been disabled. Please contact Admin for more information.");
         return "Cannot Book";
       }
-      console.log("User is verified and account is active.");
       navigation.navigate("Nearby Customer");
       return "Proceed";
-  
     } catch (error) {
-      console.error("Error in Finding Customer:", error);
-      alert("An error occurred while checking your status. Please try again.");
+      Alert.alert("Error", "Unable to process your request. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -175,7 +207,7 @@ const Home = ({ navigation }) => {
     useCallback(() => {
       checkRideAndLocation();
       setShowApplyModal(false);
-      setShowMatchModal(false);
+      // setShowMatchModal(false);
     }, [checkRideAndLocation])
   );
 
@@ -191,69 +223,94 @@ const Home = ({ navigation }) => {
       source={require("../../pictures/2.png")}
       style={styles.background}
     >
-      <ScrollView
-        contentContainerStyle={styles.scrollViewContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+      <LinearGradient
+        colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.7)']}
+        style={styles.gradientOverlay}
       >
-        <View style={styles.container}>
-          <View style={styles.logoContainer}>
-            <Image
-              source={require("../../pictures/icon.png")}
-              style={styles.logo}
-            />
-          </View>
-          <TouchableOpacity onPress={handleFind} disabled={loading}>
-            <View
-              style={{ padding: 15, backgroundColor: "black", borderRadius: 10 }}
-            >
-              <Text variant="titleMedium" style={styles.titleText}>
-                {loading ? "Checking..." : "START FINDING CUSTOMER"}
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.statusBar}>
+            <View style={styles.statusContainer}>
+              <MaterialCommunityIcons 
+                name={isOnline ? "circle" : "circle-outline"} 
+                size={24} 
+                color={isOnline ? "#4CAF50" : "#FBC635"}
+              />
+              <Text style={[styles.statusText, { color: isOnline ? "#4CAF50" : "#FBC635" }]}>
+                {isOnline ? "Online" : "Offline"}
               </Text>
             </View>
-          </TouchableOpacity>
-          <Button
-            disabled={loading}
-            onPress={() => navigation.navigate("Current Location")}
+            <TouchableOpacity
+              style={[styles.toggleButton, isOnline && styles.toggleButtonActive]}
+              onPress={() => handleStatusToggle(!isOnline)}
+            >
+              <Text style={styles.toggleButtonText}>
+                {isOnline ? "GO OFFLINE" : "GO ONLINE"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
           >
-            <View style={styles.buttonContent}>
-              {loading ? (
-                <>
-                  <ActivityIndicator
-                    animating={true}
-                    color={MD2Colors.red800}
-                  />
-                  <Text style={styles.buttonText}>Fetching coordinates...</Text>
-                </>
-              ) : (
-                <Text style={styles.mapButtonText}>View Map</Text>
-              )}
+            <View style={styles.contentContainer}>
+              <Surface style={styles.logoContainer} elevation={5}>
+                <Text style={styles.logoText}>PICKME UP</Text>
+                <Text style={styles.taglineText}>
+                  Ready to serve, anytime, anywhere
+                </Text>
+              </Surface>
+
+              <View style={styles.actionContainer}>
+                <TouchableOpacity
+                  style={[styles.findButton, !isOnline && styles.findButtonDisabled]}
+                  onPress={handleFind}
+                  disabled={loading || !isOnline}
+                >
+                  <LinearGradient
+                    colors={['#FBC635', '#FDA429']}
+                    style={styles.gradientButton}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    <Text style={styles.findButtonText}>
+                      {loading ? "CHECKING..." : "FIND CUSTOMERS"}
+                    </Text>
+                    {!loading && (
+                      <MaterialCommunityIcons
+                        name="map-marker-radius"
+                        size={24}
+                        color="black"
+                        style={styles.buttonIcon}
+                      />
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.viewLocationButton}
+                  onPress={() => navigation.navigate("Current Location")}
+                >
+                  <MaterialCommunityIcons name="map-marker" size={24} color="#FBC635" />
+                  <Text style={styles.viewLocationText}>View Current Location</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </Button>
+          </ScrollView>
 
           {applyRide && (
             <ApplyRideModal
               visible={showApplyModal}
               ride={applyRide}
-              userService={userService} 
-              navigation={navigation} 
+              userService={userService}
+              navigation={navigation}
               onClose={() => setShowApplyModal(false)}
             />
           )}
-          {/* {matchDetails && (
-            <MatchModal
-            visible={showMatchModal}
-            userService={userService}
-            navigation={navigation}
-            onClose={() => setShowMatchModal(false)}
-            matchDetails={matchDetails}
-          />
-          )} */}
-            
-
-        </View>
-      </ScrollView>
+        </SafeAreaView>
+      </LinearGradient>
     </ImageBackground>
   );
 };
@@ -261,103 +318,116 @@ const Home = ({ navigation }) => {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    width: "100%",
-    height: "100%",
+    resizeMode: "cover",
   },
-  scrollViewContent: {
+  gradientOverlay: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  statusBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    marginTop: StatusBar.currentHeight,
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusText: {
+    marginLeft: 8,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  toggleButton: {
+    backgroundColor: '#FBC635',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  toggleButtonActive: {
+    backgroundColor: '#4CAF50',
+  },
+  toggleButtonText: {
+    color: '#000',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  scrollContent: {
     flexGrow: 1,
   },
-  container: {
+  contentContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    
+    justifyContent: "space-between",
+    padding: 20,
+    paddingTop: 40,
   },
   logoContainer: {
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    padding: 25,
+    borderRadius: 15,
+    alignItems: 'center',
+    marginTop: 50,
+  },
+  logoText: {
+    fontSize: 36,
+    fontWeight: "900",
+    color: "#FBC635",
+    letterSpacing: 2,
+  },
+  taglineText: {
+    fontSize: 16,
+    color: "#FBC635",
+    marginTop: 10,
+    fontWeight: "500",
+  },
+  actionContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 'auto',
     marginBottom: 50,
   },
-  logo: {
-    width: 150,
-    height: 150,
-    borderWidth: 2,
-    
+  findButton: {
+    width: '90%',
+    height: 60,
+    borderRadius: 30,
+    overflow: 'hidden',
+    marginBottom: 20,
   },
-  button: {
-    marginTop: 20,
-    backgroundColor: "#000000",
+  findButtonDisabled: {
+    opacity: 0.7,
+  },
+  gradientButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  findButtonText: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "black",
+    marginRight: 10,
+  },
+  buttonIcon: {
+    marginLeft: 10,
+  },
+  viewLocationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 10,
   },
-  buttonContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  buttonText: {
-    marginLeft: 5,
-    color: "black",
-  },
-  mapButtonText: {
-    color: "black",
-    padding: 5,
-    textDecorationLine: "underline",
-  },
-
-  titleText: {
-    fontWeight: "bold",
+  viewLocationText: {
     color: "#FBC635",
-    textAlign: "center",
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  modalContent: {
-    backgroundColor: "white",
-    padding: 20,
-    borderRadius: 10,
-    width: "80%",
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  modalText: {
     fontSize: 16,
-    marginVertical: 5,
-  },
-  rideDetails: {
-    marginTop: 10,
-    width: "100%",
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 5,
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 15,
-  },
-  actionButton: {
-    padding: 10,
-    borderRadius: 5,
-    flex: 1,
-    marginHorizontal: 5,
-  },
-  acceptButton: {
-    backgroundColor: "#4CAF50",
-  },
-  declineButton: {
-    backgroundColor: "#FF5252",
-  },
-  buttonText1: {
-    color: "white",
-    fontWeight: "bold",
-    textAlign: "center",
+    marginLeft: 8,
+    textDecorationLine: "underline",
   },
 });
 

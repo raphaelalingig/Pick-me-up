@@ -13,6 +13,7 @@ import AvatarCustomer from "../customer/pages/AvatarCustomer";
 // Import your screens here
 import Login from "../forms/Login";
 import Home from "../customer/pages/Home";
+// import MainComponent from "../customer/pages/Home/MainComponent";
 import History from "../customer/pages/History";
 import Settings from "../customer/pages/Settings";
 import RiderHome from "../rider/pages/Home";

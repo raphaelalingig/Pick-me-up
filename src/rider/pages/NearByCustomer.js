@@ -13,8 +13,10 @@ import {
   Modal,
   LayoutAnimation,
   UIManager,
-  Platform
+  Platform,
+  Dimensions
 } from "react-native";
+import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Toast from 'react-native-root-toast';
 import FindingCustomerSpinner from "../spinner/FindingCustomerSpinner";
 import NearbyCustomersMap from "./NearbyCustomersMap";
@@ -23,18 +25,21 @@ import usePusher1 from "../../services/pusher";
 import { usePusher } from "../../context/PusherContext";
 import { useAuth } from "../../services/useAuth";
 
-// Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
+const { width } = Dimensions.get('window');
+
 const NearbyCustomerScreen = ({ navigation }) => {
   const [showSpinner, setShowSpinner] = useState(true);
   const [availableRides, setAvailableRides] = useState([]);
+  const [filteredRides, setFilteredRides] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [applyRide, setApplyRide] = useState(null);
+  const [activeFilter, setActiveFilter] = useState('all');
   const pusher = usePusher1();
   const [user_id, setUser_id] = useState();
   const [rider, setRider] = useState();
@@ -161,6 +166,30 @@ const NearbyCustomerScreen = ({ navigation }) => {
     setupPusher();
   }, [user_id]);
 
+
+  useEffect(() => {
+    filterRides(activeFilter);
+  }, [availableRides, activeFilter]);
+
+  const filterRides = (filterType) => {
+    switch (filterType) {
+      case 'deliveries':
+        setFilteredRides(availableRides.filter(ride => ride.ride_type === 'Delivery'));
+        break;
+      case 'pakyaw':
+        setFilteredRides(availableRides.filter(ride => ride.ride_type === 'Pakyaw'));
+        break;
+      default:
+        setFilteredRides(availableRides);
+        break;
+    }
+  };
+
+  const handleFilterPress = (filterType) => {
+    setActiveFilter(filterType);
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+  };
+
   const handleDecline = async () => {
     try {
       // setShowSpinner(true);
@@ -262,7 +291,7 @@ const NearbyCustomerScreen = ({ navigation }) => {
     <>
       {showMap && (
         <NearbyCustomersMap
-          availableRides={availableRides}
+          availableRides={filteredRides}
           onClose={() => setShowMap(false)}
           navigation={navigation}
         />
@@ -284,41 +313,122 @@ const NearbyCustomerScreen = ({ navigation }) => {
             </View>
           ) : (
             <>
-              <TouchableOpacity
-                style={styles.mapButton}
-                onPress={handleShowMap}
-              >
-                <Text style={styles.mapButtonText}>Show in Map</Text>
-              </TouchableOpacity>
+              <View style={styles.headerContainer}>
+                <TouchableOpacity
+                  style={styles.mapButton}
+                  onPress={handleShowMap}
+                >
+                  <MaterialIcons name="place" size={20} color="#fff" style={styles.buttonIcon} />
+                  <Text style={styles.mapButtonText}>Show in Map</Text>
+                </TouchableOpacity>
 
-              {availableRides.length === 0 ? (
+                <View style={styles.filterContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.filterButton,
+                      activeFilter === 'all' && styles.filterButtonActive
+                    ]}
+                    onPress={() => handleFilterPress('all')}
+                  >
+                    <Text style={[
+                      styles.filterButtonText,
+                      activeFilter === 'all' && styles.filterButtonTextActive
+                    ]}>All</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.filterButton,
+                      activeFilter === 'deliveries' && styles.filterButtonActive
+                    ]}
+                    onPress={() => handleFilterPress('deliveries')}
+                  >
+                    <MaterialIcons 
+                      name="local-shipping" 
+                      size={18} 
+                      color={activeFilter === 'deliveries' ? '#fff' : '#0096FF'} 
+                      style={styles.buttonIcon} 
+                    />
+                    <Text style={[
+                      styles.filterButtonText,
+                      activeFilter === 'deliveries' && styles.filterButtonTextActive
+                    ]}>Deliveries</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.filterButton,
+                      activeFilter === 'pakyaw' && styles.filterButtonActive
+                    ]}
+                    onPress={() => handleFilterPress('pakyaw')}
+                  >
+                    <MaterialCommunityIcons 
+                      name="truck-delivery" 
+                      size={18} 
+                      color={activeFilter === 'pakyaw' ? '#fff' : '#0096FF'} 
+                      style={styles.buttonIcon} 
+                    />
+                    <Text style={[
+                      styles.filterButtonText,
+                      activeFilter === 'pakyaw' && styles.filterButtonTextActive
+                    ]}>Pakyaw</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {filteredRides.length === 0 ? (
                 <View style={styles.noRidesContainer}>
                   <Text style={styles.noRidesText}>No rides available at the moment.</Text>
                 </View>
               ) : (
                 <ScrollView contentContainerStyle={styles.container}>
-                  {availableRides.map((ride, index) => (
-                    <View key={ride.ride_id || `ride-${index}`} style={styles.customerCard}>
-                      <View style={styles.customerInfo}>
-                        <Text style={styles.customerText}>
-                          Name: {`${ride.first_name} ${ride.last_name}`}
+                  {filteredRides.map((ride, index) => (
+                    <TouchableOpacity
+                      key={ride.ride_id || `ride-${index}`}
+                      style={styles.customerCard}
+                      onPress={() => navigation.navigate("BookingDetails", { ride })}
+                    >
+                      <View style={styles.cardHeader}>
+                        <View style={styles.rideTypeContainer}>
+                          <MaterialIcons 
+                            name={ride.ride_type === 'Delivery' ? 'local-shipping' : 'truck-delivery'} 
+                            size={16} 
+                            color="#0096FF" 
+                            style={styles.rideTypeIcon} 
+                          />
+                          <Text style={styles.rideType}>{ride.ride_type}</Text>
+                        </View>
+                        <Text style={styles.timestamp}>
+                          {new Date(ride.created_at).toLocaleTimeString()}
                         </Text>
-                        <Text style={styles.customerText}>Pickup: {ride.ride_type}</Text>
                       </View>
-                      <TouchableOpacity
-                        style={styles.detailsButton}
-                        onPress={() => navigation.navigate("BookingDetails", { ride })}
-                      >
-                        <Text style={styles.detailsButtonText}>Details</Text>
-                      </TouchableOpacity>
-                    </View>
+                      
+                      <View style={styles.cardContent}>
+                        <View style={styles.customerInfo}>
+                          <Text style={styles.customerName}>
+                            {`${ride.first_name} ${ride.last_name}`}
+                          </Text>
+                          <View style={styles.locationContainer}>
+                            <MaterialIcons name="place" size={14} color="#666" />
+                            <Text style={styles.customerLocation}>
+                              {ride.pickup_location}
+                            </Text>
+                          </View>
+                        </View>
+                        
+                        <View style={styles.detailsButtonContainer}>
+                          <Text style={styles.detailsButtonText}>View Details</Text>
+                          <MaterialIcons name="chevron-right" size={20} color="#333" />
+                        </View>
+                      </View>
+                    </TouchableOpacity>
                   ))}
                 </ScrollView>
               )}
             </>
           )}
 
-        {applyRide && (
+          {applyRide && (
             <ApplyRideModal
               visible={showApplyModal}
               ride={applyRide}
@@ -327,8 +437,6 @@ const NearbyCustomerScreen = ({ navigation }) => {
               onClose={() => setShowApplyModal(false)}
             />
           )}
-
-
         </ImageBackground>
       </ScrollView>
     </>
@@ -340,123 +448,171 @@ const styles = StyleSheet.create({
     flex: 1,
     resizeMode: "cover",
     opacity: 0.8,
-    backgroundColor: "#FFD700",
+    backgroundColor: "#F5F5F5",
+  },
+  headerContainer: {
+    padding: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   container: {
-    padding: 10,
-    alignItems: "center",
-  },
-  spinnerContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  customerCard: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 20,
-    marginVertical: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 5,
-    width: "90%",
-  },
-  customerText: {
-    fontSize: 16,
-    color: "#333",
-  },
-  detailsButton: {
-    backgroundColor: "#4CAF50",
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-  },
-  detailsButtonText: {
-    color: "#fff",
-    fontSize: 16,
+    padding: 15,
+    paddingTop: 5,
   },
   mapButton: {
     backgroundColor: "#0096FF",
-    padding: 10,
-    margin: 15,
-    borderRadius: 10,
-    alignSelf: "center",
+    padding: 12,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 15,
+  },
+  buttonIcon: {
+    marginRight: 8,
   },
   mapButtonText: {
-    fontSize: 18,
+    fontSize: 16,
     color: "#fff",
     fontWeight: "600",
   },
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 5,
+  },
+  filterButton: {
+    flex: 1,
+    marginHorizontal: 4,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#0096FF',
+  },
+  filterButtonActive: {
+    backgroundColor: '#0096FF',
+  },
+  filterButtonText: {
+    color: '#0096FF',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  filterButtonTextActive: {
+    color: '#fff',
+  },
+  customerCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    marginBottom: 15,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  rideTypeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E3F2FD',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  rideTypeIcon: {
+    marginRight: 4,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  customerLocation: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 4,
+  },
+  rideType: {
+    fontSize: 14,
+    color: '#0096FF',
+    fontWeight: '600',
+    backgroundColor: '#E3F2FD',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  timestamp: {
+    fontSize: 12,
+    color: '#666',
+  },
+  cardContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  customerInfo: {
+    flex: 1,
+  },
+  customerName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  customerLocation: {
+    fontSize: 14,
+    color: '#666',
+  },
+  detailsButtonContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  detailsButtonText: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
+    marginRight: 4,
+  },
+  arrowIcon: {
+    fontSize: 16,
+    color: '#333',
+  },
   noRidesContainer: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 20,
+    padding: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    margin: 15,
+    borderRadius: 12,
   },
   noRidesText: {
     fontSize: 16,
-    color: "#555",
+    color: '#666',
+    textAlign: 'center',
   },
   spinnerContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  modalContent: {
-    backgroundColor: "white",
-    padding: 20,
-    borderRadius: 10,
-    width: "80%",
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  modalText: {
-    fontSize: 16,
-    marginVertical: 5,
-  },
-  rideDetails: {
-    marginTop: 10,
-    width: "100%",
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 5,
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 15,
-  },
-  actionButton: {
-    padding: 10,
-    borderRadius: 5,
-    flex: 1,
-    marginHorizontal: 5,
-  },
-  acceptButton: {
-    backgroundColor: "#4CAF50",
-  },
-  declineButton: {
-    backgroundColor: "#FF5252",
-  },
-  buttonText: {
-    color: "white",
-    fontWeight: "bold",
-    textAlign: "center",
   },
 });
 

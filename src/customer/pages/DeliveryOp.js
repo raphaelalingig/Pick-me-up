@@ -45,7 +45,6 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
   const dropoffTimeoutRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
 
-
   useEffect(() => {
     const fetchUserId = async () => {
       const response = await userService.getUserId();
@@ -83,7 +82,6 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
   ]);
 
   const getCurrentLocation = async () => {
-
     const newPickupLocation = `${customerCoords.latitude}, ${customerCoords.longitude}`;
     setPickupLocation(newPickupLocation);
 
@@ -175,7 +173,7 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
     const bookDetails = {
       user_id: userId,
       ride_date: formattedCurrentDate,
-      ride_type: "Motor Taxi",
+      ride_type: "Delivery",
       delivery_type: deliveryType,
       pickup_location: pickupAddress,
       dropoff_location: dropoffAddress,
@@ -197,7 +195,7 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
     };
 
     try {
-      const response = await userService.book(bookDetails);
+      const response = await userService.deliver(bookDetails);
       console.log("Booked Successfully:", response.data);
       await userService.saveBookLocation(rideLocationDetails);
       navigation.navigate("WaitingForRider", { bookDetails });
@@ -247,14 +245,18 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
     try {
       const response = await fetch(placeDetailsUrl);
       const data = await response.json();
-      if (data.result && data.result.geometry && data.result.geometry.location) {
+      if (
+        data.result &&
+        data.result.geometry &&
+        data.result.geometry.location
+      ) {
         const { lat, lng } = data.result.geometry.location;
         const location = `${lat}, ${lng}`;
-        
+
         // Store the new location value
         let newPickupLocation = pickupLocation;
         let newDropoffLocation = dropoffLocation;
-        
+
         if (locationType === "pickup") {
           newPickupLocation = location;
           setPickupLocation(location);
@@ -266,10 +268,13 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
           setDropoffAddress(suggestion.description);
           setDropoffSuggestions([]);
         }
-  
+
         // Use the new values directly instead of depending on state
         if (newPickupLocation && newDropoffLocation) {
-          await fetchDirectionsAndUpdateFare(newPickupLocation, newDropoffLocation);
+          await fetchDirectionsAndUpdateFare(
+            newPickupLocation,
+            newDropoffLocation
+          );
         }
       }
     } catch (error) {
@@ -309,20 +314,26 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
         <BlurView intensity={800} tint="light" style={styles.blurContainer}>
           <Text style={styles.title}>Delivery</Text>
 
-            {/* Delivery Type Picker */}
+          {/* Delivery Type Picker */}
           <View style={styles.pickerContainer}>
             <Text style={styles.pickerLabel}>Delivery Type</Text>
-            <Picker
-              selectedValue={deliveryType}
-              onValueChange={(itemValue) => setDeliveryType(itemValue)}
-              style={styles.picker}
-            >
-              <Picker.Item label="Select Type" value="" />
-              <Picker.Item label="Padala" value="Padala" />
-              <Picker.Item label="Pasugo" value="Pasugo" />
-            </Picker>
+            <View style={styles.pickerWrapper}>
+              <Picker
+                selectedValue={deliveryType}
+                onValueChange={(itemValue) => {
+                  console.log("Selected:", itemValue);
+                  setDeliveryType(itemValue);
+                }}
+                style={styles.picker}
+                itemStyle={styles.pickerItem}
+              >
+                <Picker.Item label="Select Type" value="" />
+                <Picker.Item label="Padala" value="Padala" />
+                <Picker.Item label="Pasugo" value="Pasugo" />
+              </Picker>
+            </View>
           </View>
-          
+
           <View style={styles.inputContainer}>
             <View style={styles.inputWrapper}>
               <View style={styles.inputWithClear}>
@@ -361,7 +372,9 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
                 style={styles.locationButton}
                 onPress={getCurrentLocation}
               >
-                <Text style={styles.locationButtonText}>Use current location</Text>
+                <Text style={styles.locationButtonText}>
+                  Use current location
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.locationButton}
@@ -416,14 +429,13 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
               <Text variant="bodyLarge" style={styles.labels}>
                 Instructions
               </Text>
-                <TextInput
+              <TextInput
                 style={[styles.input, styles.instructionsInput]}
                 placeholder="Special instructions"
                 value={instructions}
-                onChangeText={setInstructions}  // Bind the instructions input
+                onChangeText={setInstructions} // Bind the instructions input
               />
             </View>
-            
           </View>
 
           <View style={styles.fareContainer}>
@@ -456,7 +468,12 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
               }}
               disabled={isLoading}
             >
-              <Text style={[styles.cancelButtonText, isLoading && styles.disabledText]}>
+              <Text
+                style={[
+                  styles.cancelButtonText,
+                  isLoading && styles.disabledText,
+                ]}
+              >
                 CANCEL
               </Text>
             </TouchableOpacity>
@@ -509,15 +526,13 @@ const styles = StyleSheet.create({
   blurContainer: {
     flex: 1,
     backgroundColor: "rgba(255,215,0,0.5)",
-    margin: 5,
-    borderRadius: 10,
+    borderRadius: 5,
     alignItems: "center",
     padding: 10,
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 20,
   },
   labels: {
     fontSize: 16,
@@ -529,7 +544,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   inputWrapper: {
-    marginBottom: 10,
+    marginBottom: 5,
   },
   input: {
     backgroundColor: "#fff",
@@ -556,7 +571,7 @@ const styles = StyleSheet.create({
   },
   fareContainer: {
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 10,
   },
   fareLabel: {
     fontSize: 18,
@@ -627,31 +642,31 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   inputWithClear: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
     borderRadius: 5,
     marginBottom: 10,
   },
   clearButton: {
     padding: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   clearButtonText: {
     fontSize: 20,
-    color: '#999',
-    fontWeight: 'bold',
+    color: "#999",
+    fontWeight: "bold",
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 10,
     borderRadius: 5,
     marginBottom: 10,
   },
   pickerContainer: {
-    marginBottom: 15,
-    paddingHorizontal: 10,
+    width: "100%", // Make it take most of the width
+    alignSelf: "center",
   },
   pickerLabel: {
     fontSize: 16,
@@ -659,20 +674,28 @@ const styles = StyleSheet.create({
     color: "#333",
     marginBottom: 5,
   },
-  picker: {
-    height: 50,
+  pickerWrapper: {
+    backgroundColor: "#fff",
+    marginBottom: 5,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 8,
+    overflow: "hidden", // Ensures the border radius is applied
+  },
+  picker: {
+    width: "100%",
     backgroundColor: "#fff",
+  },
+  pickerItem: {
+    fontSize: 16, // Adjust the font size if needed
   },
   labels: {
     marginBottom: 5,
     fontWeight: "bold",
   },
   instructionsInput: {
-    height: 80,  // To give more space for instructions input
-    textAlignVertical: "top",  // To start text from top
+    height: 80, // To give more space for instructions input
+    textAlignVertical: "top", // To start text from top
   },
 });
 

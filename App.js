@@ -36,7 +36,7 @@ export default function App() {
         </PaperProvider>
       </PusherProvider>
     </AuthProvider>
-  );
+  ); 
 }
 
 const styles = StyleSheet.create({

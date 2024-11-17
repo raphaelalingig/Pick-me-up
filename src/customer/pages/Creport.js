@@ -56,6 +56,9 @@ const SubmitFeedback_C = ({ navigation, route }) => {
         rating,
         message,
       });
+
+
+      if (response.message === "You have already submitted feedback for this ride")
   
       Alert.alert(
         "Success",
