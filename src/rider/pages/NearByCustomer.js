@@ -175,7 +175,7 @@ const NearbyCustomerScreen = ({ navigation }) => {
 
   const filterRides = (filterType) => {
     // First, filter out Motor Taxi rides
-    const nonMotorTaxiRides = availableRides.filter(ride => ride.ride_type !== 'Motor Taxi');
+    const nonMotorTaxiRides = availableRides.filter(ride => ride.ride_type !== 'Moto Taxi');
   
     switch (filterType) {
       case 'deliveries':
