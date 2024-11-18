@@ -82,7 +82,6 @@ const NearbyCustomerScreen = ({ navigation }) => {
       setShowSpinner(true);
       const response = await userService.getAvailableRides();
       const id = await userService.fetchRider();
-      console.log(response)
 
       setRider(id);
       setUser_id(id.user_id);

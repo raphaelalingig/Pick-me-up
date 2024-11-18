@@ -175,22 +175,8 @@ const TrackingDestination = ({ route, navigation }) => {
       const response = await userService.complete_ride(ride.ride_id);
       if (response.data && response.data.message) {
         await getCurrentLocation();
-        Alert.alert(
-          "Success",
-          response.data.message,
-          [
-            {
-              text: "Submit Feedback",
-              onPress: () => navigation.navigate("Rider Feedback", {ride: ride, role: "Rider"}), // Replace with the report screen navigation or function
-              style: "destructive",
-            },
-            {
-              text: "Home",
-              onPress: () => navigation.navigate("Home"),
-              style: "cancel",
-            },
-          ]
-        );
+        Alert.alert("Success", 'You have arrived at your destination!');
+        navigation.navigate("Finish",{ride});
       } else {
         Alert.alert("Error", "Failed to finish the ride. Please try again.");
       }

@@ -7,8 +7,6 @@ import { useAuth } from "../../services/useAuth";
 
 const SubmitFeedback_C = ({ navigation, route }) => {
   const { ride, role } = route.params;
-  const [rider, setRider] = useState({});
-  const [user, setUser] = useState({});
   const [message, setMessage] = useState("");
   const [rating, setRating] = useState(0);
   const [user_id, setUserId] = useState(0);
@@ -36,7 +34,6 @@ const SubmitFeedback_C = ({ navigation, route }) => {
     const senderId = role === "Customer" ? ride.user_id : ride.rider_id;
     const recipientId = role === "Customer" ? ride.rider_id : ride.user_id;
   
-    // Pre-submission validation
     if (!rating || rating < 1) {
       Alert.alert(
         "Invalid Rating",
@@ -47,15 +44,17 @@ const SubmitFeedback_C = ({ navigation, route }) => {
     }
   
     try {
-      setIsSubmitting(true); // Add loading state
-  
-      const response = await userService.submitFeedback({
+      setIsSubmitting(true);
+
+      const feedbackData = {
         sender: senderId,
         ride_id: ride.ride_id,
         recipient: recipientId,
         rating,
         message,
-      });
+      }
+  
+      const response = await userService.submitFeedback(feedbackData);
 
       console.log(response)
 
@@ -88,31 +87,31 @@ const SubmitFeedback_C = ({ navigation, route }) => {
   
       
     } catch (error) {
-      let alertTitle = "Error";
-      let alertMessage = "An unexpected error occurred. Please try again.";
+      // let alertTitle = "Error";
+      // let alertMessage = "An unexpected error occurred. Please try again.";
   
-      switch (error.status) {
-        case 400:
-          if (error.message.includes("already submitted")) {
-            alertTitle = "Already Submitted";
-            alertMessage = "You have already provided feedback for this ride.";
-          }
-          break;
-        case 422:
-          alertTitle = "Invalid Input";
-          alertMessage = "Please check your feedback details and try again.";
-          break;
-        case 404:
-          alertTitle = "Not Found";
-          alertMessage = "The ride information could not be found.";
-          break;
-        case 500:
-          alertTitle = "Server Error";
-          alertMessage = "There was a problem with the server. Please try again later.";
-          break;
-      }
+      // switch (error.status) {
+      //   case 400:
+      //     if (error.message.includes("already submitted")) {
+      //       alertTitle = "Already Submitted";
+      //       alertMessage = "You have already provided feedback for this ride.";
+      //     }
+      //     break;
+      //   case 422:
+      //     alertTitle = "Invalid Input";
+      //     alertMessage = "Please check your feedback details and try again.";
+      //     break;
+      //   case 404:
+      //     alertTitle = "Not Found";
+      //     alertMessage = "The ride information could not be found.";
+      //     break;
+      //   case 500:
+      //     alertTitle = "Server Error";
+      //     alertMessage = "There was a problem with the server. Please try again later.";
+      //     break;
+      // }
   
-      Alert.alert(alertTitle, alertMessage, [{ text: "OK" }]);
+      Alert.alert("Somethin went wrong!", "Please Try Again Later.");
     } finally {
       setIsSubmitting(false);
     }

@@ -32,7 +32,7 @@ import AccountSettingsScreen from "../customer/pages/Settings";
 import InTransit from "../customer/pages/InTransit";
 import CompleteRide from "../customer/pages/Complete Ride";
 import FinishRide from "../rider/pages/FinishRide";
-import SubmitFeedback_C from "../customer/pages/Creport";
+import SubmitFeedback_C from "../customer/pages/CustomerFeedback";
 import SubmitFeedback_R from "../rider/pages/SubmitReport";
 import Map from "../rider/pages/Map";
 import CustomerMap from "../customer/pages/CustomerMap";
@@ -41,6 +41,7 @@ import WaitingRider from "../customer/pages/WaitingForRider";
 import TrackingDestination from "../rider/pages/TrackingDestination";
 import TrackingCustomer from "../rider/pages/TrackingCustomer";
 import MapPicker from "../customer/pages/MapPicker";
+import ReportRiderPage from "../customer/pages/ReportRider";
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -201,6 +202,7 @@ const CustomerStack = () => {
       <Stack.Screen name="In Transit" component={InTransit} />
       <Stack.Screen name="To Review" component={CompleteRide} />
       <Stack.Screen name="Location" component={CustomerMap} />
+      <Stack.Screen name="Report" component={ReportRiderPage} />
       <Stack.Screen name="CustomerFeedback" component={SubmitFeedback_C} />
       {userRole === 3 || userRole === 1 || userRole === 2 && (
         <Stack.Screen

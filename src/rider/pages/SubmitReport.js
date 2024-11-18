@@ -7,8 +7,6 @@ import { useAuth } from "../../services/useAuth";
 
 const SubmitFeedback_R = ({ navigation, route }) => {
   const { ride, role } = route.params;
-  const [rider, setRider] = useState({});
-  const [user, setUser] = useState({});
   const [message, setMessage] = useState("");
   const [rating, setRating] = useState(0);
   const [user_id, setUserId] = useState(0);
@@ -45,16 +43,33 @@ const SubmitFeedback_R = ({ navigation, route }) => {
   
     try {
       setIsSubmitting(true);
-  
-      const response = await userService.submitFeedback({
+
+      const feedbackData = {
         sender: senderId,
         ride_id: ride.ride_id,
         recipient: recipientId,
         rating,
         message,
-      });
+      }
   
-      if (response.success) {
+      const response = await userService.submitFeedback(feedbackData);
+
+      console.log(response)
+  
+      if (response.message === "You have already submitted feedback for this ride"){
+        Alert.alert(
+          "Already Submitted",
+          response.message,
+          [
+            {
+              text: "OK",
+              onPress: () => navigation.goBack()
+            }
+          ]
+        );
+      }
+
+      if (response.message === "Feedback submitted successfully"){
         Alert.alert(
           "Success",
           "Thank you for your feedback!",
@@ -65,10 +80,6 @@ const SubmitFeedback_R = ({ navigation, route }) => {
             }
           ]
         );
-      } else {
-        // Handle known error responses
-        const errorMessage = response.message || "An unexpected error occurred. Please try again.";
-        Alert.alert("Error", errorMessage, [{ text: "OK" }]);
       }
     } catch (error) {
       // Handle network or unexpected errors

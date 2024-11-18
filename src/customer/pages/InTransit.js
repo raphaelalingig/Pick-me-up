@@ -86,7 +86,7 @@ const Intransit = ({ navigation }) => {
   }, []);
 
   const handleReport = () => {
-    navigation.navigate("CustomerFeedback", {
+    navigation.navigate("Report", {
       ride: bookDetails,
       role: role,
     });

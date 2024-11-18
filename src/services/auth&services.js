@@ -53,6 +53,24 @@ const userService = {
       return null;
     }
   },
+  
+
+  updateRiderOnlineStatus: async (status) => {
+    try {
+      const user_id = await userService.getUserId(); // Fetch the user ID
+      console.log("User ID:", user_id);
+  
+      const response = await axios.put(API_URL + "rider_online_status", {
+        status: status, // Use the passed status value
+        user_id: user_id,
+      });
+  
+      return response.data;
+    } catch (error) {
+      console.error("Failed to update rider status:", error);
+      throw error;
+    }
+  },
 
   updateRiderStatusAndLocation: async (locationData) =>{
     try {
@@ -121,30 +139,53 @@ const userService = {
     
     return response.data;
   },
-  feedback: async (feedbackData) => {
+
+
+  submitFeedback: async (feedbackData) => {
     try {
-      const response = await axios.post(API_URL + 'submit_feedback', feedbackData, {
+      const token = await AsyncStorage.getItem('token');
+      console.log('Sending feedback with data:', feedbackData);
+      const response = await axios.post(`${API_URL}submit_feedback`, feedbackData, {
         headers: {
           'Content-Type': 'application/json',
         },
       });
       return response.data;
     } catch (error) {
-      // Transform backend errors into a consistent format
       if (error.response) {
-        const { status, data } = error.response;
-        throw {
-          status,
-          message: data.message || 'An error occurred while submitting feedback',
-          errors: data.errors,
-          code: 'FEEDBACK_ERROR'
-        };
+        console.error("Server responded with error:", error.response.status, error.response.data);
+        throw new Error(`Server error: ${error.response.status}`);
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+        throw new Error('No response from server');
+      } else {
+        console.error("Error updating rider info:", error.message);
+        throw error;
       }
-      throw {
-        status: 500,
-        message: 'Network error occurred',
-        code: 'NETWORK_ERROR'
-      };
+    }
+  },
+
+  submitReport: async (reportData) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      console.log('Sending report with data:', reportData);
+      const response = await axios.post(`${API_URL}submit_report`, reportData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        console.error("Server responded with error:", error.response.status, error.response.data);
+        throw new Error(`Server error: ${error.response.status}`);
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+        throw new Error('No response from server');
+      } else {
+        console.error("Error updating rider info:", error.message);
+        throw error;
+      }
     }
   },
   

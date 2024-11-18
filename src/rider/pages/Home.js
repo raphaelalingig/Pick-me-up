@@ -13,6 +13,7 @@ import {
   Dimensions,
   Animated,
 } from "react-native";
+import Toast from 'react-native-root-toast';
 import { Text, Surface } from "react-native-paper";
 import { RiderContext } from "../../context/riderContext";
 import * as Location from "expo-location";
@@ -68,8 +69,11 @@ const Home = ({ navigation }) => {
   const handleStatusToggle = async (value) => {
     try {
       setLoading(true);
-      await userService.updateRiderAvailability(value ? 'Available' : 'Unavailable');
-      // await userService.updateRiderStatus(value);
+  
+      // Send status dynamically based on the toggle value
+      const newStatus = value ? "Available" : "Offline";
+      await userService.updateRiderOnlineStatus(newStatus);
+  
       // Animate the status change
       Animated.sequence([
         Animated.timing(statusAnimation, {
@@ -78,21 +82,29 @@ const Home = ({ navigation }) => {
           useNativeDriver: true,
         }),
       ]).start();
+  
+      setIsOnline(value); // Update the state to reflect the new status
+  
 
-      setIsOnline(value);
-      
-      // Show feedback to user
-      // if (value) {
-      //   Alert.alert("Status Updated", "You are now online and can receive ride requests!");
-      // } else {
-      //   Alert.alert("Status Updated", "You are now offline and won't receive new requests.");
-      // }
+      console.log(`Showing toast: You are now ${newStatus.toLowerCase()}!`);
+      Toast.show(`You are now ${newStatus.toLowerCase()}!`, {
+        duration: Toast.durations.LONG,
+        position: Toast.positions.BOTTOM,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        backgroundColor: '#333',
+        textColor: '#fff'
+      });
+      // Optional feedback (commented out in your code)
+      // Alert.alert("Status Updated", `You are now ${newStatus.toLowerCase()}!`);
     } catch (error) {
       Alert.alert("Error", "Failed to update status. Please try again.");
     } finally {
       setLoading(false);
     }
   };
+  
 
   useEffect(() => {
     const setupPusher = async () => {
