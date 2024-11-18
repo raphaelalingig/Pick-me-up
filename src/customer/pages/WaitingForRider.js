@@ -88,6 +88,32 @@ const WaitingRider = ({ navigation }) => {
 
     fetchUserId();
   }, []);
+
+  const fetchRiderLocations = async () => {
+    try {
+      const response = await userService.fetchLoc();
+      console.log("OANSNASF:", customerLat, customerLng)
+      
+      // Filter active riders and calculate distances
+      const activeRiders = response.filter(rider => 
+        rider.availability === 'Available' &&
+        rider.verification_status === 'Verified' &&
+        rider.user.status === 'Active'
+      );
+      
+      // Add distance to each rider and sort by proximity
+      const ridersWithDistance = sortRidersByDistance(activeRiders, customerLat, customerLng);
+      
+      // Optional: Filter riders within 10km
+      const nearbyRiders = filterRidersByDistance(ridersWithDistance, 10);
+      console.log(nearbyRiders)
+      
+      setRiderLocations(nearbyRiders);
+    } catch (error) {
+      console.error('Error fetching rider locations:', error);
+      Alert.alert('Error', 'Failed to retrieve rider locations. Please try again.');
+    }
+  };
   
   // Update the useEffect hook that fetches locations
   // useEffect(() => {
