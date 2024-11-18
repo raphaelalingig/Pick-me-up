@@ -81,6 +81,7 @@ const NearbyCustomerScreen = ({ navigation }) => {
       setShowSpinner(true);
       const response = await userService.getAvailableRides();
       const id = await userService.fetchRider();
+      console.log(response)
 
       setRider(id);
       setUser_id(id.user_id);
@@ -188,6 +189,18 @@ const NearbyCustomerScreen = ({ navigation }) => {
   const handleFilterPress = (filterType) => {
     setActiveFilter(filterType);
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+  };
+
+  const fetchRiderLocations = async () => {
+    try {
+      const response = await userService.fetchLoc();
+      
+      
+      setRiderLocations(response);
+    } catch (error) {
+      console.error('Error fetching rider locations:', error);
+      Alert.alert('Error', 'Failed to retrieve rider locations. Please try again.');
+    }
   };
 
   const handleDecline = async () => {
