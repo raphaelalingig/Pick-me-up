@@ -24,7 +24,7 @@ import customerMarker from "../../../assets/customer.png";
 import { CustomerContext } from "../../context/customerContext";
 import usePusher1 from "../../services/pusher";
 import { calculateDistance, formatDistance, sortRidersByDistance, filterRidersByDistance } from "./proximity/util";
-import TrackingRider from "./TrackingRider";
+import MapWithClustering from './MapWithClustering';
 
 const { width, height } = Dimensions.get('window');
 
@@ -88,6 +88,35 @@ const WaitingRider = ({ navigation }) => {
 
     fetchUserId();
   }, []);
+
+  const fetchApplications = useCallback(async () => {
+    console.log("Ride ID:", bookDetails.ride_id)
+    try {
+      if (!bookDetails?.ride_id) return;
+
+      const userId = await userService.getUserId();
+      if (!userId) {
+        console.warn("No user ID available");
+        return;
+      }
+  
+      const response = await userService.getRideApplications(bookDetails.ride_id);
+      console.log("All applications:", response);
+  
+      // Filter out applications where the applier_details.user_id matches the current user's ID
+      const filteredApplications = response.filter(application => 
+        application.applier_details.user_id !== parseInt(userId)
+      );
+      
+      console.log("Current User ID:", userId);
+      console.log("Filtered applications:", filteredApplications);
+      setApplications(filteredApplications);
+      setModalVisible(true);
+    } catch (error) {
+      console.error("Error fetching applications:", error);
+      Alert.alert("Error", "Failed to retrieve rider applications.");
+    }
+  }, [bookDetails]);
 
   const fetchRiderLocations = async () => {
     try {
@@ -164,8 +193,8 @@ const WaitingRider = ({ navigation }) => {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    fetchLatestRide().then(() => setRefreshing(false));
-    fetchRiderLocations()
+    fetchLatestRide()
+    fetchRiderLocations().then(() => setRefreshing(false));
   }, [fetchLatestRide]);
 
   const handleShowNearbyRiders = () => {
@@ -173,6 +202,15 @@ const WaitingRider = ({ navigation }) => {
     setModalVisible(true);
   };
 
+
+  const handleRegionChange = (newRegion) => {
+    setRegion(newRegion);
+  };
+
+  const handleRiderSelect = (rider) => {
+    setSelectedRider(rider);
+    setRiderModalVisible(true);
+  };
 
 
   const handleApply = async (bookDetails, selectedRider) => {
@@ -400,15 +438,18 @@ const WaitingRider = ({ navigation }) => {
             ) : (
               riderLocs.map((rider, index) => (
                 <Card key={index} style={styles.applicationCard}>
-                  <Card.Content>
-                    <Text style={styles.applicantName}>
-                      {rider.user.first_name} {rider.user.last_name}
-                    </Text>
-                    <View style={styles.applicantDetails}>
-                      <Text>Distance: {formatDistance(rider.distance)}</Text>
-                      <Text>Rating: 4.4 ⭐</Text>
-                      <Text>Status: {rider.availability}</Text>
+                  <Card.Content style={styles.cardContent}>
+                    <View style={styles.riderInfoSection}>
+                      <Text style={styles.applicantName}>
+                        {rider.user.first_name} {rider.user.last_name}
+                      </Text>
+                      <View style={styles.applicantDetails}>
+                        <Text style={styles.detailItem}>Distance: {formatDistance(rider.distance)}</Text>
+                        <Text style={styles.detailItem}>Rating: {rider.user.rating} ⭐</Text>
+                        <Text style={styles.detailItem}>Status: {rider.availability}</Text>
+                      </View>
                     </View>
+                    
                     <View style={styles.cardButtonContainer}>
                       <Button
                         mode="contained"
@@ -429,9 +470,10 @@ const WaitingRider = ({ navigation }) => {
                           setViewMode('map');
                           setModalVisible(false);
                         }}
-                        style={styles.showMapButton}
+                        style={styles.mapButton}
+                        labelStyle={styles.buttonLabel}
                       >
-                        Show in Map
+                        Map
                       </Button>
                       <Button
                         mode="contained"
@@ -441,6 +483,7 @@ const WaitingRider = ({ navigation }) => {
                           setRiderModalVisible(true);
                         }}
                         style={styles.applyButton}
+                        labelStyle={styles.buttonLabel}
                       >
                         Apply
                       </Button>
@@ -464,10 +507,14 @@ const WaitingRider = ({ navigation }) => {
   );
 
   const renderMapView = () => {
-    // Early return if no bookDetails
-    if (!bookDetails) return null;
-  
-    // Filter out riders with invalid locations before rendering
+    if (!bookDetails || !customerLat || !customerLng) return null;
+
+    const customerLocation = {
+      latitude: customerLat,
+      longitude: customerLng
+    };
+
+    // Filter out riders with invalid locations
     const validRiders = riderLocs.filter(rider => {
       const hasValidLocation = 
         rider.rider_latitude != null && 
@@ -480,7 +527,7 @@ const WaitingRider = ({ navigation }) => {
       }
       return hasValidLocation;
     });
-  
+
     return (
       <MapView
         style={styles.map}
@@ -531,40 +578,40 @@ const WaitingRider = ({ navigation }) => {
     return renderLoadingScreen();
   }
 
-  const renderMatchModal = () => (
-    <Modal
-      visible={showMatchModal}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={() => setShowMatchModal(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Ride Match Found!</Text>
-          {matchedRide && (
-            <>
-              <Text style={styles.modalText}>
-                A rider has been matched with your ride request.
-              </Text>
-              <Text style={styles.modalText}>
-                Rider Name: {matchedRide.rider_name}
-              </Text>
-              <Text style={styles.modalText}>
-                Contact: {matchedRide.rider_contact}
-              </Text>
-              <Button
-                mode="contained"
-                onPress={() => setShowMatchModal(false)}
-                style={styles.closeButton}
-              >
-                Close
-              </Button>
-            </>
-          )}
-        </View>
-      </View>
-    </Modal>
-  );
+  // const renderMatchModal = () => (
+  //   <Modal
+  //     visible={showMatchModal}
+  //     transparent={true}
+  //     animationType="slide"
+  //     onRequestClose={() => setShowMatchModal(false)}
+  //   >
+  //     <View style={styles.modalOverlay}>
+  //       <View style={styles.modalContainer}>
+  //         <Text style={styles.modalTitle}>Ride Match Found!</Text>
+  //         {matchedRide && (
+  //           <>
+  //             <Text style={styles.modalText}>
+  //               A rider has been matched with your ride request.
+  //             </Text>
+  //             <Text style={styles.modalText}>
+  //               Rider Name: {matchedRide.rider_name}
+  //             </Text>
+  //             <Text style={styles.modalText}>
+  //               Contact: {matchedRide.rider_contact}
+  //             </Text>
+  //             <Button
+  //               mode="contained"
+  //               onPress={() => setShowMatchModal(false)}
+  //               style={styles.closeButton}
+  //             >
+  //               Close
+  //             </Button>
+  //           </>
+  //         )}
+  //       </View>
+  //     </View>
+  //   </Modal>
+  // );
 
   return (
     <View style={styles.container}>
@@ -606,7 +653,7 @@ const WaitingRider = ({ navigation }) => {
 
       {renderRidersNearbyModal()}
       {renderRiderInfoModal()}
-      {renderMatchModal()}
+      {/* {renderMatchModal()} */}
     </View>
   );
 };
@@ -725,6 +772,7 @@ const styles = StyleSheet.create({
     margin: 20,
     borderRadius: 15,
     padding: 15,
+    maxHeight: '80%', // Limit modal height
   },
   modalTitle: {
     fontSize: 20,
@@ -733,31 +781,42 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   applicationCard: {
-    marginBottom: 10,
-    elevation: 3,
+    marginBottom: 8,
+    elevation: 2,
+    borderRadius: 8,
+  },
+  cardContent: {
+    padding: 8,
   },
   applicantName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  riderInfoSection: {
+    flex: 1,
   },
   applicantDetails: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 5,
+    flexWrap: 'wrap',
+    gap: 8,
   },
-  showMapButton: {
+  detailItem: {
+    fontSize: 13,
+    color: '#666',
+  },
+  cardButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8,
+    marginTop: 8,
+  },
+  mapButton: {
+    flex: 0,
+    minWidth: 80,
     backgroundColor: '#007BFF',
-    borderRadius: 20,
-    paddingVertical: 1, 
-    marginVertical: 5, 
-    elevation: 4,
-    shadowColor: '#000', 
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    borderRadius: 4,
+    paddingVertical: 4,
   },
   closeModalButton: {
     marginTop: 15,
@@ -783,7 +842,15 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   applyButton: {
+    flex: 0,
+    minWidth: 80,
     backgroundColor: '#4CAF50',
+    borderRadius: 4,
+    paddingVertical: 4,
+  },
+  buttonLabel: {
+    fontSize: 12,
+    marginVertical: 0,
   },
   cancelButton: {
     borderColor: '#FF5722',

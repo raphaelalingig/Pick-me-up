@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -10,10 +11,30 @@ import {
   TextInput,
   Button,
 } from 'react-native';
+import userService from '../../services/auth&services';
 
 const Settings = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedOption, setSelectedOption] = useState(null);
+  const [account, setAccount] = useState(null);
+
+  const fectchAcc = async () => {
+    try{
+      const response = await userService.fetchCustomer();
+      setAccount(response);
+      console.log(response)
+    }catch (error) {
+      Alert.alert("Error", "Unable to process your request. Please try again.");
+    };
+  }
+
+  useFocusEffect(
+    useCallback(() => {
+      fectchAcc();
+      // setShowMatchModal(false);
+    }, [])
+  );
+  
 
   const openModal = (option) => {
     setSelectedOption(option);
@@ -31,9 +52,15 @@ const Settings = ({ navigation }) => {
         return (
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Personal Information</Text>
-            <Text>Name: Customer 1</Text>
-            <Text>Mail: Customer1@gmail.om</Text>
-            <Text>PhoneNumber: 09461272381</Text>
+            {account ? (
+              <>
+                <Text>Name: {account.first_name} {account.last_name}</Text>
+                <Text>Mail: {account.email}</Text>
+                <Text>PhoneNumber: {account.mobile_number}</Text>
+              </>
+            ) : (
+              <Text>Loading account information...</Text>
+            )}
           </View>
         );
       case 'Change Password':
@@ -80,14 +107,14 @@ const Settings = ({ navigation }) => {
     >
       <View style={styles.container}>
         <Image 
-          source={{ uri: 'https://your-profile-icon-url.com' }}
+          source={require("../../pictures/user_icon.png")}
           style={styles.profileIcon}
         />
         
-        <Text style={styles.customerName}>Customer Name</Text>
+        <Text style={styles.customerName}>{account ? `${account.first_name} ${account.last_name}` : "Loading..."}</Text>
         <Text style={styles.sectionTitle}>Account Settings</Text>
 
-        {['Personal Information', 'Change Password', 'About PickMeUp', 'Help and Support', 'App Version'].map((option) => (
+        {['Personal Information', 'About PickMeUp', 'Help and Support', 'App Version'].map((option) => (
           <TouchableOpacity
             key={option}
             style={styles.optionContainer}

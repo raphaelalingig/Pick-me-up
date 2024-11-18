@@ -16,6 +16,7 @@ import * as Location from "expo-location";
 import userService from "../../services/auth&services";
 import riderMarker from "../../../assets/rider.png";
 import customerMarker from "../../../assets/customer.png";
+import deliveryMarker from "../../../assets/delivery.png";
 
 const TrackingCustomer = ({ route, navigation }) => {
   const { ride } = route.params;
@@ -403,13 +404,30 @@ const TrackingCustomer = ({ route, navigation }) => {
             title="Customer Location"
             pinColor="blue"
           >
-            <Image source={customerMarker} style={styles.customerIconStyle} />
+            <Image 
+              source={ride.ride_type === "Delivery" ? deliveryMarker : customerMarker} 
+              style={styles.customerIconStyle} />
           </Marker>
-          <Polyline
-            coordinates={routeCoordinates}
-            strokeColor="#FF0000"
-            strokeWidth={3}
-          />
+          {/* // Orange (#FFA500)
+              // Teal (#008080)
+              // Light Blue (#1E90FF)
+              // Goldenrod (#DAA520)
+              // FF0000 */}
+              <>
+              {/* Outer Polyline (Border) */}
+              <Polyline
+                coordinates={routeCoordinates}
+                strokeColor="#000000" // Border color (black)
+                strokeWidth={4}       // Slightly thicker
+              />
+
+              {/* Inner Polyline (Main Color - Orange) */}
+              <Polyline
+                coordinates={routeCoordinates}
+                strokeColor="#FFA500" // Main color (orange)
+                strokeWidth={3}       // Slightly thinner
+              />
+            </>
         </MapView>
       </View>
 

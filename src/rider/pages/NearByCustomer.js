@@ -42,9 +42,10 @@ const NearbyCustomerScreen = ({ navigation }) => {
   const [activeFilter, setActiveFilter] = useState('all');
   const pusher = usePusher1();
   const [user_id, setUser_id] = useState();
+  const [riderLocations, setRiderLocations] = useState();
   const [rider, setRider] = useState();
   const { userId } = useAuth();
-
+  
   
 
   // const { showApplyModal, setShowApplyModal, applyRide, setApplyRide } = usePusher();
@@ -81,6 +82,7 @@ const NearbyCustomerScreen = ({ navigation }) => {
       setShowSpinner(true);
       const response = await userService.getAvailableRides();
       const id = await userService.fetchRider();
+      console.log(response)
 
       setRider(id);
       setUser_id(id.user_id);
@@ -172,15 +174,18 @@ const NearbyCustomerScreen = ({ navigation }) => {
   }, [availableRides, activeFilter]);
 
   const filterRides = (filterType) => {
+    // First, filter out Motor Taxi rides
+    const nonMotorTaxiRides = availableRides.filter(ride => ride.ride_type !== 'Motor Taxi');
+  
     switch (filterType) {
       case 'deliveries':
-        setFilteredRides(availableRides.filter(ride => ride.ride_type === 'Delivery'));
+        setFilteredRides(nonMotorTaxiRides.filter(ride => ride.ride_type === 'Delivery'));
         break;
       case 'pakyaw':
-        setFilteredRides(availableRides.filter(ride => ride.ride_type === 'Pakyaw'));
+        setFilteredRides(nonMotorTaxiRides.filter(ride => ride.ride_type === 'Pakyaw'));
         break;
       default:
-        setFilteredRides(availableRides);
+        setFilteredRides(nonMotorTaxiRides);
         break;
     }
   };
@@ -188,6 +193,16 @@ const NearbyCustomerScreen = ({ navigation }) => {
   const handleFilterPress = (filterType) => {
     setActiveFilter(filterType);
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+  };
+
+  const fetchRiderLocations = async () => {
+    try {
+      const response = await userService.fetchLoc();
+      setRiderLocations(response);
+    } catch (error) {
+      console.error('Error fetching rider locations:', error);
+      Alert.alert('Error', 'Failed to retrieve rider locations. Please try again.');
+    }
   };
 
   const handleDecline = async () => {
@@ -256,6 +271,7 @@ const NearbyCustomerScreen = ({ navigation }) => {
   useFocusEffect(
     useCallback(() => {
       fetchAvailableRides();
+      fetchRiderLocations();
       setShowApplyModal(false); // Reset modal visibility
     }, [])
   );
@@ -267,7 +283,7 @@ const NearbyCustomerScreen = ({ navigation }) => {
   }, []);
 
   const handleShowMap = () => {
-    if (availableRides.length > 0) {
+    if (riderLocations.length > 0) {
       setShowMap(true);
     } else {
       Toast.show('No available rides to show on the map.', {
@@ -291,7 +307,7 @@ const NearbyCustomerScreen = ({ navigation }) => {
     <>
       {showMap && (
         <NearbyCustomersMap
-          availableRides={filteredRides}
+          riderLocations={riderLocations}
           onClose={() => setShowMap(false)}
           navigation={navigation}
         />
@@ -319,7 +335,7 @@ const NearbyCustomerScreen = ({ navigation }) => {
                   onPress={handleShowMap}
                 >
                   <MaterialIcons name="place" size={20} color="#fff" style={styles.buttonIcon} />
-                  <Text style={styles.mapButtonText}>Show in Map</Text>
+                  <Text style={styles.mapButtonText}>Show Map</Text>
                 </TouchableOpacity>
 
                 <View style={styles.filterContainer}>

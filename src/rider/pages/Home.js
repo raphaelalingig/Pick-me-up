@@ -52,12 +52,24 @@ const Home = ({ navigation }) => {
     fetchUserId();
   }, []);
 
+  useEffect(() => {
+    const fetchUserAvailability = async () => {
+      try {
+        const availability = await userService.fetchRider();
+        console.log("Availabilty",availability)
+        setIsOnline(availability.availability === 'Available');
+      } catch (error) {
+        console.error("Error fetching user availability:", error);
+      }
+    };
+    fetchUserAvailability();
+  }, []);
+
   const handleStatusToggle = async (value) => {
     try {
       setLoading(true);
-      // Here you would typically make an API call to update the rider's status
+      await userService.updateRiderAvailability(value ? 'Available' : 'Unavailable');
       // await userService.updateRiderStatus(value);
-      
       // Animate the status change
       Animated.sequence([
         Animated.timing(statusAnimation, {
@@ -70,11 +82,11 @@ const Home = ({ navigation }) => {
       setIsOnline(value);
       
       // Show feedback to user
-      if (value) {
-        Alert.alert("Status Updated", "You are now online and can receive ride requests!");
-      } else {
-        Alert.alert("Status Updated", "You are now offline and won't receive new requests.");
-      }
+      // if (value) {
+      //   Alert.alert("Status Updated", "You are now online and can receive ride requests!");
+      // } else {
+      //   Alert.alert("Status Updated", "You are now offline and won't receive new requests.");
+      // }
     } catch (error) {
       Alert.alert("Error", "Failed to update status. Please try again.");
     } finally {

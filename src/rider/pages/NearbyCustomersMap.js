@@ -9,13 +9,13 @@ import { usePusher } from '../../context/PusherContext';
 import ApplyRideModal from './ApplyRideModal';
 import userService from '../../services/auth&services';
 
-const NearbyCustomersMap = ({ availableRides, onClose, navigation }) => {
+const NearbyCustomersMap = ({ riderLocations, onClose, navigation }) => {
   const { riderCoords } = useContext(RiderContext);
   const [region, setRegion] = useState({
     latitude: riderCoords.latitude,
     longitude: riderCoords.longitude,
-    latitudeDelta: 0.05,
-    longitudeDelta: 0.05,
+    latitudeDelta: 0.01,
+    longitudeDelta: 0.01,
   });
   // const [showApplyModal, setShowApplyModal] = useState(false);
   // const [applyRide, setApplyRide] = useState(null);
@@ -30,6 +30,19 @@ const NearbyCustomersMap = ({ availableRides, onClose, navigation }) => {
   const handleMarkerPress = (ride) => {
     navigation.navigate("BookingDetails", { ride });
   };
+
+  const validRiders = riderLocations.filter(rider => {
+    const hasValidLocation = 
+      rider.rider_latitude != null && 
+      rider.rider_longitude != null &&
+      !isNaN(parseFloat(rider.rider_latitude)) && 
+      !isNaN(parseFloat(rider.rider_longitude));
+    
+    if (!hasValidLocation) {
+      console.log(`Skipping rider ${rider.rider_id} - Invalid location data`);
+    }
+    return hasValidLocation;
+  });
 
   //   useEffect(() => {
   //   const fetchUserId = async () => {
@@ -67,35 +80,23 @@ const NearbyCustomersMap = ({ availableRides, onClose, navigation }) => {
         </Marker>
 
         {/* Customer Markers */}
-        {availableRides.map((ride, index) => {
-          // Ensure ridelocations exist 
-          if (!ride.customer_latitude || ! ride.customer_longitude) {
-            console.warn(`Ride ${ride.ride_id} has no ridelocations.`);
-            return null; // Skip this ride
-          }
-
-          // Parse coordinates
-          const customerLat = parseFloat(ride.customer_latitude);
-          const customerLong = parseFloat(ride.customer_longitude);
-
-          // Check for valid coordinates
-          if (isNaN(customerLat) || isNaN(customerLong)) {
-            console.warn(`Invalid coordinates for ride ${ride.ride_id}:`, customerLat, customerLong);
-            return null; // Skip if invalid
-          }
-
+        {/* Rider Markers */}
+        {validRiders.map((rider) => {
+          const riderLat = parseFloat(rider.rider_latitude);
+          const riderLng = parseFloat(rider.rider_longitude);
+          
           return (
             <Marker
-              key={ride.ride_id || `ride-marker-${index}`}
+              key={`rider-${rider.rider_id}`}
               coordinate={{
-                latitude: customerLat,
-                longitude: customerLong,
+                latitude: riderLat,
+                longitude: riderLng
               }}
-              title={`${ride.first_name} ${ride.last_name}`}
-              description={ride.ride_type}
+              title={`${rider.user.first_name} ${rider.user.last_name}`}
+              description={rider.ride_type}
               onCalloutPress={() => handleMarkerPress(ride)}
             >
-              <Image source={customerMarker} style={styles.markerIcon} />
+              <Image source={riderMarker} style={styles.markerIcon} />
             </Marker>
           );
         })}

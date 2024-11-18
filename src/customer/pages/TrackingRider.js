@@ -13,6 +13,7 @@ import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
 import userService from "../../services/auth&services";
 import riderMarker from "../../../assets/rider.png";
 import customerMarker from "../../../assets/customer.png";
+import deliveryMarker from "../../../assets/delivery.png";
 import usePusher from "../../services/pusher";
 
 const TrackingRider = ({ navigation }) => {
@@ -334,17 +335,32 @@ const TrackingRider = ({ navigation }) => {
             {customerLocation && (
               <Marker coordinate={customerLocation} title="Customer Location">
                 <Image
-                  source={customerMarker}
+                  source={bookDetails.ride_type === "Delivery" ? deliveryMarker : customerMarker} 
                   style={styles.customerIconStyle}
                 />
               </Marker>
             )}
             {routeCoordinates.length > 0 && (
+              // Orange (#FFA500)
+              // Teal (#008080)
+              // Light Blue (#1E90FF)
+              // Goldenrod (#DAA520)
+              // FF0000
+              <>
+              {/* Outer Polyline (Border) */}
               <Polyline
                 coordinates={routeCoordinates}
-                strokeColor="#FF0000"
-                strokeWidth={3}
+                strokeColor="#000000" // Border color (black)
+                strokeWidth={4}       // Slightly thicker
               />
+
+              {/* Inner Polyline (Main Color - Orange) */}
+              <Polyline
+                coordinates={routeCoordinates}
+                strokeColor="#FFA500" // Main color (orange)
+                strokeWidth={3}       // Slightly thinner
+              />
+            </>
             )}
           </MapView>
         )}

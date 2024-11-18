@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -10,10 +11,29 @@ import {
   TextInput,
   Button,
 } from "react-native";
+import userService from "../../services/auth&services";
 
 const Settings = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedOption, setSelectedOption] = useState(null);
+  const [account, setAccount] = useState(null);
+
+  const fectchAcc = async () => {
+    try{
+      const response = await userService.fetchCustomer();
+      setAccount(response);
+      console.log("ACCOUNT", response)
+    }catch (error) {
+      Alert.alert("Error", "Unable to process your request. Please try again.");
+    };
+  }
+
+  useFocusEffect(
+    useCallback(() => {
+      fectchAcc();
+      // setShowMatchModal(false);
+    }, [])
+  );
 
   const openModal = (option) => {
     setSelectedOption(option);
@@ -27,17 +47,21 @@ const Settings = ({ navigation }) => {
 
   const renderModalContent = () => {
     switch (selectedOption) {
-      case "Personal Information":
-        return (
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Personal Information</Text>
-            <TextInput placeholder="Name" style={styles.input} />
-            <TextInput placeholder="Email" style={styles.input} />
-            <TouchableOpacity style={styles.saveButton} onPress={closeModal}>
-              <Text style={styles.buttonText}>Save</Text>
-            </TouchableOpacity>
-          </View>
-        );
+        case "Personal Information":
+          return (
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Personal Information</Text>
+              {account ? (
+                <>
+                  <Text>Name: {account.first_name} {account.last_name}</Text>
+                  <Text>Mail: {account.email}</Text>
+                  <Text>PhoneNumber: {account.mobile_number}</Text>
+                </>
+              ) : (
+                <Text>Loading account information...</Text>
+              )}
+            </View>
+          );
       case "Change Password":
         return (
           <View style={styles.modalContent}>
@@ -104,16 +128,15 @@ const Settings = ({ navigation }) => {
     >
       <View style={styles.container}>
         <Image
-          source={{ uri: "https://your-profile-icon-url.com" }}
+          source={require("../../pictures/rider_icon.png")}
           style={styles.profileIcon}
         />
 
-        <Text style={styles.customerName}>Rider Name</Text>
+        <Text style={styles.customerName}>{account ? `${account.first_name} ${account.last_name}` : "Loading..."}</Text>
         <Text style={styles.sectionTitle}>Account Settings</Text>
 
         {[
           "Personal Information",
-          "Change Password",
           "About PickMeUp",
           "Help and Support",
           "App Version",

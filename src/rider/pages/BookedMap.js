@@ -182,7 +182,6 @@ const BookedMap = ({ navigation, route }) => {
         <Text style={styles.distanceText}>
           Total Distance: {totalDistanceRide} km
         </Text>
-        <Text style={styles.totalFare}>Total Fare: ₱{totalFare}</Text>
       </View>
       {applyRide && (
         <ApplyRideModal

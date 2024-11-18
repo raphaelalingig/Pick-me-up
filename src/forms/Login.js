@@ -6,6 +6,7 @@ import { useAuth } from "../services/useAuth";
 import userService from "../services/auth&services";
 import CustomIconInput from "./CustomIconInput";
 import * as Location from 'expo-location';
+import Toast from 'react-native-root-toast';
 
 
 const Login = ({ navigation }) => {
@@ -23,7 +24,7 @@ const Login = ({ navigation }) => {
 
 
 
-  const getCurrentLocation = async () => {
+  const getCurrentLocation = async (role) => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status === 'granted') {
@@ -34,10 +35,20 @@ const Login = ({ navigation }) => {
         await userService.updateRiderStatusAndLocation({
           longitude: location.coords.longitude,
           latitude: location.coords.latitude,
-          status: "Online",
+          status: "Available",
+        });
+        Toast.show('Logged In Successfully', {
+          duration: Toast.durations.LONG,
+          position: Toast.positions.BOTTOM,
+          shadow: true,
+          animation: true,
+          hideOnPress: true,
+          backgroundColor: '#333',
+          textColor: '#fff'
         });
         console.log("Location updated successfully in the database");
         
+        navigation.replace(role === 3 ? "RiderStack" : "CustomerStack");
         
       } else {
         console.error("Location permission not granted");
@@ -74,9 +85,9 @@ const Login = ({ navigation }) => {
   
       if (role === 3 || role === 1 || role === 2) {
         await login(receivedToken, role, user_id, userStatus);
-        await getCurrentLocation();
+        await getCurrentLocation(role);
         // Navigate after location update
-        navigation.replace(role === 3 ? "RiderStack" : "CustomerStack");
+        
       } else if (role === 4) {
         await login(receivedToken, role, user_id, userStatus);
         // Replace this line with the correct navigation call

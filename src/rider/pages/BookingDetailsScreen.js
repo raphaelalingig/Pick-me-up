@@ -18,10 +18,11 @@ import { usePusher } from '../../context/PusherContext';
 import ApplyRideModal from './ApplyRideModal';
 
 const BookingDetailsScreen = ({ route, navigation }) => {
-  const { ride } = route.params;
+  const { ride, isAccepting } = route.params;
   const [riderLocation, setRiderLocation] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [userId, setUserId] = useState(null);
+  const [accepting, setAccepting] = useState(isAccepting || false);
 
   const { 
     applyRide, 
@@ -146,11 +147,16 @@ const BookingDetailsScreen = ({ route, navigation }) => {
                 style={[styles.applyButton, isLoading && styles.disabledButton]}
                 onPress={() => {
                   Alert.alert(
-                    "Confirm Application",
-                    "Are you sure you want to apply for this ride?",
+                    accepting ? "Confirm Pick Up" : "Confirm Application",
+                    accepting
+                      ? "Are you sure you want to pick up this ride?"
+                      : "Are you sure you want to apply for this ride?",
                     [
                       { text: "Cancel", style: "cancel" },
-                      { text: "Apply", onPress: () => handleApply(ride) },
+                      {
+                        text: accepting ? "Pick Up" : "Apply",
+                        onPress: () => handleApply(ride),
+                      },
                     ]
                   );
                 }}
@@ -159,9 +165,12 @@ const BookingDetailsScreen = ({ route, navigation }) => {
                 {isLoading ? (
                   <ActivityIndicator color="#FFF" />
                 ) : (
-                  <Text style={styles.buttonText}>Apply Now</Text>
+                  <Text style={styles.buttonText}>
+                    {accepting ? "Pick Up" : "Apply Now"}
+                  </Text>
                 )}
               </TouchableOpacity>
+
             </View>
             {applyRide && (
               <ApplyRideModal

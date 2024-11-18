@@ -192,7 +192,7 @@ const PakyawOptionScreen = ({ navigation, route }) => {
     };
 
     try {
-      const response = await userService.book(bookDetails);
+      const response = await userService.book_pakyaw(bookDetails);
       console.log("Booked Successfully:", response.data);
       await userService.saveBookLocation(rideLocationDetails);
       navigation.navigate("WaitingForRider", { bookDetails });

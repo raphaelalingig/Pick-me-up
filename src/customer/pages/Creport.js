@@ -57,19 +57,36 @@ const SubmitFeedback_C = ({ navigation, route }) => {
         message,
       });
 
+      console.log(response)
 
-      if (response.message === "You have already submitted feedback for this ride")
+
+      if (response.message === "You have already submitted feedback for this ride"){
+        Alert.alert(
+          "Already Submitted",
+          response.message,
+          [
+            {
+              text: "OK",
+              onPress: () => navigation.goBack()
+            }
+          ]
+        );
+      }
+
+      if (response.message === "Feedback submitted successfully"){
+        Alert.alert(
+          "Success",
+          "Thank you for your feedback!",
+          [
+            {
+              text: "OK",
+              onPress: () => navigation.goBack()
+            }
+          ]
+        );
+      }
   
-      Alert.alert(
-        "Success",
-        "Thank you for your feedback!",
-        [
-          {
-            text: "OK",
-            onPress: () => navigation.goBack()
-          }
-        ]
-      );
+      
     } catch (error) {
       let alertTitle = "Error";
       let alertMessage = "An unexpected error occurred. Please try again.";

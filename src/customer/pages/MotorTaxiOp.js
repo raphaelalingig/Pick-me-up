@@ -172,7 +172,7 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
     const bookDetails = {
       user_id: userId,
       ride_date: formattedCurrentDate,
-      ride_type: "Motor Taxi",
+      ride_type: "Moto Taxi",
       pickup_location: pickupAddress,
       dropoff_location: dropoffAddress,
       fare: parseFloat(fare),

@@ -58,7 +58,7 @@ const ApplyRideModal = ({ visible, ride, userService, onClose, navigation }) => 
   }, [handleDecline]);
 
   const handleViewButton = () => {
-    navigation.navigate("BookingDetails", { ride });
+    navigation.navigate("BookingDetails", { ride, isAccepting: true });
     onClose(); // Close the modal
   };
 

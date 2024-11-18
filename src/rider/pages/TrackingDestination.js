@@ -328,11 +328,26 @@ const TrackingDestination = ({ route, navigation }) => {
               style={styles.flagDestinationIconStyle}
             />
           </Marker>
-          <Polyline
-            coordinates={routeCoordinates}
-            strokeColor="#FF0000"
-            strokeWidth={3}
-          />
+          {/* // Orange (#FFA500)
+              // Teal (#008080)
+              // Light Blue (#1E90FF)
+              // Goldenrod (#DAA520)
+              // FF0000 */}
+              <>
+              {/* Outer Polyline (Border) */}
+              <Polyline
+                coordinates={routeCoordinates}
+                strokeColor="#000000" // Border color (black)
+                strokeWidth={4}       // Slightly thicker
+              />
+
+              {/* Inner Polyline (Main Color - Orange) */}
+              <Polyline
+                coordinates={routeCoordinates}
+                strokeColor="#FFA500" // Main color (orange)
+                strokeWidth={3}       // Slightly thinner
+              />
+            </>
         </MapView>
       </View>
 
