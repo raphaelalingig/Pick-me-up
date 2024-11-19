@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { ImageBackground, StyleSheet, TouchableOpacity, View, Alert } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import { ImageBackground, StyleSheet, TouchableOpacity, View, Alert, ActivityIndicator } from "react-native";
 import { TextInput, Text } from "react-native-paper";
 import { BlurView } from "expo-blur";
 import userService from "../../services/auth&services";
 import { useAuth } from "../../services/useAuth";
 
 const SubmitFeedback_C = ({ navigation, route }) => {
-  const { ride, role } = route.params;
+  const [bookDetails, setBookDetails] = useState(null);
   const [message, setMessage] = useState("");
   const [rating, setRating] = useState(0);
   const [user_id, setUserId] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const role = "Customer";
 
   const { userId, userRole } = useAuth();
 
@@ -22,17 +24,63 @@ const SubmitFeedback_C = ({ navigation, route }) => {
         setUserId(id);
       } catch (error) {
         console.error("Error fetching user_id:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
-
+  
     fetchUserId();
   }, []);
 
+  const fetchLatestRide = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const ride = await userService.checkActiveBook();
+      setBookDetails(ride.rideDetails);
+      console.log(ride.rideDetails)
+      setIsLoading(false);
+    } catch (error) {
+      Alert.alert("Error", "Failed to retrieve the latest available ride.");
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchLatestRide();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#FFD700" />
+        <Text style={styles.loadingText}>Loading ride details...</Text>
+      </View>
+    );
+  }
+
+  const completeRide = async () => {
+    setIsLoading(true);
+    try {
+      const response = await userService.review_ride(bookDetails.ride_id);
+      if (response.data && response.data.message) {
+        Alert.alert("Ride Complete", response.data.message);
+        navigation.navigate("Home");
+      } else {
+        Alert.alert("Error", "Failed to finish the ride. Please try again.");
+      }
+    } catch (error) {
+      console.error("Failed to finish ride", error.response ? error.response.data : error.message);
+      Alert.alert("Error", "An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   
 
   const onSubmit = async () => {
-    const senderId = role === "Customer" ? ride.user_id : ride.rider_id;
-    const recipientId = role === "Customer" ? ride.rider_id : ride.user_id;
+    const senderId = role === "Customer" ? bookDetails.user_id : bookDetails.rider_id;
+    const recipientId = role === "Customer" ? bookDetails.rider_id : bookDetails.user_id;
   
     if (!rating || rating < 1) {
       Alert.alert(
@@ -48,7 +96,7 @@ const SubmitFeedback_C = ({ navigation, route }) => {
 
       const feedbackData = {
         sender: senderId,
-        ride_id: ride.ride_id,
+        ride_id: bookDetails.ride_id,
         recipient: recipientId,
         rating,
         message,
@@ -66,7 +114,7 @@ const SubmitFeedback_C = ({ navigation, route }) => {
           [
             {
               text: "OK",
-              onPress: () => navigation.goBack()
+              onPress: () => completeRide()
             }
           ]
         );
@@ -79,7 +127,7 @@ const SubmitFeedback_C = ({ navigation, route }) => {
           [
             {
               text: "OK",
-              onPress: () => navigation.goBack()
+              onPress: () => completeRide()
             }
           ]
         );
@@ -119,9 +167,13 @@ const SubmitFeedback_C = ({ navigation, route }) => {
 
   const recipientLabel = role === "Customer" ? "Rider" : "Customer";
   const recipientName =
-    role === "Customer"
-      ? `${ride.rider.first_name || ""} ${ride.rider.last_name || ""}`
-      : `${ride.user.first_name || ""} ${ride.user.last_name || ""}`;
+    bookDetails && bookDetails.rider
+      ? `${bookDetails.rider.first_name || ""} ${bookDetails.rider.last_name || ""}`
+      : role === "Customer"
+      ? "Loading"
+      : bookDetails && bookDetails.user
+      ? `${bookDetails.user.first_name || ""} ${bookDetails.user.last_name || ""}`
+      : "Loading";
 
   return (
     <ImageBackground
@@ -142,7 +194,7 @@ const SubmitFeedback_C = ({ navigation, route }) => {
             />
             <TextInput
               label="Date"
-              value={ride.ride_date}
+              value={bookDetails ? `${bookDetails.ride_date}` : "Loading..."}
               editable={false}
               style={styles.textinput}
               mode="outlined"
@@ -302,7 +354,18 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.7,
-  }
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#333",
+  },
 });
 
 export default SubmitFeedback_C;

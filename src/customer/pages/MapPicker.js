@@ -4,7 +4,7 @@ import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 
 const MapPicker = ({ route, navigation }) => {
-    const { locationType } = route.params;
+    const { locationType, ride_type } = route.params;
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [address, setAddress] = useState('');
     const [initialRegion, setInitialRegion] = useState(null);
@@ -51,12 +51,27 @@ const MapPicker = ({ route, navigation }) => {
     };
 
     const handleConfirm = () => {
-        navigation.navigate('Motor Taxi', {
+      let destinationScreen = '';
+      switch (ride_type) {
+          case 'MotoTaxi':
+              destinationScreen = 'Moto Taxi';
+              break;
+          case 'Delivery':
+              destinationScreen = 'Delivery';
+              break;
+          case 'Pakyaw':
+              destinationScreen = 'Pakyaw';
+              break;
+          default:
+              destinationScreen = 'Home'; // Fallback screen
+      }
+  
+      navigation.navigate(destinationScreen, {
           selectedLocation: selectedLocation,
           address: address,
           locationType: locationType
-        });
-    };
+      });
+  };
 
     if (!initialRegion) {
         return (

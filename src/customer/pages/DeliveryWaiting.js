@@ -28,7 +28,7 @@ import MapWithClustering from './MapWithClustering';
 
 const { width, height } = Dimensions.get('window');
 
-const WaitingRider = ({ navigation }) => {
+const Delivery = ({ navigation }) => {
   const { customerCoords } = useContext(CustomerContext);
   const [region, setRegion] = useState({
     latitude: customerCoords.latitude,
@@ -39,7 +39,6 @@ const WaitingRider = ({ navigation }) => {
   const [customerLat, setCustomerLat] = useState(null);
   const [customerLng, setCustomerLng] = useState(null);
   const [bookDetails, setBookDetails] = useState(null);
-  const [deliveryDetails, setDeliveryDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState('details');
@@ -60,7 +59,6 @@ const WaitingRider = ({ navigation }) => {
     try {
       const ride = await userService.checkActiveBook();
       setBookDetails(ride.rideDetails);
-      setDeliveryDetails(ride.deliveryDeets);
       console.log(ride.rideDetails.customer_latitude)
       setCustomerLat(parseFloat(ride.rideDetails.customer_latitude));
       setCustomerLng(parseFloat(ride.rideDetails.customer_longitude));
@@ -71,7 +69,6 @@ const WaitingRider = ({ navigation }) => {
         longitudeDelta: 0.05,
       });
       setIsLoading(false);
-      console.log('RIDESSS:',ride)
     } catch (error) {
       Alert.alert("Error", "Failed to retrieve the latest available ride.");
       setIsLoading(false);
@@ -395,22 +392,6 @@ const WaitingRider = ({ navigation }) => {
               To: {bookDetails.dropoff_location}
             </Text>
           </View>
-          {deliveryDetails && (
-          <>
-            <View style={styles.detailRow}>
-              <Ionicons name="information-circle" size={20} color="#FF5722" />
-              <Text style={styles.detailText}>
-                Type: {deliveryDetails.delivery_type}
-              </Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Ionicons name="book" size={20} color="cyan" />
-              <Text style={styles.detailText}>
-                Instructions: {deliveryDetails.instructions}
-              </Text>
-            </View>
-          </>
-           )}
           <View style={styles.detailRow}>
             <Ionicons name="cash" size={20} color="#FFC107" />
             <Text style={styles.fareText}>Fare: ₱{bookDetails.fare}</Text>
@@ -884,4 +865,4 @@ const styles = StyleSheet.create({
   
 });
 
-export default WaitingRider;
+export default Delivery;

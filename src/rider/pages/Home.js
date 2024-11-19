@@ -225,14 +225,14 @@ const Home = ({ navigation }) => {
     setRefreshing(true);
     await checkRideAndLocation();
     setRefreshing(false);
-  }, [checkRideAndLocation]);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
       checkRideAndLocation();
       setShowApplyModal(false);
       // setShowMatchModal(false);
-    }, [checkRideAndLocation])
+    }, [])
   );
 
   let text = "Waiting..";

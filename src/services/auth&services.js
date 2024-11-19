@@ -288,6 +288,17 @@ const userService = {
     }
   },
 
+
+  pakyaw: async (bookDetails) => {
+    try {
+      const response = await axios.post(API_URL + 'book_pakyaw', bookDetails);
+      return response.data;
+    } catch (error) {
+        console.error('Booking Failed:', error);
+        throw error;
+    }
+  },
+
   fetchLoc: async () => {
     try {
       const response = await axios.get(API_URL + "riders_loc");

@@ -42,6 +42,7 @@ import TrackingDestination from "../rider/pages/TrackingDestination";
 import TrackingCustomer from "../rider/pages/TrackingCustomer";
 import MapPicker from "../customer/pages/MapPicker";
 import ReportRiderPage from "../customer/pages/ReportRider";
+import Delivery from "../customer/pages/DeliveryWaiting";
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -195,6 +196,7 @@ const CustomerStack = () => {
       <Stack.Screen name="Delivery" component={DeliveryOptionScreen} />
       <Stack.Screen name="Settings" component={AccountSettingsScreen} />
       <Stack.Screen name="WaitingForRider" component={WaitingRider} />
+      <Stack.Screen name="WaitingForDelivery" component={Delivery} />
       <Stack.Screen
         name="Tracking Rider"
         component={TrackingRider}

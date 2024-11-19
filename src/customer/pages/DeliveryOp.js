@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Switch,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import * as Location from "expo-location";
@@ -44,6 +45,10 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
   const pickupTimeoutRef = useRef(null);
   const dropoffTimeoutRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCalculatingFare, setIsCalculatingFare] = useState(false);
+  const [isRiderDecide, setIsRiderDecide] = useState(false);
+
+
 
   useEffect(() => {
     const fetchUserId = async () => {
@@ -106,8 +111,20 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
   };
 
   const chooseFromMap = (locationType) => {
-    navigation.navigate("MapPicker", { locationType });
+    navigation.navigate("MapPicker", { locationType, ride_type: "Delivery" });
   };
+
+  const toggleRiderDecide = () => {
+    setIsRiderDecide(!isRiderDecide);
+    
+    // Reset location if turning on rider decide
+    if (!isRiderDecide) {
+      setPickupLocation("");
+      setPickupAddress("");
+      setPickupSuggestions([]);
+    }
+  };
+
 
   const fetchDirectionsAndUpdateFare = async (
     pickup = pickupLocation,
@@ -118,6 +135,7 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
       return;
     }
 
+    setIsCalculatingFare(true); // Start fare calculation
     try {
       const [pickupLat, pickupLng] = pickup.split(",");
       const [dropoffLat, dropoffLng] = dropoff.split(",");
@@ -140,12 +158,14 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
     } catch (error) {
       console.error("Error fetching directions:", error);
       Alert.alert("Error", "Failed to calculate distance. Please try again.");
+    } finally {
+      setIsCalculatingFare(false); // End fare calculation
     }
   };
 
   const calculateFare = (distance) => {
     const baseFare = 40;
-    const additionalFareRate = 10;
+    const additionalFareRate = 12;
     const thresholdKm = 2;
 
     let calculatedFare;
@@ -160,7 +180,12 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
   };
 
   const handleConfirm = async () => {
-    if (isLoading) return;
+    if (!pickupLocation || !dropoffLocation) {
+      Alert.alert("Validation Error", "Please fill out both pickup and dropoff fields.");
+      return;
+    }
+
+    if (isCalculatingFare) return; // Prevent confirmation during fare calculation
 
     setIsLoading(true);
 
@@ -323,6 +348,7 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
                 onValueChange={(itemValue) => {
                   console.log("Selected:", itemValue);
                   setDeliveryType(itemValue);
+                  setIsRiderDecide(false);
                 }}
                 style={styles.picker}
                 itemStyle={styles.pickerItem}
@@ -334,6 +360,19 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
             </View>
           </View>
 
+          {/* Rider Decide Toggle for Pasugo */}
+          {deliveryType === "Pasugo" && (
+            <View style={styles.riderDecideContainer}>
+              <Text style={styles.riderDecideLabel}>Let Rider Decide</Text>
+              <Switch
+                value={isRiderDecide}
+                onValueChange={toggleRiderDecide}
+                trackColor={{ false: "#767577", true: "#81b0ff" }}
+                thumbColor={isRiderDecide ? "#f5dd4b" : "#f4f3f4"}
+              />
+            </View>
+          )}
+
           <View style={styles.inputContainer}>
             <View style={styles.inputWrapper}>
               <View style={styles.inputWithClear}>
@@ -342,6 +381,7 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
                   placeholder="Item pick up location"
                   value={pickupAddress}
                   onChangeText={handlePickupInputChange}
+                  editable={!(deliveryType === "Pasugo" && isRiderDecide)}
                 />
                 {pickupAddress !== "" && (
                   <TouchableOpacity
@@ -369,21 +409,44 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
 
             <View style={styles.locationButtonsContainer}>
               <TouchableOpacity
-                style={styles.locationButton}
-                onPress={getCurrentLocation}
-              >
-                <Text style={styles.locationButtonText}>
-                  Use current location
+                  style={[
+                    styles.locationButton,
+                    (deliveryType === "Pasugo" && isRiderDecide) && styles.disabledButton
+                  ]}
+                  onPress={getCurrentLocation}
+                  disabled={deliveryType === "Pasugo" && isRiderDecide}
+                >
+                <Text 
+                  style={[
+                    styles.locationButtonText,
+                    (deliveryType === "Pasugo" && isRiderDecide) && styles.disabledText
+                  ]}
+                >
+                  {deliveryType === "Pasugo" 
+                    ? (isRiderDecide ? "Disabled" : "Use current location") 
+                    : "Use current location"}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.locationButton}
+                style={[
+                  styles.locationButton,
+                  (deliveryType === "Pasugo" && isRiderDecide) && styles.disabledButton
+                ]}
                 onPress={() => chooseFromMap("pickup")}
+                disabled={deliveryType === "Pasugo" && isRiderDecide}
               >
-                <Text style={styles.locationButtonText}>Choose from map</Text>
+                <Text 
+                  style={[
+                    styles.locationButtonText,
+                    (deliveryType === "Pasugo" && isRiderDecide) && styles.disabledText
+                  ]}
+                >
+                  {deliveryType === "Pasugo" 
+                    ? (isRiderDecide ? "Disabled" : "Choose from map") 
+                    : "Choose from map"}
+                </Text>
               </TouchableOpacity>
             </View>
-
             <View style={styles.inputWrapper}>
               <View style={styles.inputWithClear}>
                 <TextInput
@@ -696,6 +759,24 @@ const styles = StyleSheet.create({
   instructionsInput: {
     height: 80, // To give more space for instructions input
     textAlignVertical: "top", // To start text from top
+  },
+  riderDecideContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 15,
+    marginVertical: 10,
+  },
+  riderDecideLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  disabledButton: {
+    backgroundColor: '#cccccc',
+  },
+  disabledText: {
+    color: '#666666',
   },
 });
 

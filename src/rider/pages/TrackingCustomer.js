@@ -189,22 +189,6 @@ const TrackingCustomer = ({ route, navigation }) => {
     }
   };
 
-  const calculateFare = (distance) => {
-    const baseFare = 40;
-    const additionalFareRate = 10;
-    const thresholdKm = 2;
-
-    let fare;
-    if (distance <= thresholdKm) {
-      fare = baseFare;
-    } else {
-      const exceedingDistance = distance - thresholdKm;
-      fare = baseFare + exceedingDistance * additionalFareRate;
-    }
-
-    setTotalFare(fare.toFixed(2));
-  };
-
   const decodePolyline = (encoded) => {
     const poly = [];
     let index = 0,
@@ -243,6 +227,22 @@ const TrackingCustomer = ({ route, navigation }) => {
       poly.push(point);
     }
     return poly;
+  };
+
+  const calculateFare = (distance) => {
+    const baseFare = 40;
+    const additionalFareRate = 12;
+    const thresholdKm = 2;
+
+    let fare;
+    if (distance <= thresholdKm) {
+      fare = baseFare;
+    } else {
+      const exceedingDistance = distance - thresholdKm;
+      fare = baseFare + exceedingDistance * additionalFareRate;
+    }
+
+    setTotalFare(fare.toFixed(2));
   };
 
   const startRide = async () => {

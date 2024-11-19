@@ -86,11 +86,9 @@ const Login = ({ navigation }) => {
       if (role === 3 || role === 1 || role === 2) {
         await login(receivedToken, role, user_id, userStatus);
         await getCurrentLocation(role);
-        // Navigate after location update
         
       } else if (role === 4) {
         await login(receivedToken, role, user_id, userStatus);
-        // Replace this line with the correct navigation call
         navigation.replace(role === 3 ? "RiderStack" : "CustomerStack");
       } else {
         setError("An error occurred during login");

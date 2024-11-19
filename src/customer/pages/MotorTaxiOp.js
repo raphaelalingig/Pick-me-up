@@ -41,6 +41,7 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
   const pickupTimeoutRef = useRef(null);
   const dropoffTimeoutRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCalculatingFare, setIsCalculatingFare] = useState(false);
 
 
   useEffect(() => {
@@ -105,7 +106,7 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
   };
 
   const chooseFromMap = (locationType) => {
-    navigation.navigate("MapPicker", { locationType });
+    navigation.navigate("MapPicker", { locationType, ride_type: "Moto Taxi" });
   };
 
   const fetchDirectionsAndUpdateFare = async (
@@ -117,6 +118,7 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
       return;
     }
 
+    setIsCalculatingFare(true); // Start fare calculation
     try {
       const [pickupLat, pickupLng] = pickup.split(",");
       const [dropoffLat, dropoffLng] = dropoff.split(",");
@@ -139,12 +141,14 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
     } catch (error) {
       console.error("Error fetching directions:", error);
       Alert.alert("Error", "Failed to calculate distance. Please try again.");
+    } finally {
+      setIsCalculatingFare(false); // End fare calculation
     }
   };
 
   const calculateFare = (distance) => {
     const baseFare = 40;
-    const additionalFareRate = 10;
+    const additionalFareRate = 12;
     const thresholdKm = 2;
 
     let calculatedFare;
@@ -159,39 +163,45 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
   };
 
   const handleConfirm = async () => {
-    if (isLoading) return;
+    if (!pickupLocation || !dropoffLocation) {
+      Alert.alert("Validation Error", "Please fill out both pickup and dropoff fields.");
+      return;
+    }
+
+    if (isCalculatingFare) return; // Prevent confirmation during fare calculation
 
     setIsLoading(true);
 
-    const currentDate = new Date();
-    const formattedCurrentDate = currentDate
-      .toISOString()
-      .slice(0, 19)
-      .replace("T", " ");
-
-    const bookDetails = {
-      user_id: userId,
-      ride_date: formattedCurrentDate,
-      ride_type: "Moto Taxi",
-      pickup_location: pickupAddress,
-      dropoff_location: dropoffAddress,
-      fare: parseFloat(fare),
-      distance: totalDistanceRide,
-      status: "Available",
-    };
-
-    const [pickupLat, pickupLng] = pickupLocation.split(",");
-    const [dropoffLat, dropoffLng] = dropoffLocation.split(",");
-
-    const rideLocationDetails = {
-      user_id: userId,
-      customer_latitude: parseFloat(pickupLat),
-      customer_longitude: parseFloat(pickupLng),
-      dropoff_latitude: parseFloat(dropoffLat),
-      dropoff_longitude: parseFloat(dropoffLng),
-    };
-
+    // Existing booking logic
     try {
+      const currentDate = new Date();
+      const formattedCurrentDate = currentDate
+        .toISOString()
+        .slice(0, 19)
+        .replace("T", " ");
+
+      const bookDetails = {
+        user_id: userId,
+        ride_date: formattedCurrentDate,
+        ride_type: "Moto Taxi",
+        pickup_location: pickupAddress,
+        dropoff_location: dropoffAddress,
+        fare: parseFloat(fare),
+        distance: totalDistanceRide,
+        status: "Available",
+      };
+
+      const [pickupLat, pickupLng] = pickupLocation.split(",");
+      const [dropoffLat, dropoffLng] = dropoffLocation.split(",");
+
+      const rideLocationDetails = {
+        user_id: userId,
+        customer_latitude: parseFloat(pickupLat),
+        customer_longitude: parseFloat(pickupLng),
+        dropoff_latitude: parseFloat(dropoffLat),
+        dropoff_longitude: parseFloat(dropoffLng),
+      };
+
       const response = await userService.book(bookDetails);
       console.log("Booked Successfully:", response.data);
       await userService.saveBookLocation(rideLocationDetails);
@@ -303,6 +313,13 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
       >
         <BlurView intensity={800} tint="light" style={styles.blurContainer}>
           <Text style={styles.title}>Motor-Taxi</Text>
+
+          {/* Form validation */}
+          {/* {(!pickupLocation || !dropoffLocation) && (
+            <Text style={styles.validationError}>
+              Pickup and dropoff locations are required.
+            </Text>
+          )} */}
           
           <View style={styles.inputContainer}>
             <View style={styles.inputWrapper}>
@@ -395,13 +412,19 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
           </View>
 
           <View style={styles.fareContainer}>
-            <Text style={styles.fareLabel}>Estimated Fare:</Text>
-            <TextInput
-              style={styles.fareInput}
-              value={fare}
-              onChangeText={setFare}
-              keyboardType="numeric"
-            />
+          {isCalculatingFare ? (
+              <ActivityIndicator size="large" color="black" />
+            ) : (
+              <>
+              <Text style={styles.fareLabel}>Estimated Fare:</Text>
+              <TextInput
+                style={styles.fareInput}
+                value={fare}
+                onChangeText={setFare}
+                keyboardType="numeric"
+              />
+            </>
+            )}
             <Text style={styles.distanceText}>
               Distance: {totalDistanceRide} km
             </Text>
@@ -447,9 +470,9 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
               {isLoading ? (
                 <View style={styles.loadingContainer}>
                   <ActivityIndicator size="small" color="#fff" />
-                  {/* <Text style={[styles.confirmButtonText, styles.loadingText]}>
-                    Processing...
-                  </Text> */}
+                  <Text style={[styles.confirmButtonText, styles.loadingText]}>
+                    Booking...
+                  </Text>
                 </View>
               ) : (
                 <Text style={styles.confirmButtonText}>Confirm</Text>
@@ -608,6 +631,13 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     marginBottom: 10,
+  },
+  validationError: {
+    color: "red",
+    marginBottom: 10,
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
 });
 

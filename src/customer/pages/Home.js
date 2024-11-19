@@ -117,12 +117,22 @@ const ServiceCard = ({ icon, title, description, onPress, selected }) => (
   </TouchableOpacity>
 );
 
-const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
+const ChooseServiceScreen = ({ setCurrentForm, navigation, havePakyaw }) => {
   const [selectedService, setSelectedService] = useState(null);
 
   const handleServiceSelect = (service) => {
     setSelectedService(service);
     navigation.navigate(service);
+  };
+
+  const handleCheckPakyaw = (service) => {
+    console.log(havePakyaw)
+    if (havePakyaw === true){
+      navigation.navigate("WaitingForRider");
+    }else{
+      handleServiceSelect(service);
+    }
+    
   };
 
   return (
@@ -154,7 +164,7 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation }) => {
             icon={<FontAwesome5 name="users" size={28} color={selectedService === "Pakyaw" ? "#000" : "#FBC635"} />}
             title="Pakyaw"
             description="Group rides & special trips"
-            onPress={() => handleServiceSelect("Pakyaw")}
+            onPress={() => handleCheckPakyaw("Pakyaw")}
             selected={selectedService === "Pakyaw"}
           />
         </View>
@@ -176,6 +186,8 @@ const MainComponent = ({ navigation }) => {
   const [errorMsg, setErrorMsg] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [havePakyaw, setHavePakyaw] = useState(false);
+  
   const { customerCoords, setCustomerCoords } = useContext(CustomerContext);
 
   const checkRideAndLocation = useCallback(async () => {
@@ -203,20 +215,26 @@ const MainComponent = ({ navigation }) => {
       const ride = response.rideDetails;
       if (response && response.hasActiveRide) {
         const { status } = response.rideDetails;
-        switch (status) {
-          case "Available":
-            navigation.navigate("WaitingForRider", { ride });
-            return "existing_booking";
-          case "Booked":
-            navigation.navigate("Tracking Rider", { ride });
-            return "existing_ride";
-          case "In Transit":
-            navigation.navigate("In Transit", { ride });
-            return "in_transit";
-          case "Review":
-            navigation.navigate("To Review", { ride });
-            return "review";
+        const { ride_type } = response.rideDetails;
+        setHavePakyaw(ride_type === "Pakyaw");
+        console.log(response.rideDetails.ride_type);
+        if (ride_type !== "Pakyaw"){
+          switch (status) {
+            case "Available":
+              navigation.navigate("WaitingForRider", { ride });
+              return "existing_booking";
+            case "Booked":
+              navigation.navigate("Tracking Rider", { ride });
+              return "existing_ride";
+            case "In Transit":
+              navigation.navigate("In Transit", { ride });
+              return "in_transit";
+            case "Review":
+              navigation.navigate("To Review", { ride });
+              return "review";
+          }
         }
+        
       }
 
       return "proceed";
@@ -272,6 +290,7 @@ const MainComponent = ({ navigation }) => {
           <ChooseServiceScreen
             setCurrentForm={setCurrentForm}
             navigation={navigation}
+            havePakyaw={havePakyaw}
           />
         )}
       </View>

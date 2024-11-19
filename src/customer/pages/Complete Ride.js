@@ -1,38 +1,42 @@
 import { StyleSheet, TouchableOpacity, View, ImageBackground, Alert, Image, } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Text } from "react-native-paper";
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'; // Importing icons
 import userService from "../../services/auth&services";
 
 const CompleteRide = ({ navigation, route }) => {
-  const { ride } = route.params;
+  const [bookDetails, setBookDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const role = "Customer";
 
-  const completeRide = async () => {
+  const fetchLatestRide = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await userService.review_ride(ride.ride_id);
-      if (response.data && response.data.message) {
-        Alert.alert("Ride Complete", response.data.message);
-        navigation.navigate("Home");
-      } else {
-        Alert.alert("Error", "Failed to finish the ride. Please try again.");
-      }
+      const ride = await userService.checkActiveBook();
+      setBookDetails(ride.rideDetails);
+      console.log(ride.rideDetails)
+      setIsLoading(false);
     } catch (error) {
-      console.error("Failed to finish ride", error.response ? error.response.data : error.message);
-      Alert.alert("Error", "An error occurred. Please try again.");
-    } finally {
+      Alert.alert("Error", "Failed to retrieve the latest available ride.");
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchLatestRide();
+  }, []);
 
   const handleReport = () => {
-    navigation.navigate("CustomerFeedback", {
-      ride: ride,
-      role: role
+    navigation.navigate("Report", {
+      ride: bookDetails,
+      role
     });
   };
+
+  const handleFeedback = () => {
+    navigation.navigate("CustomerFeedback");
+  };
+
 
   return (
     <ImageBackground
@@ -68,13 +72,13 @@ const CompleteRide = ({ navigation, route }) => {
             style={styles.reportButton}
             onPress={handleReport}
           >
-            <Text style={styles.buttonText}>Submit Feedback</Text>
+            <Text style={styles.buttonText}>Report Rider</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.returnHomeButton}
-            onPress={completeRide}
+            onPress={handleFeedback}
           >
-            <Text style={styles.buttonText}>Return Home</Text>
+            <Text style={styles.buttonText}>Submit Feedback</Text>
           </TouchableOpacity>
         </View>
       </View>

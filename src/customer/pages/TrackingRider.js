@@ -78,11 +78,6 @@ const TrackingRider = ({ navigation }) => {
                 "This Ride has been cancelled.",
                 [
                   {
-                    text: "Report",
-                    onPress: () => handleReport(),
-                    style: "destructive",
-                  },
-                  {
                     text: "Home",
                     onPress: () => navigation.navigate("Home"),
                     style: "cancel",

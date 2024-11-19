@@ -13,7 +13,7 @@ const ReportRiderPage = ({ navigation, route }) => {
   const reasons = [
     "Rider was rude",
     "Reckless driving",
-    "Overcharged me",
+    "Overcharging",
     "Unprofessional behavior",
     "Other",
   ];
@@ -35,7 +35,7 @@ const ReportRiderPage = ({ navigation, route }) => {
   const handleSubmit = async () => {
     const senderId = role === "Customer" ? ride.user_id : ride.rider_id;
     const recipientId = role === "Customer" ? ride.rider_id : ride.user_id;
-    
+
     if (!reason) {
       Alert.alert("Missing Reason", "Please select a reason for reporting.");
       return;
@@ -52,37 +52,26 @@ const ReportRiderPage = ({ navigation, route }) => {
         comments,
       };
 
-      // Stub for sending report data to backend
       console.log("Submitting report:", reportData);
       const response = await userService.submitReport(reportData);
 
-      console.log(response.message)
-
-      if (response.message === "You have already submitted a report for this ride"){
-        Alert.alert(
-          "Already Submitted",
-          response.message,
-          [
-            {
-              text: "OK",
-              onPress: () => navigation.goBack()
-            }
-          ]
-        );
+      if (response.message === "You have already submitted a report for this ride") {
+        Alert.alert("Already Submitted", response.message, [
+          {
+            text: "OK",
+            onPress: () => navigation.goBack(),
+          },
+        ]);
         return;
       }
 
-      if (response.message === "Feedback submitted successfully"){
-        Alert.alert(
-          "Success",
-          "Thank you for your feedback!",
-          [
-            {
-              text: "OK",
-              onPress: () => navigation.goBack()
-            }
-          ]
-        );
+      if (response.message === "Feedback submitted successfully") {
+        Alert.alert("Success", "Thank you for your feedback!", [
+          {
+            text: "OK",
+            onPress: () => navigation.goBack(),
+          },
+        ]);
       }
     } catch (error) {
       console.error("Error submitting report:", error);
@@ -92,53 +81,60 @@ const ReportRiderPage = ({ navigation, route }) => {
     }
   };
 
-  const riderName =`${ride.rider.first_name || ""} ${ride.rider.last_name || ""}`;
-  console.log(riderName)
+  const riderName = ride?.rider
+    ? `${ride.rider.first_name || ""} ${ride.rider.last_name || ""}`
+    : "Unknown Rider";
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Report Rider: {riderName}</Text>
-      <Text style={styles.subtitle}>Why are you reporting this rider?</Text>
+      <View style={styles.card}>
+        <Text style={styles.title}>Report Rider</Text>
+        <Text style={styles.riderName}>{riderName}</Text>
+        <Text style={styles.subtitle}>Why are you reporting this rider?</Text>
 
-      <RadioButton.Group onValueChange={(value) => setReason(value)} value={reason}>
-        {reasons.map((item, index) => (
-          <View style={styles.radioItem} key={index}>
-            <RadioButton value={item} />
-            <Text style={styles.radioLabel}>{item}</Text>
-          </View>
-        ))}
-      </RadioButton.Group>
-
-      <TextInput
-        label="Additional Comments (Optional)"
-        value={comments}
-        onChangeText={setComments}
-        mode="outlined"
-        multiline
-        numberOfLines={4}
-        style={styles.commentsInput}
-        placeholder="Add any additional details..."
-      />
-
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.cancelButton}
-          onPress={() => navigation.goBack()}
+        <RadioButton.Group
+          onValueChange={(value) => setReason(value)}
+          value={reason}
         >
-          <Text style={styles.buttonText}>Cancel</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.submitButton,
-            isSubmitting && styles.disabledButton,
-          ]}
-          onPress={handleSubmit}
-          disabled={isSubmitting}
-        >
-          <Text style={styles.buttonText}>
-            {isSubmitting ? "Submitting..." : "Submit"}
-          </Text>
-        </TouchableOpacity>
+          {reasons.map((item, index) => (
+            <View style={styles.radioItem} key={index}>
+              <RadioButton value={item} color="#FFD700" />
+              <Text style={styles.radioLabel}>{item}</Text>
+            </View>
+          ))}
+        </RadioButton.Group>
+
+        <TextInput
+          label="Additional Comments (Optional)"
+          value={comments}
+          onChangeText={setComments}
+          mode="outlined"
+          multiline
+          numberOfLines={4}
+          style={styles.commentsInput}
+          placeholder="Add any additional details..."
+        />
+
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.buttonText}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.submitButton,
+              isSubmitting && styles.disabledButton,
+            ]}
+            onPress={handleSubmit}
+            disabled={isSubmitting}
+          >
+            <Text style={styles.buttonText}>
+              {isSubmitting ? "Submitting..." : "Submit"}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -148,16 +144,36 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    backgroundColor: "#f2f2f2",
+  },
+  card: {
     backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
-    marginBottom: 12,
+    color: "#333",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  riderName: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#555",
+    textAlign: "center",
+    marginBottom: 20,
   },
   subtitle: {
     fontSize: 16,
-    marginBottom: 12,
+    fontWeight: "400",
+    color: "#666",
+    marginBottom: 10,
   },
   radioItem: {
     flexDirection: "row",
@@ -166,11 +182,13 @@ const styles = StyleSheet.create({
   },
   radioLabel: {
     fontSize: 16,
+    color: "#444",
   },
   commentsInput: {
     marginTop: 16,
-    marginBottom: 16,
+    marginBottom: 20,
     backgroundColor: "#f9f9f9",
+    borderColor: "#ddd",
   },
   buttonContainer: {
     flexDirection: "row",
@@ -179,21 +197,21 @@ const styles = StyleSheet.create({
   cancelButton: {
     flex: 1,
     backgroundColor: "#FF3B30",
-    padding: 16,
+    paddingVertical: 12,
     borderRadius: 8,
-    marginRight: 8,
     alignItems: "center",
+    marginRight: 8,
   },
   submitButton: {
     flex: 1,
     backgroundColor: "#34C759",
-    padding: 16,
+    paddingVertical: 12,
     borderRadius: 8,
-    marginLeft: 8,
     alignItems: "center",
+    marginLeft: 8,
   },
   buttonText: {
-    color: "white",
+    color: "#fff",
     fontSize: 16,
     fontWeight: "600",
   },

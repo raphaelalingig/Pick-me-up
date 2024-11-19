@@ -81,7 +81,7 @@ const Intransit = ({ navigation }) => {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchLatestRide(); // Refresh the ride details instead of navigating
+    await fetchLatestRide();
     setRefreshing(false);
   }, []);
 

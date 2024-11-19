@@ -7,6 +7,7 @@ import riderMarker from "../../../assets/rider.png";
 import customerMarker from "../../../assets/customer.png";
 import { usePusher } from '../../context/PusherContext';
 import ApplyRideModal from './ApplyRideModal';
+import userService from "../../services/auth&services";
 
 const BookedMap = ({ navigation, route }) => {
   const { ride } = route.params;
@@ -171,11 +172,21 @@ const BookedMap = ({ navigation, route }) => {
         >
           <Image source={customerMarker} style={styles.customerIconStyle} />
         </Marker>
-        <Polyline
-          coordinates={routeCoordinates}
-          strokeColor="#4285F4" // Google Maps blue color
-          strokeWidth={3}
-        />
+        <>
+              {/* Outer Polyline (Border) */}
+              <Polyline
+                coordinates={routeCoordinates}
+                strokeColor="#000000" // Border color (black)
+                strokeWidth={4}       // Slightly thicker
+              />
+
+              {/* Inner Polyline (Main Color - Orange) */}
+              <Polyline
+                coordinates={routeCoordinates}
+                strokeColor="#FFA500" // Main color (orange)
+                strokeWidth={3}       // Slightly thinner
+              />
+            </>
       </MapView>
 
       <View style={styles.distanceContainer}>

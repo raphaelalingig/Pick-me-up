@@ -23,11 +23,7 @@ const FinishRide = ({ navigation, route }) => {
     });
   };
   const completeRide = () => {
-    // Reset ride state and navigate back to the main rider screen
-    navigation.reset({
-      index: 0,
-      routes: [{ name: "Rider Home" }], // Replace with your actual home screen route name
-    });
+    navigation.navigate("Home")
   };
 
   return (
