@@ -1,7 +1,14 @@
-import { StyleSheet, TouchableOpacity, View, ImageBackground, Alert, Image, } from "react-native";
+import {
+  StyleSheet,
+  TouchableOpacity,
+  View,
+  ImageBackground,
+  Alert,
+  Image,
+} from "react-native";
 import React, { useState } from "react";
 import { Text } from "react-native-paper";
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'; // Importing icons
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"; // Importing icons
 import userService from "../../services/auth&services";
 
 const FinishRide = ({ navigation, route }) => {
@@ -9,17 +16,23 @@ const FinishRide = ({ navigation, route }) => {
   const [isLoading, setIsLoading] = useState(true);
   const role = "Rider";
 
-
   const handleReport = () => {
     navigation.navigate("Rider Feedback", {
       ride: ride,
-      role: role
+      role: role,
+    });
+  };
+  const completeRide = () => {
+    // Reset ride state and navigate back to the main rider screen
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Rider Home" }], // Replace with your actual home screen route name
     });
   };
 
   return (
     <ImageBackground
-      source={require("../../pictures/9.png")}// Replace with your map image URL
+      source={require("../../pictures/9.png")} // Replace with your map image URL
       style={styles.background}
     >
       <View style={styles.overlay}>
@@ -33,24 +46,25 @@ const FinishRide = ({ navigation, route }) => {
 
         {/* Circular Image Placeholder */}
         <View style={styles.imagePlaceholder}>
-        <Image
-          source={require("../../pictures/7.png")} // Replace with your image URL
-          style={styles.image}
-        />
-      </View>
+          <Image
+            source={require("../../pictures/7.png")} // Replace with your image URL
+            style={styles.image}
+          />
+        </View>
 
         {/* Arrival Message */}
         <View style={styles.messageContainer}>
-          <Text style={styles.messageText}>You have Arrived at your Destination!</Text>
-          <Text style={styles.subMessageText}>Thank you for your hardwork.</Text>
+          <Text style={styles.messageText}>
+            You have Arrived at your Destination!
+          </Text>
+          <Text style={styles.subMessageText}>
+            Thank you for your hardwork.
+          </Text>
         </View>
 
         {/* Buttons: Report and Return Home */}
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.reportButton}
-            onPress={handleReport}
-          >
+          <TouchableOpacity style={styles.reportButton} onPress={handleReport}>
             <Text style={styles.buttonText}>Send Customer Feedback</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -87,71 +101,71 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   rideTypeIconContainer: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
     padding: 10,
     borderRadius: 8,
     marginRight: 10,
-    elevation: 2,  // Slight shadow under the icon
+    elevation: 2, // Slight shadow under the icon
   },
   rideTypeText: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000000',  // Yellow color for the title
+    fontWeight: "bold",
+    color: "#000000", // Yellow color for the title
   },
   // Image placeholder
   imagePlaceholder: {
     width: 200,
     height: 200,
-    backgroundColor: '#FFD700',
+    backgroundColor: "#FFD700",
     borderRadius: 100,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 30,
   },
 
   image: {
-    width: '80%', // Adjust size as needed
-    height: '80%', // Adjust size as needed
+    width: "80%", // Adjust size as needed
+    height: "80%", // Adjust size as needed
     borderRadius: 100, // Keep it circular
   },
   // Arrival message section
   messageContainer: {
     paddingHorizontal: 20,
     marginBottom: 30,
-    alignItems: 'center',
+    alignItems: "center",
   },
   messageText: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
     marginBottom: 5,
   },
   subMessageText: {
     fontSize: 16,
-    textAlign: 'center',
-    color: '#333',
+    textAlign: "center",
+    color: "#333",
   },
   // Button section
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '80%',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "80%",
   },
   reportButton: {
-    backgroundColor: '#FF0000',  // Red for Report
+    backgroundColor: "#FF0000", // Red for Report
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
     marginRight: 10,
   },
   returnHomeButton: {
-    backgroundColor: '#158D01',  // Green for Return Home
+    backgroundColor: "#158D01", // Green for Return Home
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
   },
   buttonText: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 16,
   },
 });
