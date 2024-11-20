@@ -47,6 +47,7 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isCalculatingFare, setIsCalculatingFare] = useState(false);
   const [isRiderDecide, setIsRiderDecide] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
 
 
 
@@ -61,6 +62,7 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
   }, []);
 
   useEffect(() => {
+    if (isClearing) return;
     if (route.params?.selectedLocation && route.params?.address) {
       const { latitude, longitude } = route.params.selectedLocation;
       const location = `${latitude}, ${longitude}`;
@@ -180,8 +182,8 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
   };
 
   const handleConfirm = async () => {
-    if (!pickupLocation || !dropoffLocation) {
-      Alert.alert("Validation Error", "Please fill out both pickup and dropoff fields.");
+    if (!pickupLocation || !dropoffLocation || instructions) {
+      Alert.alert("Validation Error", "Please fill out all of the fields.");
       return;
     }
 
@@ -307,24 +309,46 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
     }
   };
 
-  const clearPickupAddress = () => {
+  const clearPickupAddress = async () => {
+    console.log("Clearing pickup address");
+    setIsClearing(true);
+    
+    // Clear pickup fields
     setPickupLocation("");
     setPickupAddress("");
     setPickupSuggestions([]);
-    if (dropoffLocation) {
+    
+    // Reset fare if no dropoff location
+    if (!dropoffLocation) {
       setFare("40.00");
       setTotalDistanceRide(0);
     }
+    
+    // Small delay before allowing new updates
+    setTimeout(() => {
+      setIsClearing(false);
+    }, 100);
   };
 
-  const clearDropoffAddress = () => {
+  const clearDropoffAddress = async () => {
+    console.log("Clearing dropoff address");
+    setIsClearing(true);
+    
+    // Clear dropoff fields
     setDropoffLocation("");
     setDropoffAddress("");
     setDropoffSuggestions([]);
-    if (pickupLocation) {
+    
+    // Reset fare if no pickup location
+    if (!pickupLocation) {
       setFare("40.00");
       setTotalDistanceRide(0);
     }
+    
+    // Small delay before allowing new updates
+    setTimeout(() => {
+      setIsClearing(false);
+    }, 100);
   };
 
   return (
@@ -361,7 +385,8 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
           </View>
 
           {/* Rider Decide Toggle for Pasugo */}
-          {deliveryType === "Pasugo" && (
+
+          {/* {deliveryType === "Pasugo" && (
             <View style={styles.riderDecideContainer}>
               <Text style={styles.riderDecideLabel}>Let Rider Decide</Text>
               <Switch
@@ -371,7 +396,7 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
                 thumbColor={isRiderDecide ? "#f5dd4b" : "#f4f3f4"}
               />
             </View>
-          )}
+          )} */}
 
           <View style={styles.inputContainer}>
             <View style={styles.inputWrapper}>

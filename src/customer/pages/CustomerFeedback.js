@@ -37,7 +37,7 @@ const SubmitFeedback_C = ({ navigation, route }) => {
     try {
       const ride = await userService.checkActiveBook();
       setBookDetails(ride.rideDetails);
-      console.log(ride.rideDetails)
+      console.log("FEEDBACK", ride.rideDetails)
       setIsLoading(false);
     } catch (error) {
       Alert.alert("Error", "Failed to retrieve the latest available ride.");
@@ -185,13 +185,13 @@ const SubmitFeedback_C = ({ navigation, route }) => {
           <Text style={styles.title}>Rate Your Experience</Text>
           
           <View style={styles.inputContainer}>
-            <TextInput
+            {/* <TextInput
               label={recipientLabel}
               value={recipientName}
               editable={false}
               style={styles.textinput}
               mode="outlined"
-            />
+            /> */}
             <TextInput
               label="Date"
               value={bookDetails ? `${bookDetails.ride_date}` : "Loading..."}

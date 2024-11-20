@@ -163,7 +163,7 @@ const WaitingRider = ({ navigation }) => {
           console.log("APPLIER", data.ride.applier)
             if (data.ride.applier === userId) {
               Alert.alert("Ride Match", 'You have found a Match!');
-              navigation.navigate("Home");
+              navigation.navigate("Tracking Rider");
             }
         });
 

@@ -42,6 +42,7 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
   const dropoffTimeoutRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isCalculatingFare, setIsCalculatingFare] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
 
 
   useEffect(() => {
@@ -55,6 +56,7 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
   }, []);
 
   useEffect(() => {
+    if (isClearing) return;
     if (route.params?.selectedLocation && route.params?.address) {
       const { latitude, longitude } = route.params.selectedLocation;
       const location = `${latitude}, ${longitude}`;
@@ -282,24 +284,46 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
     }
   };
 
-  const clearPickupAddress = () => {
+  const clearPickupAddress = async () => {
+    console.log("Clearing pickup address");
+    setIsClearing(true);
+    
+    // Clear pickup fields
     setPickupLocation("");
     setPickupAddress("");
     setPickupSuggestions([]);
-    if (dropoffLocation) {
+    
+    // Reset fare if no dropoff location
+    if (!dropoffLocation) {
       setFare("40.00");
       setTotalDistanceRide(0);
     }
+    
+    // Small delay before allowing new updates
+    setTimeout(() => {
+      setIsClearing(false);
+    }, 100);
   };
 
-  const clearDropoffAddress = () => {
+  const clearDropoffAddress = async () => {
+    console.log("Clearing dropoff address");
+    setIsClearing(true);
+    
+    // Clear dropoff fields
     setDropoffLocation("");
     setDropoffAddress("");
     setDropoffSuggestions([]);
-    if (pickupLocation) {
+    
+    // Reset fare if no pickup location
+    if (!pickupLocation) {
       setFare("40.00");
       setTotalDistanceRide(0);
     }
+    
+    // Small delay before allowing new updates
+    setTimeout(() => {
+      setIsClearing(false);
+    }, 100);
   };
 
   return (

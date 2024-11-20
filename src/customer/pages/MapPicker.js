@@ -51,27 +51,39 @@ const MapPicker = ({ route, navigation }) => {
     };
 
     const handleConfirm = () => {
-      let destinationScreen = '';
-      switch (ride_type) {
-          case 'MotoTaxi':
-              destinationScreen = 'Moto Taxi';
-              break;
-          case 'Delivery':
-              destinationScreen = 'Delivery';
-              break;
-          case 'Pakyaw':
-              destinationScreen = 'Pakyaw';
-              break;
-          default:
-              destinationScreen = 'Home'; // Fallback screen
-      }
-  
-      navigation.navigate(destinationScreen, {
-          selectedLocation: selectedLocation,
-          address: address,
-          locationType: locationType
-      });
-  };
+        if (!selectedLocation || !address) {
+            Alert.alert('Error', 'Please select a valid location');
+            return;
+        }
+
+        // Map ride types to screen names
+        const screenMapping = {
+            'Moto Taxi': 'Moto Taxi',
+            'Delivery': 'Delivery',
+            'Pakyaw': 'Pakyaw'
+        };
+
+        const destinationScreen = screenMapping[ride_type];
+
+        if (!destinationScreen) {
+            console.error('Invalid ride type:', ride_type);
+            Alert.alert('Error', 'Invalid ride type selected');
+            return;
+        }
+
+        try {
+            console.log(selectedLocation)
+            navigation.navigate(destinationScreen, {
+                selectedLocation,
+                address,
+                locationType,
+                ride_type
+            });
+        } catch (error) {
+            console.error('Navigation error:', error);
+            Alert.alert('Error', 'Failed to navigate to the next screen');
+        }
+    };
 
     if (!initialRegion) {
         return (

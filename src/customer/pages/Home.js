@@ -145,11 +145,11 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation, havePakyaw }) => {
         
         <View style={styles.servicesGrid}>
           <ServiceCard
-            icon={<MaterialCommunityIcons name="motorbike" size={32} color={selectedService === "Motor Taxi" ? "#000" : "#FBC635"} />}
+            icon={<MaterialCommunityIcons name="motorbike" size={32} color={selectedService === "Moto Taxi" ? "#000" : "#FBC635"} />}
             title="Moto-Taxi"
             description="Quick rides to your destination"
-            onPress={() => handleServiceSelect("Motor Taxi")}
-            selected={selectedService === "Motor Taxi"}
+            onPress={() => handleServiceSelect("Moto Taxi")}
+            selected={selectedService === "Moto Taxi"}
           />
 
           <ServiceCard

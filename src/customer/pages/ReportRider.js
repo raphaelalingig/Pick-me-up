@@ -5,10 +5,12 @@ import userService from "../../services/auth&services";
 
 const ReportRiderPage = ({ navigation, route }) => {
   const { ride, role } = route.params;
+  const [bookDetails, setBookDetails] = useState("");
   const [reason, setReason] = useState("");
   const [comments, setComments] = useState("");
   const [user_id, setUserId] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  console.log(ride)
 
   const reasons = [
     "Rider was rude",
@@ -32,9 +34,26 @@ const ReportRiderPage = ({ navigation, route }) => {
     fetchUserId();
   }, []);
 
+  const fetchLatestRide = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const ride = await userService.checkActiveBook();
+      setBookDetails(ride.rideDetails);
+      console.log("FEEDBACK", ride.rideDetails)
+      setIsLoading(false);
+    } catch (error) {
+      Alert.alert("Error", "Failed to retrieve the latest available ride.");
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchLatestRide();
+  }, []);
+
   const handleSubmit = async () => {
-    const senderId = role === "Customer" ? ride.user_id : ride.rider_id;
-    const recipientId = role === "Customer" ? ride.rider_id : ride.user_id;
+    const senderId = role === "Customer" ? bookDetails.user_id : bookDetails.rider_id;
+    const recipientId = role === "Customer" ? bookDetails.rider_id : bookDetails.user_id;
 
     if (!reason) {
       Alert.alert("Missing Reason", "Please select a reason for reporting.");
@@ -46,7 +65,7 @@ const ReportRiderPage = ({ navigation, route }) => {
 
       const reportData = {
         sender: senderId,
-        ride_id: ride.ride_id,
+        ride_id: bookDetails.ride_id,
         recipient: recipientId,
         reason,
         comments,
@@ -81,8 +100,8 @@ const ReportRiderPage = ({ navigation, route }) => {
     }
   };
 
-  const riderName = ride?.rider
-    ? `${ride.rider.first_name || ""} ${ride.rider.last_name || ""}`
+  const riderName = bookDetails?.rider
+    ? `${bookDetails.rider.first_name || ""} ${bookDetails.rider.last_name || ""}`
     : "Unknown Rider";
 
   return (

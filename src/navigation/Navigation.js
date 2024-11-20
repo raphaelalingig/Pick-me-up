@@ -191,7 +191,7 @@ const CustomerStack = () => {
       <Stack.Screen name="NearbyCustomer" component={NearbyCustomerScreen} />
       <Stack.Screen name="BookingDetails" component={BookingDetailsScreen} />
       <Stack.Screen name="MapPicker" component={MapPicker} />
-      <Stack.Screen name="Motor Taxi" component={MotorTaxiOptionScreen} />
+      <Stack.Screen name="Moto Taxi" component={MotorTaxiOptionScreen} />
       <Stack.Screen name="Pakyaw" component={PakyawOptionScreen} />
       <Stack.Screen name="Delivery" component={DeliveryOptionScreen} />
       <Stack.Screen name="Settings" component={AccountSettingsScreen} />

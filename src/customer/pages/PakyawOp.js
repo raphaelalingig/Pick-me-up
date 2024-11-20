@@ -11,6 +11,7 @@ import {
   Platform,
   ActivityIndicator,
   Switch,
+  ScrollView,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
@@ -75,6 +76,7 @@ const PakyawOptionScreen = ({ navigation, route }) => {
   const [description, setDescription] = useState("");
   const [scheduledDate, setScheduledDate] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
 
 
   useEffect(() => {
@@ -88,6 +90,7 @@ const PakyawOptionScreen = ({ navigation, route }) => {
   }, []);
 
   useEffect(() => {
+    if (isClearing) return;
     if (route.params?.selectedLocation && route.params?.address) {
       const { latitude, longitude } = route.params.selectedLocation;
       const location = `${latitude}, ${longitude}`;
@@ -194,6 +197,11 @@ const PakyawOptionScreen = ({ navigation, route }) => {
 
   const handleConfirm = async () => {
     if (isLoading) return;
+
+    if (!pickupLocation || !dropoffLocation || !description) {
+      Alert.alert("Validation Error", "Please fill out all of the fields.");
+      return;
+    }
 
     setIsLoading(true);
 
@@ -311,25 +319,48 @@ const PakyawOptionScreen = ({ navigation, route }) => {
     }
   };
 
-  const clearPickupAddress = () => {
+  const clearPickupAddress = async () => {
+    console.log("Clearing pickup address");
+    setIsClearing(true);
+    
+    // Clear pickup fields
     setPickupLocation("");
     setPickupAddress("");
     setPickupSuggestions([]);
-    if (dropoffLocation) {
+    
+    // Reset fare if no dropoff location
+    if (!dropoffLocation) {
       setFare("40.00");
       setTotalDistanceRide(0);
     }
+    
+    // Small delay before allowing new updates
+    setTimeout(() => {
+      setIsClearing(false);
+    }, 100);
   };
 
-  const clearDropoffAddress = () => {
+  const clearDropoffAddress = async () => {
+    console.log("Clearing dropoff address");
+    setIsClearing(true);
+    
+    // Clear dropoff fields
     setDropoffLocation("");
     setDropoffAddress("");
     setDropoffSuggestions([]);
-    if (pickupLocation) {
+    
+    // Reset fare if no pickup location
+    if (!pickupLocation) {
       setFare("40.00");
       setTotalDistanceRide(0);
     }
+    
+    // Small delay before allowing new updates
+    setTimeout(() => {
+      setIsClearing(false);
+    }, 100);
   };
+
   const handleDateChange = useCallback((event, selectedDate) => {
     if (event.type === "set" && selectedDate) {
       setScheduledDate(selectedDate);
@@ -340,14 +371,19 @@ const PakyawOptionScreen = ({ navigation, route }) => {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
+    behavior={Platform.OS === "ios" ? "padding" : "height"}
+    style={styles.container}
+  >
+    <ImageBackground
+      source={require("../../pictures/3.png")}
+      style={styles.background}
     >
-      <ImageBackground
-        source={require("../../pictures/3.png")}
-        style={styles.background}
+      <ScrollView
+        intensity={800}
+        tint="light"
+        style={styles.blurContainer}
+        contentContainerStyle={styles.scrollViewContent} // Added this prop
       >
-        <BlurView intensity={800} tint="light" style={styles.blurContainer}>
           <Text style={styles.title}>Pakyaw</Text>
 
           <View style={styles.inputContainer}>
@@ -586,7 +622,7 @@ const PakyawOptionScreen = ({ navigation, route }) => {
               )}
             </TouchableOpacity>
           </View>
-        </BlurView>
+        </ScrollView  >
       </ImageBackground>
     </KeyboardAvoidingView>
   );
@@ -606,6 +642,8 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,215,0,0.5)",
     margin: 5,
     borderRadius: 10,
+  },
+  scrollViewContent: {  // New style for ScrollView content
     alignItems: "center",
     padding: 10,
   },

@@ -23,7 +23,11 @@ const FinishRide = ({ navigation, route }) => {
     });
   };
   const completeRide = () => {
-    navigation.navigate("Home")
+    // Reset ride state and navigate back to the main rider screen
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "RiderDrawer" }], // Replace with your actual home screen route name
+    });
   };
 
   return (
@@ -61,7 +65,7 @@ const FinishRide = ({ navigation, route }) => {
         {/* Buttons: Report and Return Home */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.reportButton} onPress={handleReport}>
-            <Text style={styles.buttonText}>Send Customer Feedback</Text>
+            <Text style={styles.buttonText}>Send Feedback</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.returnHomeButton}
