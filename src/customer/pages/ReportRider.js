@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { View, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { TextInput, Text, RadioButton } from "react-native-paper";
 import userService from "../../services/auth&services";
@@ -35,15 +35,15 @@ const ReportRiderPage = ({ navigation, route }) => {
   }, []);
 
   const fetchLatestRide = useCallback(async () => {
-    setIsLoading(true);
+    // setIsLoading(true);
     try {
       const ride = await userService.checkActiveBook();
       setBookDetails(ride.rideDetails);
       console.log("FEEDBACK", ride.rideDetails)
-      setIsLoading(false);
+      // setIsLoading(false);
     } catch (error) {
       Alert.alert("Error", "Failed to retrieve the latest available ride.");
-      setIsLoading(false);
+      // setIsLoading(false);
     }
   }, []);
 
@@ -100,9 +100,11 @@ const ReportRiderPage = ({ navigation, route }) => {
     }
   };
 
-  const riderName = bookDetails?.rider
+  const riderName = 
+  
+  bookDetails?.rider
     ? `${bookDetails.rider.first_name || ""} ${bookDetails.rider.last_name || ""}`
-    : "Unknown Rider";
+    : "";
 
   return (
     <View style={styles.container}>

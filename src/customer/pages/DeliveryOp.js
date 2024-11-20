@@ -184,7 +184,7 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
   };
 
   const handleConfirm = async () => {
-    if (!pickupLocation || !dropoffLocation || instructions) {
+    if (!pickupLocation || !dropoffLocation || !instructions) {
       Alert.alert("Validation Error", "Please fill out all of the fields.");
       return;
     }

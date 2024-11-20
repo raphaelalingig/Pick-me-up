@@ -350,7 +350,7 @@ const TrackingDestination = ({ route, navigation }) => {
             style={styles.button}
             onPress={() => navigation.navigate("Rider Feedback", {ride: ride, role: "Rider"})}
           >
-            <Text style={styles.buttonText}>Report</Text>
+            <Text style={styles.buttonText}>Feedback Report</Text>
           </TouchableOpacity>
           <View style={styles.arriveButtonContainer}>
             <Text style={styles.hintText}>Long press to Finish ride</Text>

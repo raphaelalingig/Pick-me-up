@@ -17,7 +17,6 @@ import deliveryMarker from "../../../assets/delivery.png";
 import usePusher from "../../services/pusher";
 import { MAP_API_KEY } from "@env";
 
-
 const TrackingRider = ({ navigation }) => {
   const [bookDetails, setBookDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,38 +62,34 @@ const TrackingRider = ({ navigation }) => {
   useEffect(() => {
     const setupPusher = async () => {
       try {
-        console.log("IDDDDD:",userId)
+        console.log("IDDDDD:", userId);
         if (!userId) return;
-        const progressChannel = pusher.subscribe('progress');
+        const progressChannel = pusher.subscribe("progress");
 
-        progressChannel.bind('RIDE_PROG', data => {
+        progressChannel.bind("RIDE_PROG", (data) => {
           console.log("Progress DATA received:", data);
-          console.log("id & status:", data.update.id, data.update.status)
-            if (data.update.id === userId) {
-              if(data.update.status === "Start"){
-                Alert.alert("Starting Ride", 'Your Rider Has Arrived!');
-                navigation.navigate("Home");
+          console.log("id & status:", data.update.id, data.update.status);
+          if (data.update.id === userId) {
+            if (data.update.status === "Start") {
+              Alert.alert("Starting Ride", "Your Rider Has Arrived!");
+              navigation.navigate("Home");
             } else if (data.update.status === "Cancel") {
-              Alert.alert(
-                "Sorry",
-                "This Ride has been cancelled.",
-                [
-                  {
-                    text: "Home",
-                    onPress: () => navigation.navigate("Home"),
-                    style: "cancel",
-                  },
-                ]
-              );
-              }
+              Alert.alert("Sorry", "This Ride has been cancelled.", [
+                {
+                  text: "Home",
+                  onPress: () => navigation.navigate("Home"),
+                  style: "cancel",
+                },
+              ]);
             }
+          }
         });
         return () => {
           progressChannel.unbind_all();
-          pusher.unsubscribe('progress');
+          pusher.unsubscribe("progress");
         };
       } catch (error) {
-        console.error('Error setting up Pusher:', error);
+        console.error("Error setting up Pusher:", error);
       }
     };
     setupPusher();
@@ -281,8 +276,10 @@ const TrackingRider = ({ navigation }) => {
   };
 
   const handleContactPress = () => {
+    const phoneNumber = `tel:${bookDetails.rider.mobile_number}`;
+
+    console.log("Contact button pressed");
     if (bookDetails?.rider?.mobile_number) {
-      const phoneNumber = `tel:${bookDetails.rider.mobile_number}`;
       Linking.openURL(phoneNumber).catch((err) =>
         Alert.alert("Error", "Failed to open the dialer.")
       );
@@ -332,7 +329,11 @@ const TrackingRider = ({ navigation }) => {
             {customerLocation && (
               <Marker coordinate={customerLocation} title="Customer Location">
                 <Image
-                  source={bookDetails.ride_type === "Delivery" ? deliveryMarker : customerMarker} 
+                  source={
+                    bookDetails.ride_type === "Delivery"
+                      ? deliveryMarker
+                      : customerMarker
+                  }
                   style={styles.customerIconStyle}
                 />
               </Marker>
@@ -344,20 +345,20 @@ const TrackingRider = ({ navigation }) => {
               // Goldenrod (#DAA520)
               // FF0000
               <>
-              {/* Outer Polyline (Border) */}
-              <Polyline
-                coordinates={routeCoordinates}
-                strokeColor="#000000" // Border color (black)
-                strokeWidth={4}       // Slightly thicker
-              />
+                {/* Outer Polyline (Border) */}
+                <Polyline
+                  coordinates={routeCoordinates}
+                  strokeColor="#000000" // Border color (black)
+                  strokeWidth={4} // Slightly thicker
+                />
 
-              {/* Inner Polyline (Main Color - Orange) */}
-              <Polyline
-                coordinates={routeCoordinates}
-                strokeColor="#FFA500" // Main color (orange)
-                strokeWidth={3}       // Slightly thinner
-              />
-            </>
+                {/* Inner Polyline (Main Color - Orange) */}
+                <Polyline
+                  coordinates={routeCoordinates}
+                  strokeColor="#FFA500" // Main color (orange)
+                  strokeWidth={3} // Slightly thinner
+                />
+              </>
             )}
           </MapView>
         )}
@@ -394,7 +395,10 @@ const TrackingRider = ({ navigation }) => {
             onPress={handleContactPress}
             disabled={!bookDetails?.rider?.mobile_number}
           >
-            <Text style={styles.buttonText}>Contact</Text>
+            <Text style={styles.buttonText}>Wait for Rider to Arrive. </Text>
+            {bookDetails?.rider?.mobile_number && (
+              <Text style={styles.buttonText}>Contact Rider</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>
