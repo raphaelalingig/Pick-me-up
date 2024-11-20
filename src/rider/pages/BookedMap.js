@@ -8,7 +8,8 @@ import customerMarker from "../../../assets/customer.png";
 import { usePusher } from '../../context/PusherContext';
 import ApplyRideModal from './ApplyRideModal';
 import userService from "../../services/auth&services";
-
+import {MAP_API_KEY} from "@env"
+ 
 const BookedMap = ({ navigation, route }) => {
   const { ride } = route.params;
 
@@ -59,7 +60,7 @@ const BookedMap = ({ navigation, route }) => {
 
   const fetchDirections = async () => {
     try {
-      const apiKey = "AIzaSyAekXSq_b4GaHneUKEBVsl4UTGlaskobFo"; // Your API key
+      const apiKey = MAP_API_KEY; // Your API key
       const origin = `${riderLocation.latitude},${riderLocation.longitude}`;
       const destination = `${customerLocation.latitude},${customerLocation.longitude}`;
       const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${apiKey}`;

@@ -9,6 +9,7 @@ import * as Location from 'expo-location';
 import Toast from 'react-native-root-toast';
 
 
+
 const Login = ({ navigation }) => {
   const [user_name, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -21,7 +22,6 @@ const Login = ({ navigation }) => {
   const [hideEntry, setHideEntry] = useState(true);
   const [user, setUser] = useState("");
   const [status, setStatus] = useState(null);
-
 
 
   const getCurrentLocation = async (role) => {

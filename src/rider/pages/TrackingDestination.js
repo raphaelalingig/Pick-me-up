@@ -15,6 +15,8 @@ import userService from "../../services/auth&services";
 import { RiderContext } from "../../context/riderContext";
 
 import riderWithUser from "../../../assets/riderWithCustomer.png";
+import { MAP_API_KEY } from "@env";
+
 import flagDestination from "../../../assets/flagDestination.png";
 
 const TrackingDestination = ({ route, navigation }) => {
@@ -120,7 +122,7 @@ const TrackingDestination = ({ route, navigation }) => {
 
   const fetchDirections = async () => {
     try {
-      const apiKey = "AIzaSyAekXSq_b4GaHneUKEBVsl4UTGlaskobFo";
+      const apiKey = MAP_API_KEY;
       const origin = `${customerLocation.latitude},${customerLocation.longitude}`;
       const destination = `${destinationLocation.latitude},${destinationLocation.longitude}`;
       const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${apiKey}`;

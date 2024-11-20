@@ -15,6 +15,8 @@ import riderMarker from "../../../assets/rider.png";
 import customerMarker from "../../../assets/customer.png";
 import deliveryMarker from "../../../assets/delivery.png";
 import usePusher from "../../services/pusher";
+import { MAP_API_KEY } from "@env";
+
 
 const TrackingRider = ({ navigation }) => {
   const [bookDetails, setBookDetails] = useState(null);
@@ -253,7 +255,7 @@ const TrackingRider = ({ navigation }) => {
     if (!riderLoc || !customerLoc) return;
 
     try {
-      const apiKey = "AIzaSyAekXSq_b4GaHneUKEBVsl4UTGlaskobFo";
+      const apiKey = MAP_API_KEY;
       const origin = `${riderLoc.latitude},${riderLoc.longitude}`;
       const destination = `${customerLoc.latitude},${customerLoc.longitude}`;
       const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${apiKey}`;

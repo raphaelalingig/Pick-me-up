@@ -17,8 +17,10 @@ import * as Location from "expo-location";
 import { CustomerContext } from "../../context/customerContext";
 import userService from "../../services/auth&services";
 import { BlurView } from "expo-blur";
+import { MAP_API_KEY } from "@env";
 
-const GOOGLE_PLACES_API_KEY = "AIzaSyAekXSq_b4GaHneUKEBVsl4UTGlaskobFo";
+// Correctly assign the API key
+const GOOGLE_PLACES_API_KEY = MAP_API_KEY;
 
 const PlaceSuggestion = ({ suggestion, onPress }) => (
   <TouchableOpacity

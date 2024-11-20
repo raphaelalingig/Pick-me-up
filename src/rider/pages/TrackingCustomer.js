@@ -17,6 +17,8 @@ import userService from "../../services/auth&services";
 import riderMarker from "../../../assets/rider.png";
 import customerMarker from "../../../assets/customer.png";
 import deliveryMarker from "../../../assets/delivery.png";
+import { MAP_API_KEY } from "@env";
+
 
 const TrackingCustomer = ({ route, navigation }) => {
   const { ride } = route.params;
@@ -164,7 +166,7 @@ const TrackingCustomer = ({ route, navigation }) => {
 
   const fetchDirections = async () => {
     try {
-      const apiKey = "AIzaSyAekXSq_b4GaHneUKEBVsl4UTGlaskobFo";
+      const apiKey = MAP_API_KEY;
       const origin = `${riderLocation.latitude},${riderLocation.longitude}`;
       const destination = `${customerLocation.latitude},${customerLocation.longitude}`;
       const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${apiKey}`;
