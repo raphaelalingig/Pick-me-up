@@ -346,12 +346,12 @@ const TrackingDestination = ({ route, navigation }) => {
           <Text style={styles.infoText}>Fare: ₱{ride.fare}</Text>
         </View>
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.button}
             onPress={() => navigation.navigate("Rider Feedback", {ride: ride, role: "Rider"})}
           >
-            <Text style={styles.buttonText}>Feedback Report</Text>
-          </TouchableOpacity>
+            <Text style={styles.buttonText}>Report</Text>
+          </TouchableOpacity> */}
           <View style={styles.arriveButtonContainer}>
             <Text style={styles.hintText}>Long press to Finish ride</Text>
             <Pressable

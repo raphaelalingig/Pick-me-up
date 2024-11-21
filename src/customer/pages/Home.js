@@ -128,7 +128,7 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation, havePakyaw }) => {
   const handleCheckPakyaw = (service) => {
     console.log(havePakyaw)
     if (havePakyaw === true){
-      navigation.navigate("WaitingForRider");
+      navigation.navigate("Pakyaw");
     }else{
       handleServiceSelect(service);
     }
@@ -161,11 +161,11 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation, havePakyaw }) => {
           />
 
           <ServiceCard
-            icon={<FontAwesome5 name="users" size={28} color={selectedService === "Pakyaw" ? "#000" : "#FBC635"} />}
+            icon={<FontAwesome5 name="users" size={28} color={selectedService === "Book Pakyaw" ? "#000" : "#FBC635"} />}
             title="Pakyaw"
             description="Group rides & special trips"
-            onPress={() => handleCheckPakyaw("Pakyaw")}
-            selected={selectedService === "Pakyaw"}
+            onPress={() => handleCheckPakyaw("Book Pakyaw")}
+            selected={selectedService === "Book Pakyaw"}
           />
         </View>
 
@@ -180,7 +180,7 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation, havePakyaw }) => {
   );
 };
 
-const MainComponent = ({ navigation }) => {
+const MainComponent = ({ navigation, route }) => {
   const [currentForm, setCurrentForm] = useState("BookNow");
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -189,6 +189,17 @@ const MainComponent = ({ navigation }) => {
   const [havePakyaw, setHavePakyaw] = useState(false);
   
   const { customerCoords, setCustomerCoords } = useContext(CustomerContext);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", () => {
+      const havePakyaw = route.params?.havePakyaw;
+      if (havePakyaw !== undefined) {
+        setHavePakyaw(havePakyaw);
+      }
+    });
+  
+    return unsubscribe;
+  }, [navigation, route.params]);
 
   const checkRideAndLocation = useCallback(async () => {
     try {
@@ -213,12 +224,14 @@ const MainComponent = ({ navigation }) => {
 
       const response = await userService.checkActiveBook();
       const ride = response.rideDetails;
+      console.log(ride)
       if (response && response.hasActiveRide) {
         const { status } = response.rideDetails;
         const { ride_type } = response.rideDetails;
         setHavePakyaw(ride_type === "Pakyaw");
-        console.log(response.rideDetails.ride_type);
+        console.log("pakyaw???",response.rideDetails.ride_type);
         if (ride_type !== "Pakyaw"){
+          setHavePakyaw(false);
           switch (status) {
             case "Available":
               navigation.navigate("WaitingForRider", { ride });

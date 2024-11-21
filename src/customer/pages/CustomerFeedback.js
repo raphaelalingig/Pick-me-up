@@ -64,7 +64,7 @@ const SubmitFeedback_C = ({ navigation, route }) => {
       const response = await userService.review_ride(bookDetails.ride_id);
       if (response.data && response.data.message) {
         Alert.alert("Ride Complete", response.data.message);
-        navigation.navigate("Home");
+        navigation.navigate("Home", { havePakyaw: false });
       } else {
         Alert.alert("Error", "Failed to finish the ride. Please try again.");
       }

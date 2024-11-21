@@ -111,6 +111,7 @@ const Home = ({ navigation }) => {
       try {
         if (!user_id) return;
         const bookedChannel = pusher.subscribe('booked');
+        const progressChannel = pusher.subscribe('progress');
 
 
         bookedChannel.bind('BOOKED', data => {
@@ -123,7 +124,17 @@ const Home = ({ navigation }) => {
             }
         });
 
+        progressChannel.bind('RIDE_PROG', data => {
+          console.log("Progress DATA received:", data);
+          if (data.update.id === user_id) {
+            if(data.update.status === "Pakyaw"){
+              checkRideAndLocation()
+            }
+          }
+        });
+
         return () => {
+          progressChannel.unbind_all();
           bookedChannel.unbind_all();
           pusher.unsubscribe('booked');
         };
@@ -170,6 +181,29 @@ const Home = ({ navigation }) => {
     }
   };
 
+  const handleStartPakyaw = async (ride) => {
+    if (!ride?.ride_id) {
+      Alert.alert("Error", "No ride found to start.");
+      return;
+    }
+  
+    try {
+      const response = await userService.startPakyaw(ride.ride_id);
+      console.log("Start Pakyaw Response:", response);
+  
+      if (response?.message) {
+        Alert.alert("Success", response.message, [
+          { text: "OK", onPress: () => checkRideAndLocation()},
+        ]);
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || "Failed to start Pakyaw.";
+      Alert.alert("Error", errorMessage);
+    }
+  };
+
+
+
   const checkRideAndLocation = useCallback(async () => {
     try {
 
@@ -200,9 +234,29 @@ const Home = ({ navigation }) => {
       console.log(response)
       if (response && response.hasActiveRide) {
         const { status } = response.rideDetails;
-        console.log(status)
+        console.log("RIDER HOME STATUS",status)
         const ride = response.rideDetails; 
         switch (status) {
+          case 'Start':
+            Alert.alert(
+              "Pakyaw Start Request", 
+              "Your Passenger requested to Start the Pakyaw Ride!",
+              [
+                {
+                  text: "Decline",
+                  onPress: () => console.log("Ride declined"), // Handle decline logic if needed
+                  style: "cancel",
+                },
+                {
+                  text: "Accept",
+                  onPress: () => {
+                    handleStartPakyaw(ride)
+                  },
+                },
+              ],
+              { cancelable: false }
+            );
+            return "existing_ride";
           case 'Booked':
             navigation.navigate("Tracking Customer", {ride});
             return "existing_ride";

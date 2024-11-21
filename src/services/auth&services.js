@@ -519,6 +519,61 @@ const userService = {
     }
   },
 
+  accept_rider: async (ride_id, rider) => { 
+    const userId = await userService.getUserId();
+    if (!userId) {
+      console.error("User ID not found");
+      return false;
+    }
+  
+    try {
+      // Ensure the key in the request body matches what the backend expects
+      const response = await axios.post(`${API_URL}accept_rider/${ride_id}`, { user_id: userId , rider_id: rider});
+      return response;
+    } catch (error) {
+      console.error("Error accepting ride:", error);
+      throw error;
+    }
+  },
+
+  request_startPakyaw: async (rideId) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await axios.put(
+        API_URL + `request_start_pakyaw/${rideId}`, 
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error starting Pakyaw:", error);
+      throw error;
+    }
+  },
+
+  startPakyaw: async (rideId) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await axios.put(
+        API_URL + `start_pakyaw/${rideId}`, 
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error starting Pakyaw:", error);
+      throw error;
+    }
+  },
+
   set_riderLocation: async (ride_id) => { 
     try {
       // Ensure the key in the request body matches what the backend expects

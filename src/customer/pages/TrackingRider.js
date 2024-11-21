@@ -106,6 +106,7 @@ const TrackingRider = ({ navigation }) => {
 
       setRiderId(ride.rideDetails.rider_id);
       setBookDetails(ride.rideDetails);
+      console.log(ride.rideDetails.rider)
 
       // Validate and set customer location
       const customerCoords = validateCoordinates(

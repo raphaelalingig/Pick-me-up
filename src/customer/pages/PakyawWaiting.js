@@ -28,7 +28,7 @@ import MapWithClustering from './MapWithClustering';
 
 const { width, height } = Dimensions.get('window');
 
-const Delivery = ({ navigation }) => {
+const WaitingPakyaw = ({ navigation }) => {
   const { customerCoords } = useContext(CustomerContext);
   const [region, setRegion] = useState({
     latitude: customerCoords.latitude,
@@ -39,11 +39,13 @@ const Delivery = ({ navigation }) => {
   const [customerLat, setCustomerLat] = useState(null);
   const [customerLng, setCustomerLng] = useState(null);
   const [bookDetails, setBookDetails] = useState(null);
+  const [deliveryDetails, setDeliveryDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState('details');
   const [modalVisible, setModalVisible] = useState(false);
   const [riderModalVisible, setRiderModalVisible] = useState(false);
+  const [applications, setApplications] = useState([]);
   const [riderLocs, setRiderLocations] = useState([]);
   const [selectedRider, setSelectedRider] = useState(null);
   const [userId, setUserId] = useState(null);
@@ -58,7 +60,21 @@ const Delivery = ({ navigation }) => {
     setIsLoading(true);
     try {
       const ride = await userService.checkActiveBook();
+
+      const { status } = ride.rideDetails;
+      switch (status) {
+        case "Booked":
+          navigation.navigate("Tracking Rider", { ride });
+          return "existing_ride";
+        case "In Transit":
+          navigation.navigate("In Transit", { ride });
+          return "in_transit";
+        case "Review":
+          navigation.navigate("To Review", { ride });
+          return "review";
+      }
       setBookDetails(ride.rideDetails);
+      setDeliveryDetails(ride.deliveryDeets);
       console.log(ride.rideDetails.customer_latitude)
       setCustomerLat(parseFloat(ride.rideDetails.customer_latitude));
       setCustomerLng(parseFloat(ride.rideDetails.customer_longitude));
@@ -69,11 +85,14 @@ const Delivery = ({ navigation }) => {
         longitudeDelta: 0.05,
       });
       setIsLoading(false);
+      console.log('RIDESSS:',ride)
     } catch (error) {
       Alert.alert("Error", "Failed to retrieve the latest available ride.");
       setIsLoading(false);
     }
   }, []);
+
+  
 
   useEffect(() => {
     const fetchUserId = async () => {
@@ -119,6 +138,7 @@ const Delivery = ({ navigation }) => {
     }
   }, [bookDetails]);
 
+
   const fetchRiderLocations = async () => {
     try {
       setIsLoadingRiders(true);
@@ -160,7 +180,7 @@ const Delivery = ({ navigation }) => {
           console.log("APPLIER", data.ride.applier)
             if (data.ride.applier === userId) {
               Alert.alert("Ride Match", 'You have found a Match!');
-              navigation.navigate("Home");
+              navigation.navigate("Tracking Rider", {ride: bookDetails});
             }
         });
 
@@ -192,10 +212,11 @@ const Delivery = ({ navigation }) => {
 
   const handleShowNearbyRiders = () => {
     setIsLoadingRiders(true);
-    fetchRiderLocations()
+    setModalVisible(true)
+    fetchApplications()
+    
       .finally(() => {
         setIsLoadingRiders(false);
-        setModalVisible(true);
       });
   };
 
@@ -210,27 +231,29 @@ const Delivery = ({ navigation }) => {
   };
 
 
-  const handleApply = async (bookDetails, selectedRider) => {
+  const handleAccept = async (bookDetails, selectedRider) => {
     if (!userId) {
       Alert.alert("Error", "User ID is not available.");
       return;
     }
     const ride_id = bookDetails.ride_id;
-    const rider = selectedRider.user_id;
+    const rider = selectedRider.applier;
+    
 
 
-    console.log("Attempting to apply rider with ID:", bookDetails.ride_id);
+    console.log("Attempting to accept rider with ID:", bookDetails.ride_id);
     setIsLoading(true);
     try {
-      const response = await userService.apply_rider(ride_id, rider);
+      const response = await userService.accept_rider(ride_id, rider);
       console.log("Accept ride response:", response.data);
-      if (response.data.message === "exist") {
+      if (response.data.message === 'Accepted Successfully.'){
+        Alert.alert("Message", 'Accepted Successfully!');
         setRiderModalVisible(false);
-        Alert.alert("Message", 'You have already applied for this rider.');
-      }else if (response.data.message === "applied"){
-        Alert.alert("Message", 'Applied Successfully!');
+        fetchLatestRide()
+      }else if (response.data.message === 'This ride is no longer available.'){
+        Alert.alert("Message", 'This ride is no longer available.');
         setRiderModalVisible(false);
-      }else if (response.data && response.data.message){
+      }else if (response.data.message){
         Alert.alert("Ride Match", 'You have found a Match!');
         navigation.navigate("Home");
       } else {
@@ -263,16 +286,30 @@ const Delivery = ({ navigation }) => {
     }
   };
 
-  // const isRiderApplied = useCallback((rider) => {
-  //   if (!applications || !rider) return false;
-    
-  //   const riderFullName = `${rider.user.first_name} ${rider.user.last_name}`.toLowerCase();
-    
-  //   return applications.some(application => {
-  //     const applierFullName = `${application.applier_details.first_name} ${application.applier_details.last_name}`.toLowerCase();
-  //     return applierFullName === riderFullName;
-  //   });
-  // }, [applications]);
+  const handleStartPakyaw = async () => {
+    if (!bookDetails?.ride_id) {
+      Alert.alert("Error", "No ride found to start.");
+      return;
+    }
+  
+    try {
+      setIsLoading(true);
+      const response = await userService.request_startPakyaw(bookDetails.ride_id);
+      console.log("Start Pakyaw Response:", response);
+  
+      if (response?.message) {
+        Alert.alert("Start Pakyaw", "Rider successfully requested to start the ride.", [
+          { text: "OK", onPress: () => fetchLatestRide() },
+        ]);
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || "Failed to start Pakyaw.";
+      Alert.alert("Error", errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
 
   const handleCancel = useCallback(async () => {
     if (!bookDetails?.ride_id) return;
@@ -282,20 +319,26 @@ const Delivery = ({ navigation }) => {
       const response = await userService.cancel_ride(bookDetails.ride_id);
       if (response.data?.message) {
         Alert.alert("Success", response.data.message, [
-          { text: "OK", onPress: () => navigation.navigate("Home") }
+          {
+            text: "OK",
+            onPress: () =>
+              navigation.navigate("Home", { havePakyaw: false }),
+          },
         ]);
       } else {
         throw new Error("Cancel failed");
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.error || "Failed to cancel ride";
+      const errorMessage =
+        error.response?.data?.error || "Failed to cancel ride";
       Alert.alert("Error", errorMessage, [
-        { text: "OK", onPress: () => navigation.goBack() }
+        { text: "OK", onPress: () => navigation.goBack() },
       ]);
     } finally {
       setIsLoading(false);
     }
   }, [bookDetails, navigation]);
+  
 
   const handleCancelConfirmation = useCallback(() => {
     Alert.alert(
@@ -341,16 +384,16 @@ const Delivery = ({ navigation }) => {
             
             <>
               <Text style={styles.modalTitle}>Rider Information</Text>
-              <Text style={styles.modalText}>Name: {selectedRider.user.first_name} {selectedRider.user.last_name}</Text>
+              <Text style={styles.modalText}>Name: {selectedRider.applier_details.first_name} {selectedRider.applier_details.last_name}</Text>
               <Text style={styles.modalText}>Rating: 4.4 ⭐</Text>
-              <Text style={styles.modalText}>Distance: {formatDistance(selectedRider.distance)}</Text>
+              {/* <Text style={styles.modalText}>Distance: {formatDistance(selectedRider.ridehistory.distance)}</Text> */}
               <View style={styles.modalButtonContainer}>
                 <Button 
                   mode="contained" 
-                  onPress={() => handleApply(bookDetails, selectedRider)}
+                  onPress={() => handleAccept(bookDetails, selectedRider)}
                   style={styles.applyButton}
                 >
-                  Apply
+                  Accept
                 </Button>
               <Button 
                 mode="outlined" 
@@ -393,6 +436,31 @@ const Delivery = ({ navigation }) => {
             </Text>
           </View>
           <View style={styles.detailRow}>
+            <MaterialCommunityIcons name="motorbike" size={20} color="#FF5722" />
+            <Text style={styles.detailText}>
+              Riders Applied: {bookDetails.rider_id ? 1 : 0}/{bookDetails.num_of_riders}
+            </Text>
+          </View>
+          {bookDetails && (
+          <>
+            
+            <View style={styles.detailRow}>
+              <Ionicons name="book" size={20} color="cyan" />
+              <Text style={styles.detailText}>
+                Description: {bookDetails.description}
+              </Text>
+            </View>
+            {bookDetails.scheduled_date && (
+              <View style={styles.detailRow}>
+                <Ionicons name="information-circle" size={20} color="#FF5722" />
+                <Text style={styles.detailText}>
+                  Schedule: {bookDetails.scheduled_date}
+                </Text>
+              </View>
+            )}
+          </>
+           )}
+          <View style={styles.detailRow}>
             <Ionicons name="cash" size={20} color="#FFC107" />
             <Text style={styles.fareText}>Fare: ₱{bookDetails.fare}</Text>
           </View>
@@ -404,7 +472,7 @@ const Delivery = ({ navigation }) => {
             onPress={handleShowNearbyRiders} 
             style={styles.chip}
           >
-            Nearby Riders
+            View Applications
           </Chip>
           <Chip 
             icon="close-circle" 
@@ -415,10 +483,26 @@ const Delivery = ({ navigation }) => {
           </Chip>
         </View>
       </Surface>
+       {/* Add "Start Pakyaw" Button */}
+       <View style={styles.startPakyawButtonContainer}>
+        <Button
+          mode="contained"
+          onPress={handleStartPakyaw}
+          disabled={bookDetails.rider_id !== null && bookDetails.num_of_riders === 1 ? false : true}
+          style={[
+            styles.startPakyawButton,
+            bookDetails.rider_id !== null && bookDetails.num_of_riders === 1
+              ? {}
+              : { backgroundColor: 'gray' }, // Optional: Update disabled button styling
+          ]}
+        >
+          Start Pakyaw
+        </Button>
+      </View>
     </ImageBackground>
   );
 
-  const renderRidersNearbyModal = () => (
+  const renderRiderApplicationsModal = () => (
     <Modal
       visible={modalVisible}
       transparent={true}
@@ -427,76 +511,51 @@ const Delivery = ({ navigation }) => {
     >
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Nearby Riders</Text>
+          <Text style={styles.modalTitle}>Nearby Rider Applications</Text>
           
           {isLoadingRiders ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#007BFF" />
-            <Text style={styles.loadingText}>Finding nearby riders...</Text>
+            <Text style={styles.loadingText}>Fetching Applications...</Text>
           </View>
           ) : (
-            <ScrollView>
-              {riderLocs.length === 0 ? (
-                <Text style={styles.noRidersText}>No Nearby Riders Available</Text>
-              ) : (
-                riderLocs.map((rider, index) => (
-                  <Card key={index} style={styles.applicationCard}>
+          <ScrollView>
+              {applications.length === 0 ? (
+                <Text style={styles.noRidersText}>Currently no Applications</Text>
+            ) : (
+              applications.map((app, index) => (
+                <Card key={index} style={styles.applicationCard}>
                     <Card.Content style={styles.cardContent}>
                       <View style={styles.riderInfoSection}>
-                        <Text style={styles.applicantName}>
-                          {rider.user.first_name} {rider.user.last_name}
-                        </Text>
-                        <View style={styles.applicantDetails}>
-                          <Text style={styles.detailItem}>Distance: {formatDistance(rider.distance)}</Text>
-                          <Text style={styles.detailItem}>Rating: {rider.user.rating} ⭐</Text>
-                          <Text style={styles.detailItem}>Status: {rider.availability}</Text>
-                        </View>
+                    <Text style={styles.applicantName}>
+                      {app.applier_details.first_name} {app.applier_details.last_name}
+                    </Text>
+                    <View style={styles.applicantDetails}>
+                          {/* <Text style={styles.detailItem}>Distance: {formatDistance(app.distance)}</Text> */}
+                          <Text style={styles.detailItem}>Rating: {app.rating} ⭐</Text>
+                    </View>
                       </View>
                       
                       <View style={styles.cardButtonContainer}>
                         <Button
                           mode="contained"
                           onPress={() => {
-                            const riderLat = parseFloat(rider.rider_latitude);
-                            const riderLng = parseFloat(rider.rider_longitude);
-                            if (isNaN(riderLat) || isNaN(riderLng)) {
-                              console.warn(`Invalid coordinates for rider ${rider.rider_id}:`, riderLat, riderLng);
-                              return null;
-                            }
-                            
-                            setRegion({
-                              latitude: riderLat,
-                              longitude: riderLng,
-                              latitudeDelta: 0.05,
-                              longitudeDelta: 0.05,
-                            });
-                            setSelectedRider(rider);
-                            setViewMode('map');
-                            setModalVisible(false);
-                          }}
-                          style={styles.mapButton}
-                          labelStyle={styles.buttonLabel}
-                        >
-                          Map
-                        </Button>
-                        <Button
-                          mode="contained"
-                          onPress={() => {
-                            setSelectedRider(rider);
+                            setSelectedRider(app);
                             setModalVisible(false);
                             setRiderModalVisible(true);
+                            console.log("selected",app.applier)
                           }}
                           style={styles.applyButton}
                           labelStyle={styles.buttonLabel}
                         >
-                          Apply
-                        </Button>
+                          Accept
+                    </Button>
                       </View>
-                    </Card.Content>
-                  </Card>
-                ))
-              )}
-            </ScrollView>
+                  </Card.Content>
+                </Card>
+              ))
+            )}
+          </ScrollView>
           )}
           
           <Button 
@@ -511,113 +570,12 @@ const Delivery = ({ navigation }) => {
     </Modal>
   );
 
-  const renderMapView = () => {
-    if (!bookDetails || !customerLat || !customerLng) return null;
-
-    const customerLocation = {
-      latitude: customerLat,
-      longitude: customerLng
-    };
-
-    // Filter out riders with invalid locations
-    const validRiders = riderLocs.filter(rider => {
-      const hasValidLocation = 
-        rider.rider_latitude != null && 
-        rider.rider_longitude != null &&
-        !isNaN(parseFloat(rider.rider_latitude)) && 
-        !isNaN(parseFloat(rider.rider_longitude));
-      
-      if (!hasValidLocation) {
-        console.log(`Skipping rider ${rider.rider_id} - Invalid location data`);
-      }
-      return hasValidLocation;
-    });
-
-    return (
-      <MapView
-        style={styles.map}
-        region={region}
-        onRegionChangeComplete={setRegion}
-        showsMarkerClusters={true}
-        provider={PROVIDER_GOOGLE}
-      >
-        {/* Customer Marker */}
-        {!isNaN(customerLat) && !isNaN(customerLng) && (
-          <Marker
-            coordinate={{
-              latitude: customerLat,
-              longitude: customerLng
-            }}
-            title="Your Location"
-          >
-            <Image source={customerMarker} style={styles.markerIcon} />
-          </Marker>
-        )}
-  
-        {/* Rider Markers */}
-        {validRiders.map((rider) => {
-          const riderLat = parseFloat(rider.rider_latitude);
-          const riderLng = parseFloat(rider.rider_longitude);
-          
-          return (
-            <Marker
-              key={`rider-${rider.rider_id}`}
-              coordinate={{
-                latitude: riderLat,
-                longitude: riderLng
-              }}
-              title={`${rider.user.first_name} ${rider.user.last_name}`}
-              description={`Distance: ${formatDistance(rider.distance)} • Status: ${rider.verification_status}`}
-              onCalloutPress={() => handleMarkerPress(rider)}
-              calloutVisible={selectedRider && selectedRider.rider_id === rider.rider_id}
-            >
-              <Image source={riderMarker} style={styles.markerIcon} />
-            </Marker>
-          );
-        })}
-      </MapView>
-    );
-  };
   
 
   if (isLoading || !bookDetails) {
     return renderLoadingScreen();
   }
 
-  // const renderMatchModal = () => (
-  //   <Modal
-  //     visible={showMatchModal}
-  //     transparent={true}
-  //     animationType="slide"
-  //     onRequestClose={() => setShowMatchModal(false)}
-  //   >
-  //     <View style={styles.modalOverlay}>
-  //       <View style={styles.modalContainer}>
-  //         <Text style={styles.modalTitle}>Ride Match Found!</Text>
-  //         {matchedRide && (
-  //           <>
-  //             <Text style={styles.modalText}>
-  //               A rider has been matched with your ride request.
-  //             </Text>
-  //             <Text style={styles.modalText}>
-  //               Rider Name: {matchedRide.rider_name}
-  //             </Text>
-  //             <Text style={styles.modalText}>
-  //               Contact: {matchedRide.rider_contact}
-  //             </Text>
-  //             <Button
-  //               mode="contained"
-  //               onPress={() => setShowMatchModal(false)}
-  //               style={styles.closeButton}
-  //             >
-  //               Close
-  //             </Button>
-  //           </>
-  //         )}
-  //       </View>
-  //     </View>
-  //   </Modal>
-  // );
 
   return (
     <View style={styles.container}>
@@ -631,7 +589,7 @@ const Delivery = ({ navigation }) => {
         >
           <Text style={styles.toggleText}>Ride Details</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+        {/* <TouchableOpacity 
           style={[
             styles.toggleButton, 
             viewMode === 'map' ? styles.activeToggle : styles.inactiveToggle
@@ -642,7 +600,7 @@ const Delivery = ({ navigation }) => {
           }}
         >
           <Text style={styles.toggleText}>Rider Map</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       <ScrollView
@@ -657,7 +615,7 @@ const Delivery = ({ navigation }) => {
         {viewMode === 'details' ? renderRideDetailsContent() : renderMapView()}
       </ScrollView>
 
-      {renderRidersNearbyModal()}
+      {renderRiderApplicationsModal()}
       {renderRiderInfoModal()}
       {/* {renderMatchModal()} */}
     </View>
@@ -862,7 +820,17 @@ const styles = StyleSheet.create({
     borderColor: '#FF5722',
     borderWidth: 1,
   },
+  startPakyawButtonContainer: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  startPakyawButton: {
+    backgroundColor: '#007BFF',
+    width: '90%',
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
   
 });
 
-export default Delivery;
+export default WaitingPakyaw;

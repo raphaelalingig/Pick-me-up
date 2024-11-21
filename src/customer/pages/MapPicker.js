@@ -60,7 +60,7 @@ const MapPicker = ({ route, navigation }) => {
         const screenMapping = {
             'Moto Taxi': 'Moto Taxi',
             'Delivery': 'Delivery',
-            'Pakyaw': 'Pakyaw'
+            'Book Pakyaw': 'Book Pakyaw'
         };
 
         const destinationScreen = screenMapping[ride_type];

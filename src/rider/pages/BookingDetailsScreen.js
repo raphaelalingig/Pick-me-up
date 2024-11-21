@@ -24,6 +24,8 @@ const BookingDetailsScreen = ({ route, navigation }) => {
   const [userId, setUserId] = useState(null);
   const [accepting, setAccepting] = useState(isAccepting || false);
 
+  console.log("BOOK DEETS",ride)
+
   const { 
     applyRide, 
     setApplyRide,
@@ -56,6 +58,7 @@ const BookingDetailsScreen = ({ route, navigation }) => {
     const customer = ride.user_id;
 
     try {
+      
       const response = await userService.apply_ride(ride_id, customer);
       if (response.data.message === "exist") {
         Alert.alert("Already Applied", "You have already applied for this ride.");

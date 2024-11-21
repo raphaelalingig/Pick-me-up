@@ -83,6 +83,8 @@ const NearbyCustomerScreen = ({ navigation }) => {
       const response = await userService.getAvailableRides();
       const id = await userService.fetchRider();
 
+      console.log("AVAILABLE RIDE: ", response)
+
       setRider(id);
       setUser_id(id.user_id);
 
@@ -406,22 +408,22 @@ const NearbyCustomerScreen = ({ navigation }) => {
                       <View style={styles.cardHeader}>
                         <View style={styles.rideTypeContainer}>
                         {
-  ride.ride_type === 'Delivery' ? (
-    <MaterialIcons
-      name="package-variant-closed"
-      size={16}
-      color="#0096FF"
-      style={styles.rideTypeIcon}
-    />
-  ) : (
-    <MaterialCommunityIcons
-      name="motorbike"
-      size={16}
-      color="#0096FF"
-      style={styles.rideTypeIcon}
-    />
-  )
-}
+                          ride.ride_type === 'Delivery' ? (
+                            <MaterialIcons
+                              name="local-shipping"
+                              size={16}
+                              color="#0096FF"
+                              style={styles.rideTypeIcon}
+                            />
+                          ) : (
+                            <MaterialCommunityIcons
+                              name="truck-delivery"
+                              size={16}
+                              color="#0096FF"
+                              style={styles.rideTypeIcon}
+                            />
+                          )
+                        }
                           <Text style={styles.rideType}>{ride.ride_type}</Text>
                         </View>
                         <Text style={styles.timestamp}>
