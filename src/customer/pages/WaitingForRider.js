@@ -59,6 +59,7 @@ const WaitingRider = ({ navigation }) => {
   const [matchedRide, setMatchedRide] = useState(null);
   const [isLoadingRiders, setIsLoadingRiders] = useState(false);
   const [loadingAnimation, setLoadingAnimation] = useState(false);
+  const [isMapLoading, setIsMapLoading] = useState(false);
 
   const pusher = usePusher1();
 
@@ -729,8 +730,13 @@ const WaitingRider = ({ navigation }) => {
             viewMode === "map" ? styles.activeToggle : styles.inactiveToggle,
           ]}
           onPress={async () => {
-            await fetchRiderLocations();
-            setViewMode("map");
+            setLoadingAnimation(true); // Start loading
+            try {
+              await fetchRiderLocations();
+              setViewMode("map");
+            } finally {
+              setLoadingAnimation(false); // End loading regardless of success/failure
+            }
           }}
         >
           <Text style={styles.toggleText}>Rider Map</Text>
