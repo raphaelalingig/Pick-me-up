@@ -13,19 +13,20 @@ import {
   Dimensions,
   Animated,
 } from "react-native";
-import Toast from 'react-native-root-toast';
+import Toast from "react-native-root-toast";
 import { Text, Surface } from "react-native-paper";
 import { RiderContext } from "../../context/riderContext";
 import * as Location from "expo-location";
 import userService from "../../services/auth&services";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
-import ApplyRideModal from './ApplyRideModal';
+import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
+import ApplyRideModal from "./ApplyRideModal";
 import { usePusher } from "../../context/PusherContext";
 import usePusher1 from "../../services/pusher";
+import * as Clipboard from "expo-clipboard";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 const Home = ({ navigation }) => {
   const [location, setLocation] = useState(null);
@@ -37,7 +38,8 @@ const Home = ({ navigation }) => {
   const [isOnline, setIsOnline] = useState(false);
   const [statusAnimation] = useState(new Animated.Value(0));
   const pusher = usePusher1();
-  const { showApplyModal, setShowApplyModal, applyRide, setApplyRide } = usePusher();
+  const { showApplyModal, setShowApplyModal, applyRide, setApplyRide } =
+    usePusher();
 
   useEffect(() => {
     const fetchUserId = async () => {
@@ -57,8 +59,8 @@ const Home = ({ navigation }) => {
     const fetchUserAvailability = async () => {
       try {
         const availability = await userService.fetchRider();
-        console.log("Availabilty",availability)
-        setIsOnline(availability.availability === 'Available');
+        console.log("Availabilty", availability);
+        setIsOnline(availability.availability === "Available");
       } catch (error) {
         console.error("Error fetching user availability:", error);
       }
@@ -69,11 +71,11 @@ const Home = ({ navigation }) => {
   const handleStatusToggle = async (value) => {
     try {
       setLoading(true);
-  
+
       // Send status dynamically based on the toggle value
       const newStatus = value ? "Available" : "Offline";
       await userService.updateRiderOnlineStatus(newStatus);
-  
+
       // Animate the status change
       Animated.sequence([
         Animated.timing(statusAnimation, {
@@ -82,9 +84,8 @@ const Home = ({ navigation }) => {
           useNativeDriver: true,
         }),
       ]).start();
-  
+
       setIsOnline(value); // Update the state to reflect the new status
-  
 
       console.log(`Showing toast: You are now ${newStatus.toLowerCase()}!`);
       Toast.show(`You are now ${newStatus.toLowerCase()}!`, {
@@ -93,8 +94,8 @@ const Home = ({ navigation }) => {
         shadow: true,
         animation: true,
         hideOnPress: true,
-        backgroundColor: '#333',
-        textColor: '#fff'
+        backgroundColor: "#333",
+        textColor: "#fff",
       });
       // Optional feedback (commented out in your code)
       // Alert.alert("Status Updated", `You are now ${newStatus.toLowerCase()}!`);
@@ -104,31 +105,29 @@ const Home = ({ navigation }) => {
       setLoading(false);
     }
   };
-  
 
   useEffect(() => {
     const setupPusher = async () => {
       try {
         if (!user_id) return;
-        const bookedChannel = pusher.subscribe('booked');
-        const progressChannel = pusher.subscribe('progress');
+        const bookedChannel = pusher.subscribe("booked");
+        const progressChannel = pusher.subscribe("progress");
 
-
-        bookedChannel.bind('BOOKED', data => {
+        bookedChannel.bind("BOOKED", (data) => {
           console.log("MATCHED DATA received:", data);
-          console.log(user_id)
-          console.log("APPLIER", data.ride.applier)
-            if (data.ride.applier === user_id) {
-              Alert.alert("Ride Match", 'You have found a Match!');
-              navigation.navigate("Home");
-            }
+          console.log(user_id);
+          console.log("APPLIER", data.ride.applier);
+          if (data.ride.applier === user_id) {
+            Alert.alert("Ride Match", "You have found a Match!");
+            navigation.navigate("Home");
+          }
         });
 
-        progressChannel.bind('RIDE_PROG', data => {
+        progressChannel.bind("RIDE_PROG", (data) => {
           console.log("Progress DATA received:", data);
           if (data.update.id === user_id) {
-            if(data.update.status === "Pakyaw"){
-              checkRideAndLocation()
+            if (data.update.status === "Pakyaw") {
+              checkRideAndLocation();
             }
           }
         });
@@ -136,27 +135,48 @@ const Home = ({ navigation }) => {
         return () => {
           progressChannel.unbind_all();
           bookedChannel.unbind_all();
-          pusher.unsubscribe('booked');
+          pusher.unsubscribe("booked");
         };
       } catch (error) {
-        console.error('Error setting up Pusher:', error);
+        console.error("Error setting up Pusher:", error);
       }
     };
 
     setupPusher();
   }, [user_id]);
-  
 
   const handleFind = async () => {
     setLoading(true);
     try {
       const user_status = await userService.fetchRider();
       if (user_status.message === "Get Verified") {
-        Alert.alert("Verification Required", "Please complete your verification process before looking for customers.");
+        Alert.alert(
+          "Verification Required",
+          "Please complete your verification process before looking for customers.",
+          [
+            {
+              text: "Copy Address",
+              onPress: () => {
+                Clipboard.setStringAsync("pickmeupadmin@gmail.com");
+                Alert.alert("Copied", "Email address copied to clipboard.");
+              },
+            },
+            { text: "OK", onPress: () => {} },
+          ]
+        );
         return "Cannot Book";
       }
       if (user_status.message === "Account Disabled") {
-        Alert.alert("Account Disabled", "Your account has been disabled. Please contact Admin for more information.");
+        Alert.alert("Account Disabled", "Your account has been disabled.", [
+          {
+            text: "Copy Address",
+            onPress: () => {
+              Clipboard.setStringAsync("pickmeupadmin@gmail.com");
+              Alert.alert("Copied", "Email address copied to clipboard.");
+            },
+          },
+          { text: "OK", onPress: () => {} },
+        ]);
         return "Cannot Book";
       }
       navigation.navigate("Nearby Customer");
@@ -186,27 +206,25 @@ const Home = ({ navigation }) => {
       Alert.alert("Error", "No ride found to start.");
       return;
     }
-  
+
     try {
       const response = await userService.startPakyaw(ride.ride_id);
       console.log("Start Pakyaw Response:", response);
-  
+
       if (response?.message) {
         Alert.alert("Success", response.message, [
-          { text: "OK", onPress: () => checkRideAndLocation()},
+          { text: "OK", onPress: () => checkRideAndLocation() },
         ]);
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || "Failed to start Pakyaw.";
+      const errorMessage =
+        error.response?.data?.message || "Failed to start Pakyaw.";
       Alert.alert("Error", errorMessage);
     }
   };
 
-
-
   const checkRideAndLocation = useCallback(async () => {
     try {
-
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         setErrorMsg("Permission to access location was denied");
@@ -228,18 +246,17 @@ const Home = ({ navigation }) => {
       const rider_lat = location.coords.latitude;
       const rider_long = location.coords.longitude;
       uploadRiderLocation(rider_lat, rider_long);
-      
 
       const response = await userService.checkActiveRide();
-      console.log(response)
+      console.log(response);
       if (response && response.hasActiveRide) {
         const { status } = response.rideDetails;
-        console.log("RIDER HOME STATUS",status)
-        const ride = response.rideDetails; 
+        console.log("RIDER HOME STATUS", status);
+        const ride = response.rideDetails;
         switch (status) {
-          case 'Start':
+          case "Start":
             Alert.alert(
-              "Pakyaw Start Request", 
+              "Pakyaw Start Request",
               "Your Passenger requested to Start the Pakyaw Ride!",
               [
                 {
@@ -250,29 +267,28 @@ const Home = ({ navigation }) => {
                 {
                   text: "Accept",
                   onPress: () => {
-                    handleStartPakyaw(ride)
+                    handleStartPakyaw(ride);
                   },
                 },
               ],
               { cancelable: false }
             );
             return "existing_ride";
-          case 'Booked':
-            navigation.navigate("Tracking Customer", {ride});
+          case "Booked":
+            navigation.navigate("Tracking Customer", { ride });
             return "existing_ride";
-          case 'In Transit':
-            navigation.navigate("Tracking Destination", {ride});
+          case "In Transit":
+            navigation.navigate("Tracking Destination", { ride });
             return "in_transit";
         }
       }
 
-      
       return "proceed";
     } catch (error) {
       setErrorMsg("Error fetching location or ride status");
-      } finally {
-        setLoading(false);
-      }
+    } finally {
+      setLoading(false);
+    }
   }, [navigation, setRiderCoords]);
 
   const onRefresh = useCallback(async () => {
@@ -302,23 +318,31 @@ const Home = ({ navigation }) => {
       style={styles.background}
     >
       <LinearGradient
-        colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.7)']}
+        colors={["rgba(0,0,0,0.3)", "rgba(0,0,0,0.7)"]}
         style={styles.gradientOverlay}
       >
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.statusBar}>
             <View style={styles.statusContainer}>
-              <MaterialCommunityIcons 
-                name={isOnline ? "circle" : "circle-outline"} 
-                size={24} 
+              <MaterialCommunityIcons
+                name={isOnline ? "circle" : "circle-outline"}
+                size={24}
                 color={isOnline ? "#4CAF50" : "#FBC635"}
               />
-              <Text style={[styles.statusText, { color: isOnline ? "#4CAF50" : "#FBC635" }]}>
+              <Text
+                style={[
+                  styles.statusText,
+                  { color: isOnline ? "#4CAF50" : "#FBC635" },
+                ]}
+              >
                 {isOnline ? "Online" : "Offline"}
               </Text>
             </View>
             <TouchableOpacity
-              style={[styles.toggleButton, isOnline && styles.toggleButtonActive]}
+              style={[
+                styles.toggleButton,
+                isOnline && styles.toggleButtonActive,
+              ]}
               onPress={() => handleStatusToggle(!isOnline)}
             >
               <Text style={styles.toggleButtonText}>
@@ -343,12 +367,15 @@ const Home = ({ navigation }) => {
 
               <View style={styles.actionContainer}>
                 <TouchableOpacity
-                  style={[styles.findButton, !isOnline && styles.findButtonDisabled]}
+                  style={[
+                    styles.findButton,
+                    !isOnline && styles.findButtonDisabled,
+                  ]}
                   onPress={handleFind}
                   disabled={loading || !isOnline}
                 >
                   <LinearGradient
-                    colors={['#FBC635', '#FDA429']}
+                    colors={["#FBC635", "#FDA429"]}
                     style={styles.gradientButton}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
@@ -371,8 +398,14 @@ const Home = ({ navigation }) => {
                   style={styles.viewLocationButton}
                   onPress={() => navigation.navigate("Current Location")}
                 >
-                  <MaterialCommunityIcons name="map-marker" size={24} color="#FBC635" />
-                  <Text style={styles.viewLocationText}>View Current Location</Text>
+                  <MaterialCommunityIcons
+                    name="map-marker"
+                    size={24}
+                    color="#FBC635"
+                  />
+                  <Text style={styles.viewLocationText}>
+                    View Current Location
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -405,35 +438,35 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statusBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: "rgba(0,0,0,0.8)",
     marginTop: StatusBar.currentHeight,
   },
   statusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   statusText: {
     marginLeft: 8,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   toggleButton: {
-    backgroundColor: '#FBC635',
+    backgroundColor: "#FBC635",
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
   },
   toggleButtonActive: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: "#4CAF50",
   },
   toggleButtonText: {
-    color: '#000',
-    fontWeight: '700',
+    color: "#000",
+    fontWeight: "700",
     fontSize: 14,
   },
   scrollContent: {
@@ -446,10 +479,10 @@ const styles = StyleSheet.create({
     paddingTop: 40,
   },
   logoContainer: {
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: "rgba(0,0,0,0.8)",
     padding: 25,
     borderRadius: 15,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 50,
   },
   logoText: {
@@ -465,16 +498,16 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   actionContainer: {
-    width: '100%',
-    alignItems: 'center',
-    marginTop: 'auto',
+    width: "100%",
+    alignItems: "center",
+    marginTop: "auto",
     marginBottom: 50,
   },
   findButton: {
-    width: '90%',
+    width: "90%",
     height: 60,
     borderRadius: 30,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: 20,
   },
   findButtonDisabled: {
@@ -482,9 +515,9 @@ const styles = StyleSheet.create({
   },
   gradientButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 20,
   },
   findButtonText: {
@@ -497,8 +530,8 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   viewLocationButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 10,
   },
   viewLocationText: {

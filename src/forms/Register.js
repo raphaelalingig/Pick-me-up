@@ -37,6 +37,11 @@ const FirstForm = memo(
     userType,
     setUserType,
     errors, // Add errors prop
+    isLegalAge,
+    setIsLegalAge,
+    ageError,
+    setAgeError,
+    handleUserTypeChange,
   }) => (
     <View style={styles.formContainer}>
       <View style={{ width: "100%" }}>
@@ -103,6 +108,26 @@ const FirstForm = memo(
 
       <View>
         <Text variant="bodyLarge" style={styles.labels}>
+          User Type
+        </Text>
+        <View
+          style={[styles.pickerContainer, errors.role_id && styles.errorInput]}
+        >
+          <Picker selectedValue={userType} onValueChange={handleUserTypeChange}>
+            <Picker.Item label="Select User Type" value="" />
+            <Picker.Item label="Customer" value="Customer" />
+            <Picker.Item label="Rider" value="Rider" />
+          </Picker>
+        </View>
+        {errors.role_id && (
+          <HelperText type="error" visible={true}>
+            {errors.role_id[0]}
+          </HelperText>
+        )}
+      </View>
+
+      <View>
+        <Text variant="bodyLarge" style={styles.labels}>
           Select Birth Date
         </Text>
         <Button
@@ -135,6 +160,18 @@ const FirstForm = memo(
             maximumDate={new Date()}
           />
         )}
+
+        {date_of_birth && (
+          <Text style={{ color: isLegalAge ? "green" : "red" }}>
+            {!userType
+              ? "Please select a user type"
+              : isLegalAge
+              ? "Eligible"
+              : userType === "Customer"
+              ? "Must be 15 years or older"
+              : "Must be 18 years or older"}
+          </Text>
+        )}
       </View>
 
       <View>
@@ -160,29 +197,6 @@ const FirstForm = memo(
         )}
       </View>
 
-      <View>
-        <Text variant="bodyLarge" style={styles.labels}>
-          User Type
-        </Text>
-        <View
-          style={[styles.pickerContainer, errors.role_id && styles.errorInput]}
-        >
-          <Picker
-            selectedValue={userType}
-            onValueChange={(itemValue) => setUserType(itemValue)}
-          >
-            <Picker.Item label="Select User Type" value="" />
-            <Picker.Item label="Customer" value="Customer" />
-            <Picker.Item label="Rider" value="Rider" />
-          </Picker>
-        </View>
-        {errors.role_id && (
-          <HelperText type="error" visible={true}>
-            {errors.role_id[0]}
-          </HelperText>
-        )}
-      </View>
-
       <View style={styles.buttonContainer}>
         <TouchableOpacity>
           <Button
@@ -192,6 +206,7 @@ const FirstForm = memo(
               setCurrentForm("second");
             }}
             mode="contained"
+            disabled={isLegalAge ? false : true}
           >
             <Text>Next</Text>
           </Button>
@@ -214,6 +229,12 @@ const SecondForm = memo(
     mobile_number,
     setMobileNumber,
     errors,
+    validateEmail,
+    setEmailError,
+    emailError,
+    mobileError,
+    setMobileError,
+    validateMobileNumber,
   }) => (
     <View style={styles.formContainer}>
       <View>
@@ -224,16 +245,17 @@ const SecondForm = memo(
           placeholder="Phone Number"
           mode="outlined"
           value={mobile_number}
-          onChangeText={setMobileNumber}
+          onChangeText={validateMobileNumber}
           outlineStyle={[
             styles.textinputs,
-            errors.mobile_number && styles.errorInput,
+            (mobileError || errors.mobile_number) && styles.errorInput,
           ]}
           keyboardType="phone-pad"
+          maxLength={11} // Add this to limit input length
         />
-        {errors.mobile_number && (
+        {(mobileError || errors.mobile_number) && (
           <HelperText type="error" visible={true}>
-            {errors.mobile_number[0]}
+            {mobileError || errors.mobile_number[0]}
           </HelperText>
         )}
       </View>
@@ -246,18 +268,21 @@ const SecondForm = memo(
           placeholder="Email Address"
           mode="outlined"
           value={email}
-          onChangeText={setEmail}
-          outlineStyle={[styles.textinputs, errors.email && styles.errorInput]}
+          onChangeText={validateEmail}
+          outlineStyle={[
+            styles.textinputs,
+            (emailError || errors.email) && styles.errorInput,
+          ]}
           keyboardType="email-address"
           autoCapitalize="none"
+          type="email"
         />
-        {errors.email && (
+        {(emailError || errors.email) && (
           <HelperText type="error" visible={true}>
-            {errors.email[0]}
+            {emailError || errors.email[0]}
           </HelperText>
         )}
       </View>
-
       <View>
         <Text variant="bodyLarge" style={styles.labels}>
           Password
@@ -340,15 +365,19 @@ const Register = ({ navigation }) => {
   const [currentForm, setCurrentForm] = useState("first");
   const [gender, setGender] = useState("");
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
   const [repassword, setRepassword] = useState("");
   const [isError, setIsError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [HideEntry, setHideEntry] = useState(true);
   const [mobile_number, setMobileNumber] = useState("");
+  const [mobileError, setMobileError] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [userType, setUserType] = useState("");
   const [errors, setErrors] = useState({});
+  const [isLegalAge, setIsLegalAge] = useState(false);
+  const [ageError, setAgeError] = useState("");
 
   const datePickerRef = useRef();
   const [date_of_birth, setDateOfBirth] = useState(new Date());
@@ -459,9 +488,99 @@ const Register = ({ navigation }) => {
   const onDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || date_of_birth;
     setShowDatePicker(false);
-    setDateOfBirth(currentDate);
+
+    if (currentDate) {
+      // Calculate age
+      const today = new Date();
+      const birthDate = new Date(currentDate);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+
+      // Adjust age if birthday hasn't occurred this year
+      if (
+        monthDiff < 0 ||
+        (monthDiff === 0 && today.getDate() < birthDate.getDate())
+      ) {
+        age--;
+      }
+
+      // Update date
+      setDateOfBirth(currentDate);
+
+      // Check age requirements based on user type
+      if (!userType) {
+        setIsLegalAge(false);
+      } else if (userType === "Customer") {
+        setIsLegalAge(age >= 15); // Changed from 12 to 15
+      } else if (userType === "Rider") {
+        setIsLegalAge(age >= 18);
+      }
+    }
   };
 
+  const handleUserTypeChange = (itemValue) => {
+    setUserType(itemValue);
+
+    if (date_of_birth) {
+      const today = new Date();
+      const birthDate = new Date(date_of_birth);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+
+      if (
+        monthDiff < 0 ||
+        (monthDiff === 0 && today.getDate() < birthDate.getDate())
+      ) {
+        age--;
+      }
+
+      if (itemValue === "Customer") {
+        setIsLegalAge(age >= 15); // Changed from 12 to 15
+      } else if (itemValue === "Rider") {
+        setIsLegalAge(age >= 18);
+      }
+    }
+  };
+
+  const validateEmail = (text) => {
+    // Regular expression for basic email validation
+    const emailRegex =
+      /^[^\s@]+@(gmail\.com|yahoo\.com|outlook\.com|hotmail\.com)$/i;
+
+    // Update email state
+    setEmail(text);
+
+    // Validate email
+    if (!text) {
+      setEmailError("Email is required");
+    } else if (!emailRegex.test(text)) {
+      setEmailError(
+        "Please enter a valid email address with gmail.com, yahoo.com, outlook.com, or hotmail.com domain"
+      );
+    } else {
+      setEmailError("");
+    }
+  };
+  const validateMobileNumber = (text) => {
+    // Remove any non-digit characters
+    const phoneNumber = text.replace(/[^0-9]/g, "");
+
+    // Limit to 11 digits
+    if (phoneNumber.length <= 11) {
+      setMobileNumber(phoneNumber);
+    }
+
+    // Validate length
+    if (phoneNumber.length === 0) {
+      setMobileError("Mobile number is required");
+    } else if (phoneNumber.length < 11) {
+      setMobileError("Mobile number must be 11 digits");
+    } else if (phoneNumber.length > 11) {
+      setMobileError("Mobile number cannot exceed 11 digits");
+    } else {
+      setMobileError("");
+    }
+  };
   return (
     <ImageBackground
       source={require("../pictures/PMU_Rider_Back.png")}
@@ -518,6 +637,11 @@ const Register = ({ navigation }) => {
               userType={userType}
               setUserType={setUserType}
               errors={errors}
+              isLegalAge={isLegalAge}
+              setIsLegalAge={setIsLegalAge}
+              ageError={ageError}
+              setAgeError={setAgeError}
+              handleUserTypeChange={handleUserTypeChange}
             />
           ) : (
             <SecondForm
@@ -547,6 +671,12 @@ const Register = ({ navigation }) => {
               setLastName={setLastName}
               handleRegistration={handleRegistration}
               errors={errors}
+              validateEmail={validateEmail}
+              emailError={emailError}
+              setEmailError={setEmailError}
+              setMobileError={setMobileError}
+              mobileError={mobileError}
+              validateMobileNumber={validateMobileNumber}
             />
           )}
         </View>

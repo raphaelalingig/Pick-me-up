@@ -18,15 +18,21 @@ import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityI
 import Ionicons from "react-native-vector-icons/Ionicons";
 import userService from "../../services/auth&services";
 import { BlurView } from "expo-blur";
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import riderMarker from "../../../assets/rider.png";
 import customerMarker from "../../../assets/customer.png";
 import { CustomerContext } from "../../context/customerContext";
 import usePusher1 from "../../services/pusher";
-import { calculateDistance, formatDistance, sortRidersByDistance, filterRidersByDistance } from "./proximity/util";
-import MapWithClustering from './MapWithClustering';
+import {
+  calculateDistance,
+  formatDistance,
+  sortRidersByDistance,
+  filterRidersByDistance,
+} from "./proximity/util";
+import MapWithClustering from "./MapWithClustering";
+import Spinner from "../../rider/spinner/Spinner";
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 
 const WaitingRider = ({ navigation }) => {
   const { customerCoords } = useContext(CustomerContext);
@@ -42,7 +48,7 @@ const WaitingRider = ({ navigation }) => {
   const [deliveryDetails, setDeliveryDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [viewMode, setViewMode] = useState('details');
+  const [viewMode, setViewMode] = useState("details");
   const [modalVisible, setModalVisible] = useState(false);
   const [riderModalVisible, setRiderModalVisible] = useState(false);
   const [riderLocs, setRiderLocations] = useState([]);
@@ -52,6 +58,8 @@ const WaitingRider = ({ navigation }) => {
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [matchedRide, setMatchedRide] = useState(null);
   const [isLoadingRiders, setIsLoadingRiders] = useState(false);
+  const [loadingAnimation, setLoadingAnimation] = useState(false);
+  const [isMapLoading, setIsMapLoading] = useState(false);
 
   const pusher = usePusher1();
 
@@ -61,7 +69,7 @@ const WaitingRider = ({ navigation }) => {
       const ride = await userService.checkActiveBook();
       setBookDetails(ride.rideDetails);
       setDeliveryDetails(ride.deliveryDeets);
-      console.log(ride.rideDetails.customer_latitude)
+      console.log(ride.rideDetails.customer_latitude);
       setCustomerLat(parseFloat(ride.rideDetails.customer_latitude));
       setCustomerLng(parseFloat(ride.rideDetails.customer_longitude));
       setRegion({
@@ -71,7 +79,7 @@ const WaitingRider = ({ navigation }) => {
         longitudeDelta: 0.05,
       });
       setIsLoading(false);
-      console.log('RIDESSS:',ride)
+      console.log("RIDESSS:", ride);
     } catch (error) {
       Alert.alert("Error", "Failed to retrieve the latest available ride.");
       setIsLoading(false);
@@ -94,7 +102,7 @@ const WaitingRider = ({ navigation }) => {
   }, []);
 
   const fetchApplications = useCallback(async () => {
-    console.log("Ride ID:", bookDetails.ride_id)
+    console.log("Ride ID:", bookDetails.ride_id);
     try {
       if (!bookDetails?.ride_id) return;
 
@@ -103,15 +111,18 @@ const WaitingRider = ({ navigation }) => {
         console.warn("No user ID available");
         return;
       }
-  
-      const response = await userService.getRideApplications(bookDetails.ride_id);
-      console.log("All applications:", response);
-  
-      // Filter out applications where the applier_details.user_id matches the current user's ID
-      const filteredApplications = response.filter(application => 
-        application.applier_details.user_id !== parseInt(userId)
+
+      const response = await userService.getRideApplications(
+        bookDetails.ride_id
       );
-      
+      console.log("All applications:", response);
+
+      // Filter out applications where the applier_details.user_id matches the current user's ID
+      const filteredApplications = response.filter(
+        (application) =>
+          application.applier_details.user_id !== parseInt(userId)
+      );
+
       console.log("Current User ID:", userId);
       console.log("Filtered applications:", filteredApplications);
       setApplications(filteredApplications);
@@ -126,26 +137,34 @@ const WaitingRider = ({ navigation }) => {
     try {
       setIsLoadingRiders(true);
       const response = await userService.fetchLoc();
-      console.log("OANSNASF:", customerLat, customerLng)
-      
+      console.log("OANSNASF:", customerLat, customerLng);
+
       // Filter active riders and calculate distances
-      const activeRiders = response.filter(rider => 
-        rider.availability === 'Available' &&
-        rider.verification_status === 'Verified' &&
-        rider.user.status === 'Active'
+      const activeRiders = response.filter(
+        (rider) =>
+          rider.availability === "Available" &&
+          rider.verification_status === "Verified" &&
+          rider.user.status === "Active"
       );
-      
+
       // Add distance to each rider and sort by proximity
-      const ridersWithDistance = sortRidersByDistance(activeRiders, customerLat, customerLng);
-      
+      const ridersWithDistance = sortRidersByDistance(
+        activeRiders,
+        customerLat,
+        customerLng
+      );
+
       // Optional: Filter riders within 10km
       const nearbyRiders = filterRidersByDistance(ridersWithDistance, 10);
-      console.log(nearbyRiders)
-      
+      console.log(nearbyRiders);
+
       setRiderLocations(nearbyRiders);
     } catch (error) {
-      console.error('Error fetching rider locations:', error);
-      Alert.alert('Error', 'Failed to retrieve rider locations. Please try again.');
+      console.error("Error fetching rider locations:", error);
+      Alert.alert(
+        "Error",
+        "Failed to retrieve rider locations. Please try again."
+      );
     } finally {
       setIsLoadingRiders(false);
     }
@@ -155,24 +174,24 @@ const WaitingRider = ({ navigation }) => {
     const setupPusher = async () => {
       try {
         if (!userId) return;
-        const bookedChannel = pusher.subscribe('booked');
+        const bookedChannel = pusher.subscribe("booked");
 
-        bookedChannel.bind('BOOKED', data => {
+        bookedChannel.bind("BOOKED", (data) => {
           console.log("MATCHED DATA received:", data);
-          console.log(userId)
-          console.log("APPLIER", data.ride.applier)
-            if (data.ride.applier === userId) {
-              Alert.alert("Ride Match", 'You have found a Match!');
-              navigation.navigate("Tracking Rider");
-            }
+          console.log(userId);
+          console.log("APPLIER", data.ride.applier);
+          if (data.ride.applier === userId) {
+            Alert.alert("Ride Match", "You have found a Match!");
+            navigation.navigate("Tracking Rider");
+          }
         });
 
         return () => {
           appliedChannel.unbind_all();
-          pusher.unsubscribe('booked');
+          pusher.unsubscribe("booked");
         };
       } catch (error) {
-        console.error('Error setting up Pusher:', error);
+        console.error("Error setting up Pusher:", error);
       }
     };
 
@@ -185,23 +204,22 @@ const WaitingRider = ({ navigation }) => {
   //   fetchLoc();
   // }, [fetchLatestRide]);
 
-
-
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    fetchLatestRide()
+    fetchLatestRide();
     fetchRiderLocations().then(() => setRefreshing(false));
   }, [fetchLatestRide]);
 
   const handleShowNearbyRiders = () => {
     setIsLoadingRiders(true);
-    fetchRiderLocations()
-      .finally(() => {
-        setIsLoadingRiders(false);
-        setModalVisible(true);
-      });
+    setLoadingAnimation(true);
+    setLoadingMessage("Fetching available riders...");
+    fetchRiderLocations().finally(() => {
+      setIsLoadingRiders(false);
+      setModalVisible(true);
+      setLoadingAnimation(false);
+    });
   };
-
 
   const handleRegionChange = (newRegion) => {
     setRegion(newRegion);
@@ -212,7 +230,6 @@ const WaitingRider = ({ navigation }) => {
     setRiderModalVisible(true);
   };
 
-
   const handleApply = async (bookDetails, selectedRider) => {
     if (!userId) {
       Alert.alert("Error", "User ID is not available.");
@@ -221,7 +238,6 @@ const WaitingRider = ({ navigation }) => {
     const ride_id = bookDetails.ride_id;
     const rider = selectedRider.user_id;
 
-
     console.log("Attempting to apply rider with ID:", bookDetails.ride_id);
     setIsLoading(true);
     try {
@@ -229,12 +245,12 @@ const WaitingRider = ({ navigation }) => {
       console.log("Accept ride response:", response.data);
       if (response.data.message === "exist") {
         setRiderModalVisible(false);
-        Alert.alert("Message", 'You have already applied for this rider.');
-      }else if (response.data.message === "applied"){
-        Alert.alert("Message", 'Applied Successfully!');
+        Alert.alert("Message", "You have already applied for this rider.");
+      } else if (response.data.message === "applied") {
+        Alert.alert("Message", "Applied Successfully!");
         setRiderModalVisible(false);
-      }else if (response.data && response.data.message){
-        Alert.alert("Ride Match", 'You have found a Match!');
+      } else if (response.data && response.data.message) {
+        Alert.alert("Ride Match", "You have found a Match!");
         navigation.navigate("Home");
       } else {
         Alert.alert("Error", "Failed to accept the ride. Please try again.");
@@ -268,9 +284,9 @@ const WaitingRider = ({ navigation }) => {
 
   // const isRiderApplied = useCallback((rider) => {
   //   if (!applications || !rider) return false;
-    
+
   //   const riderFullName = `${rider.user.first_name} ${rider.user.last_name}`.toLowerCase();
-    
+
   //   return applications.some(application => {
   //     const applierFullName = `${application.applier_details.first_name} ${application.applier_details.last_name}`.toLowerCase();
   //     return applierFullName === riderFullName;
@@ -285,15 +301,16 @@ const WaitingRider = ({ navigation }) => {
       const response = await userService.cancel_ride(bookDetails.ride_id);
       if (response.data?.message) {
         Alert.alert("Success", response.data.message, [
-          { text: "OK", onPress: () => navigation.navigate("Home") }
+          { text: "OK", onPress: () => navigation.navigate("Home") },
         ]);
       } else {
         throw new Error("Cancel failed");
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.error || "Failed to cancel ride";
+      const errorMessage =
+        error.response?.data?.error || "Failed to cancel ride";
       Alert.alert("Error", errorMessage, [
-        { text: "OK", onPress: () => navigation.goBack() }
+        { text: "OK", onPress: () => navigation.goBack() },
       ]);
     } finally {
       setIsLoading(false);
@@ -301,18 +318,14 @@ const WaitingRider = ({ navigation }) => {
   }, [bookDetails, navigation]);
 
   const handleCancelConfirmation = useCallback(() => {
-    Alert.alert(
-      "Cancel Ride",
-      "Are you sure you want to cancel this ride?",
-      [
-        { text: "No", style: "cancel" },
-        {
-          text: "Yes",
-          onPress: handleCancel,
-          style: "destructive",
-        },
-      ]
-    );
+    Alert.alert("Cancel Ride", "Are you sure you want to cancel this ride?", [
+      { text: "No", style: "cancel" },
+      {
+        text: "Yes",
+        onPress: handleCancel,
+        style: "destructive",
+      },
+    ]);
   }, [handleCancel]);
 
   const handleMarkerPress = (rider) => {
@@ -341,27 +354,31 @@ const WaitingRider = ({ navigation }) => {
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
           {selectedRider && (
-            
             <>
               <Text style={styles.modalTitle}>Rider Information</Text>
-              <Text style={styles.modalText}>Name: {selectedRider.user.first_name} {selectedRider.user.last_name}</Text>
+              <Text style={styles.modalText}>
+                Name: {selectedRider.user.first_name}{" "}
+                {selectedRider.user.last_name}
+              </Text>
               <Text style={styles.modalText}>Rating: 4.4 ⭐</Text>
-              <Text style={styles.modalText}>Distance: {formatDistance(selectedRider.distance)}</Text>
+              <Text style={styles.modalText}>
+                Distance: {formatDistance(selectedRider.distance)}
+              </Text>
               <View style={styles.modalButtonContainer}>
-                <Button 
-                  mode="contained" 
+                <Button
+                  mode="contained"
                   onPress={() => handleApply(bookDetails, selectedRider)}
                   style={styles.applyButton}
                 >
                   Apply
                 </Button>
-              <Button 
-                mode="outlined" 
-                onPress={handleCancelModal} 
-                style={styles.cancelButton}
-              >
-                Cancel
-              </Button>
+                <Button
+                  mode="outlined"
+                  onPress={handleCancelModal}
+                  style={styles.cancelButton}
+                >
+                  Cancel
+                </Button>
               </View>
             </>
           )}
@@ -377,6 +394,44 @@ const WaitingRider = ({ navigation }) => {
       blurRadius={5}
     >
       <Surface style={styles.surfaceCard} elevation={4}>
+        {loadingAnimation && (
+          <View
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: 0,
+              bottom: 0,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "rgba(255, 255, 255, 0.9)",
+              zIndex: 2,
+              borderRadius: 15,
+            }}
+          >
+            <View
+              style={{
+                padding: 20,
+                backgroundColor: "#ffffff",
+                borderRadius: 5,
+                elevation: 5,
+                shadowColor: "#000",
+                shadowOffset: {
+                  width: 0,
+                  height: 2,
+                },
+                shadowOpacity: 0.25,
+                shadowRadius: 3.84,
+              }}
+            >
+              <Spinner />
+              <View style={{ marginTop: 10 }}>
+                <Text>Fetching available riders...</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
         <View style={styles.rideTypeHeader}>
           <MaterialCommunityIcons name="motorbike" size={30} color="#007BFF" />
           <Text style={styles.rideTypeText}>{bookDetails.ride_type}</Text>
@@ -396,21 +451,21 @@ const WaitingRider = ({ navigation }) => {
             </Text>
           </View>
           {deliveryDetails && (
-          <>
-            <View style={styles.detailRow}>
-              <Ionicons name="information-circle" size={20} color="#FF5722" />
-              <Text style={styles.detailText}>
-                Type: {deliveryDetails.delivery_type}
-              </Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Ionicons name="book" size={20} color="cyan" />
-              <Text style={styles.detailText}>
-                Instructions: {deliveryDetails.instructions}
-              </Text>
-            </View>
-          </>
-           )}
+            <>
+              <View style={styles.detailRow}>
+                <Ionicons name="information-circle" size={20} color="#FF5722" />
+                <Text style={styles.detailText}>
+                  Type: {deliveryDetails.delivery_type}
+                </Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Ionicons name="book" size={20} color="cyan" />
+                <Text style={styles.detailText}>
+                  Instructions: {deliveryDetails.instructions}
+                </Text>
+              </View>
+            </>
+          )}
           <View style={styles.detailRow}>
             <Ionicons name="cash" size={20} color="#FFC107" />
             <Text style={styles.fareText}>Fare: ₱{bookDetails.fare}</Text>
@@ -418,19 +473,21 @@ const WaitingRider = ({ navigation }) => {
         </View>
 
         <View style={styles.buttonContainer}>
-          <Chip 
-            icon="eye" 
-            onPress={handleShowNearbyRiders} 
+          <Chip
+            icon="eye"
+            mode="outlined"
+            onPress={handleShowNearbyRiders}
             style={styles.chip}
           >
             Nearby Riders
           </Chip>
-          <Chip 
-            icon="close-circle" 
-            onPress={handleCancelConfirmation} 
+          <Chip
+            icon="close-circle"
+            onPress={handleCancelConfirmation}
+            mode="outlined"
             style={[styles.chip, styles.cancelChip]}
           >
-            Cancel Ride
+            <Text style={{ color: "white" }}>Cancel Ride</Text>
           </Chip>
         </View>
       </Surface>
@@ -447,16 +504,18 @@ const WaitingRider = ({ navigation }) => {
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
           <Text style={styles.modalTitle}>Nearby Riders</Text>
-          
+
           {isLoadingRiders ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#007BFF" />
-            <Text style={styles.loadingText}>Finding nearby riders...</Text>
-          </View>
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#007BFF" />
+              <Text style={styles.loadingText}>Finding nearby riders...</Text>
+            </View>
           ) : (
             <ScrollView>
               {riderLocs.length === 0 ? (
-                <Text style={styles.noRidersText}>No Nearby Riders Available</Text>
+                <Text style={styles.noRidersText}>
+                  No Nearby Riders Available
+                </Text>
               ) : (
                 riderLocs.map((rider, index) => (
                   <Card key={index} style={styles.applicationCard}>
@@ -466,12 +525,18 @@ const WaitingRider = ({ navigation }) => {
                           {rider.user.first_name} {rider.user.last_name}
                         </Text>
                         <View style={styles.applicantDetails}>
-                          <Text style={styles.detailItem}>Distance: {formatDistance(rider.distance)}</Text>
-                          <Text style={styles.detailItem}>Rating: {rider.user.rating} ⭐</Text>
-                          <Text style={styles.detailItem}>Status: {rider.availability}</Text>
+                          <Text style={styles.detailItem}>
+                            Distance: {formatDistance(rider.distance)}
+                          </Text>
+                          <Text style={styles.detailItem}>
+                            Rating: {rider.user.rating} ⭐
+                          </Text>
+                          <Text style={styles.detailItem}>
+                            Status: {rider.availability}
+                          </Text>
                         </View>
                       </View>
-                      
+
                       <View style={styles.cardButtonContainer}>
                         <Button
                           mode="contained"
@@ -479,10 +544,14 @@ const WaitingRider = ({ navigation }) => {
                             const riderLat = parseFloat(rider.rider_latitude);
                             const riderLng = parseFloat(rider.rider_longitude);
                             if (isNaN(riderLat) || isNaN(riderLng)) {
-                              console.warn(`Invalid coordinates for rider ${rider.rider_id}:`, riderLat, riderLng);
+                              console.warn(
+                                `Invalid coordinates for rider ${rider.rider_id}:`,
+                                riderLat,
+                                riderLng
+                              );
                               return null;
                             }
-                            
+
                             setRegion({
                               latitude: riderLat,
                               longitude: riderLng,
@@ -490,7 +559,7 @@ const WaitingRider = ({ navigation }) => {
                               longitudeDelta: 0.05,
                             });
                             setSelectedRider(rider);
-                            setViewMode('map');
+                            setViewMode("map");
                             setModalVisible(false);
                           }}
                           style={styles.mapButton}
@@ -517,9 +586,9 @@ const WaitingRider = ({ navigation }) => {
               )}
             </ScrollView>
           )}
-          
-          <Button 
-            mode="contained" 
+
+          <Button
+            mode="contained"
             onPress={() => setModalVisible(false)}
             style={styles.closeModalButton}
           >
@@ -535,17 +604,17 @@ const WaitingRider = ({ navigation }) => {
 
     const customerLocation = {
       latitude: customerLat,
-      longitude: customerLng
+      longitude: customerLng,
     };
 
     // Filter out riders with invalid locations
-    const validRiders = riderLocs.filter(rider => {
-      const hasValidLocation = 
-        rider.rider_latitude != null && 
+    const validRiders = riderLocs.filter((rider) => {
+      const hasValidLocation =
+        rider.rider_latitude != null &&
         rider.rider_longitude != null &&
-        !isNaN(parseFloat(rider.rider_latitude)) && 
+        !isNaN(parseFloat(rider.rider_latitude)) &&
         !isNaN(parseFloat(rider.rider_longitude));
-      
+
       if (!hasValidLocation) {
         console.log(`Skipping rider ${rider.rider_id} - Invalid location data`);
       }
@@ -565,30 +634,34 @@ const WaitingRider = ({ navigation }) => {
           <Marker
             coordinate={{
               latitude: customerLat,
-              longitude: customerLng
+              longitude: customerLng,
             }}
             title="Your Location"
           >
             <Image source={customerMarker} style={styles.markerIcon} />
           </Marker>
         )}
-  
+
         {/* Rider Markers */}
         {validRiders.map((rider) => {
           const riderLat = parseFloat(rider.rider_latitude);
           const riderLng = parseFloat(rider.rider_longitude);
-          
+
           return (
             <Marker
               key={`rider-${rider.rider_id}`}
               coordinate={{
                 latitude: riderLat,
-                longitude: riderLng
+                longitude: riderLng,
               }}
               title={`${rider.user.first_name} ${rider.user.last_name}`}
-              description={`Distance: ${formatDistance(rider.distance)} • Status: ${rider.verification_status}`}
+              description={`Distance: ${formatDistance(
+                rider.distance
+              )} • Status: ${rider.verification_status}`}
               onCalloutPress={() => handleMarkerPress(rider)}
-              calloutVisible={selectedRider && selectedRider.rider_id === rider.rider_id}
+              calloutVisible={
+                selectedRider && selectedRider.rider_id === rider.rider_id
+              }
             >
               <Image source={riderMarker} style={styles.markerIcon} />
             </Marker>
@@ -597,7 +670,6 @@ const WaitingRider = ({ navigation }) => {
       </MapView>
     );
   };
-  
 
   if (isLoading || !bookDetails) {
     return renderLoadingScreen();
@@ -641,23 +713,30 @@ const WaitingRider = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.toggleContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[
-            styles.toggleButton, 
-            viewMode === 'details' ? styles.activeToggle : styles.inactiveToggle
+            styles.toggleButton,
+            viewMode === "details"
+              ? styles.activeToggle
+              : styles.inactiveToggle,
           ]}
-          onPress={() => setViewMode('details')}
+          onPress={() => setViewMode("details")}
         >
           <Text style={styles.toggleText}>Ride Details</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[
-            styles.toggleButton, 
-            viewMode === 'map' ? styles.activeToggle : styles.inactiveToggle
+            styles.toggleButton,
+            viewMode === "map" ? styles.activeToggle : styles.inactiveToggle,
           ]}
           onPress={async () => {
-            await fetchRiderLocations();
-            setViewMode('map');
+            setLoadingAnimation(true); // Start loading
+            try {
+              await fetchRiderLocations();
+              setViewMode("map");
+            } finally {
+              setLoadingAnimation(false); // End loading regardless of success/failure
+            }
           }}
         >
           <Text style={styles.toggleText}>Rider Map</Text>
@@ -666,14 +745,14 @@ const WaitingRider = ({ navigation }) => {
 
       <ScrollView
         refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
-            onRefresh={onRefresh} 
-            colors={['#007BFF']} 
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#007BFF"]}
           />
         }
       >
-        {viewMode === 'details' ? renderRideDetailsContent() : renderMapView()}
+        {viewMode === "details" ? renderRideDetailsContent() : renderMapView()}
       </ScrollView>
 
       {renderRidersNearbyModal()}
@@ -686,7 +765,7 @@ const WaitingRider = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#F5F5F5",
   },
   loadingContainer: {
     flex: 1,
@@ -700,109 +779,110 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   toggleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     padding: 10,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   toggleButton: {
     flex: 1,
     padding: 12,
-    alignItems: 'center',
+    alignItems: "center",
     marginHorizontal: 5,
     borderRadius: 10,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   activeToggle: {
     borderBottomWidth: 2,
-    borderBottomColor: '#007BFF',
+    borderBottomColor: "#007BFF",
   },
   inactiveToggle: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   toggleText: {
-    color: '#007BFF',
-    fontWeight: 'bold',
+    color: "#007BFF",
+    fontWeight: "bold",
   },
   background: {
     minHeight: height * 0.8,
-    justifyContent: 'center',
+    justifyContent: "center",
     padding: 15,
   },
   surfaceCard: {
     borderRadius: 15,
     padding: 15,
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: "rgba(255,255,255,0.9)",
   },
   rideTypeHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 15,
   },
   rideTypeText: {
     fontSize: 22,
-    fontWeight: '600',
-    color: '#007BFF',
+    fontWeight: "600",
+    color: "#007BFF",
     marginLeft: 10,
   },
   detailsContainer: {
-    backgroundColor: '#F0F4F8',
+    backgroundColor: "#F0F4F8",
     borderRadius: 10,
     padding: 15,
     marginBottom: 15,
   },
   detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 10,
   },
   detailText: {
     fontSize: 16,
     marginLeft: 10,
-    color: '#333',
+    color: "#333",
   },
   fareText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginLeft: 10,
-    color: '#4CAF50',
+    color: "#4CAF50",
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   chip: {
     flex: 0.48,
   },
   cancelChip: {
-    backgroundColor: '#FF5722',
+    backgroundColor: "#FF5722",
+    color: "white",
   },
   map: {
-    width: '100%',
+    width: "100%",
     height: height * 0.8,
   },
   markerIcon: {
     width: 40,
     height: 40,
-    resizeMode: 'contain',
+    resizeMode: "contain",
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
   },
   modalContainer: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     margin: 20,
     borderRadius: 15,
     padding: 15,
-    maxHeight: '80%', // Limit modal height
+    maxHeight: "80%", // Limit modal height
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 15,
   },
   applicationCard: {
@@ -815,41 +895,41 @@ const styles = StyleSheet.create({
   },
   applicantName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 4,
   },
   riderInfoSection: {
     flex: 1,
   },
   applicantDetails: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
   },
   detailItem: {
     fontSize: 13,
-    color: '#666',
+    color: "#666",
   },
   cardButtonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    justifyContent: "flex-end",
     gap: 8,
     marginTop: 8,
   },
   mapButton: {
     flex: 0,
     minWidth: 80,
-    backgroundColor: '#007BFF',
+    backgroundColor: "#007BFF",
     borderRadius: 4,
     paddingVertical: 4,
   },
   closeModalButton: {
     marginTop: 15,
-    backgroundColor: '#FF3D00', 
+    backgroundColor: "#FF3D00",
     borderRadius: 20,
     paddingVertical: 10,
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -862,14 +942,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   modalButtonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     marginTop: 20,
   },
   applyButton: {
     flex: 0,
     minWidth: 80,
-    backgroundColor: '#4CAF50',
+    backgroundColor: "#4CAF50",
     borderRadius: 4,
     paddingVertical: 4,
   },
@@ -878,10 +958,9 @@ const styles = StyleSheet.create({
     marginVertical: 0,
   },
   cancelButton: {
-    borderColor: '#FF5722',
+    borderColor: "#FF5722",
     borderWidth: 1,
   },
-  
 });
 
 export default WaitingRider;
