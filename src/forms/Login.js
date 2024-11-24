@@ -99,10 +99,10 @@ const Login = ({ navigation }) => {
           setError("Incorrect username or password");
         } else if (err.response.status === 404) {
           setError("Username and Password do not match");
+        } else if (err.response.status === 403) {
+          setError(err.response.data?.message || "Your account is already logged in on another device.");
         } else {
-          setError(
-            err.response.data?.message || "An error occurred during login"
-          );
+          setError(err.response.data?.message || "An error occurred during login");
         }
       } else if (err.request) {
         setError("Network error, please try again later");
