@@ -1,14 +1,19 @@
 // Login.js (updated)
 import React, { useState } from "react";
-import { View, StyleSheet, ImageBackground, TouchableOpacity } from "react-native";
+import {
+  View,
+  StyleSheet,
+  ImageBackground,
+  TouchableOpacity,
+  ToastAndroid,
+} from "react-native";
 import { Button, Text, Dialog, Portal } from "react-native-paper";
 import { useAuth } from "../services/useAuth";
 import userService from "../services/auth&services";
 import CustomIconInput from "./CustomIconInput";
-import * as Location from 'expo-location';
-import Toast from 'react-native-root-toast';
-
-
+import * as Location from "expo-location";
+import Toast from "react-native-root-toast";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 const Login = ({ navigation }) => {
   const [user_name, setUsername] = useState("");
@@ -23,33 +28,39 @@ const Login = ({ navigation }) => {
   const [user, setUser] = useState("");
   const [status, setStatus] = useState(null);
 
+  const showToast = (message = "Something went wrong") => {
+    ToastAndroid.showWithGravity(
+      message,
+      ToastAndroid.LONG,
+      ToastAndroid.CENTER
+    );
+  };
 
   const getCurrentLocation = async (role) => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status === 'granted') {
+      if (status === "granted") {
         const location = await Location.getCurrentPositionAsync({});
         console.log("Location fetched successfully:", location);
-        
+
         // Update rider status and location
         await userService.updateRiderStatusAndLocation({
           longitude: location.coords.longitude,
           latitude: location.coords.latitude,
           status: "Available",
         });
-        Toast.show('Logged In Successfully', {
+        Toast.show("Logged In Successfully", {
           duration: Toast.durations.LONG,
           position: Toast.positions.BOTTOM,
           shadow: true,
           animation: true,
           hideOnPress: true,
-          backgroundColor: '#333',
-          textColor: '#fff'
+          backgroundColor: "#333",
+          textColor: "#fff",
         });
         console.log("Location updated successfully in the database");
-        
+
         navigation.replace(role === 3 ? "RiderStack" : "CustomerStack");
-        
       } else {
         console.error("Location permission not granted");
         setError("Location permission is required to proceed.");
@@ -59,68 +70,68 @@ const Login = ({ navigation }) => {
       setError("An error occurred while fetching location.");
     }
   };
-  
 
   const handleLogin = async () => {
-    setError("");
-  
     if (!user_name || !password) {
-      setError("Please input required credentials");
+      showToast("Please input required credentials");
       return;
     }
-  
+
     setIsLoading(true);
-  
+
     try {
-      const { token: receivedToken, role, user_id, status: userStatus } = await userService.login(
-        user_name,
-        password
-      );
+      const {
+        token: receivedToken,
+        role,
+        user_id,
+        status: userStatus,
+      } = await userService.login(user_name, password);
       console.log("login", receivedToken);
-      
+
       setToken(receivedToken);
       setUser(user_id);
       setStatus(userStatus);
-      
-  
+
       if (role === 3 || role === 1 || role === 2) {
         await login(receivedToken, role, user_id, userStatus);
         await getCurrentLocation(role);
-        
       } else if (role === 4) {
         await login(receivedToken, role, user_id, userStatus);
         navigation.replace(role === 3 ? "RiderStack" : "CustomerStack");
       } else {
-        setError("An error occurred during login");
+        showToast("An error occurred during login");
       }
     } catch (err) {
       if (err.response) {
         if (err.response.status === 401) {
-          setError("Incorrect username or password");
+          showToast("Incorrect username or password");
         } else if (err.response.status === 404) {
-          setError("Username and Password do not match");
+          showToast("Username and Password do not match");
         } else if (err.response.status === 403) {
-          setError(err.response.data?.message || "Your account is already logged in on another device.");
+          showToast(
+            err.response.data?.message ||
+              "Your account is already logged in on another device."
+          );
         } else {
-          setError(err.response.data?.message || "An error occurred during login");
+          showToast(
+            err.response.data?.message || "An error occurred during login"
+          );
         }
       } else if (err.request) {
-        setError("Network error, please try again later");
+        showToast("Network error, please try again later");
       } else {
-        setError("An unexpected error occurred");
+        showToast("An unexpected error occurred");
       }
     } finally {
       setIsLoading(false);
     }
   };
-  
 
   // const handleRoleSelection = async (role) => {
   //   await login(token, role, user, status);
   //   setShowDialog(false);
   //   navigation.replace(role === 3 ? "RiderStack" : "CustomerStack");
   // };
-  
 
   const toggleSecureEntry = () => {
     setHideEntry(!hideEntry);
