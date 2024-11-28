@@ -145,6 +145,30 @@ const Home = ({ navigation }) => {
     setupPusher();
   }, [user_id]);
 
+  useEffect(() => {
+    const checkUserStatus = async () => {
+      setLoading(true);
+      try {
+        const user_status = await userService.fetchRider();
+        if (
+          user_status.message === "Get Verified" ||
+          user_status.message === "Account Disabled"
+        ) {
+          handleFind(user_status.message);
+        }
+      } catch (error) {
+        Alert.alert(
+          "Error",
+          "Unable to process your request. Please try again."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkUserStatus();
+  }, [isOnline]);
+
   const handleFind = async () => {
     setLoading(true);
     try {

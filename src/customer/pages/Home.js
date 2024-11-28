@@ -29,6 +29,38 @@ const { width } = Dimensions.get("window");
 const BookNow = ({ setCurrentForm, navigation, checkRideAndLocation }) => {
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const user_status = await userService.fetchCustomer();
+        if (user_status.message === "Account Disabled") {
+          Alert.alert(
+            "Account Disabled",
+            "Your account has been disabled. Please contact Admin for more information.",
+            [
+              {
+                text: "Copy Address",
+                onPress: () => {
+                  Clipboard.setStringAsync("pickmeupadmin@gmail.com");
+                  Alert.alert("Copied", "Email address copied to clipboard.");
+                },
+              },
+              { text: "OK", onPress: () => {} },
+            ]
+          );
+          return "Cannot Book";
+        }
+      } catch (error) {
+        Alert.alert(
+          "Error",
+          "Unable to check account status. Please try again."
+        );
+      }
+    };
+
+    checkStatus();
+  }, []);
+
   const handleBookNow = async () => {
     setLoading(true);
     try {
