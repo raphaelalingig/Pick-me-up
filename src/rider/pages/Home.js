@@ -145,6 +145,30 @@ const Home = ({ navigation }) => {
     setupPusher();
   }, [user_id]);
 
+  useEffect(() => {
+    const checkUserStatus = async () => {
+      setLoading(true);
+      try {
+        const user_status = await userService.fetchRider();
+        if (
+          user_status.message === "Get Verified" ||
+          user_status.message === "Account Disabled"
+        ) {
+          handleFind(user_status.message);
+        }
+      } catch (error) {
+        Alert.alert(
+          "Error",
+          "Unable to process your request. Please try again."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkUserStatus();
+  }, [isOnline]);
+
   const handleFind = async () => {
     setLoading(true);
     try {
@@ -152,7 +176,7 @@ const Home = ({ navigation }) => {
       if (user_status.message === "Get Verified") {
         Alert.alert(
           "Verification Required",
-          "Please complete your verification process before looking for customers.",
+          "Please complete your verification process before looking for customers. Please contact Admin for more information",
           [
             {
               text: "Copy Address",
@@ -167,16 +191,20 @@ const Home = ({ navigation }) => {
         return "Cannot Book";
       }
       if (user_status.message === "Account Disabled") {
-        Alert.alert("Account Disabled", "Your account has been disabled.", [
-          {
-            text: "Copy Address",
-            onPress: () => {
-              Clipboard.setStringAsync("pickmeupadmin@gmail.com");
-              Alert.alert("Copied", "Email address copied to clipboard.");
+        Alert.alert(
+          "Account Disabled",
+          "Your account has been disabled. Please contact Admin for more information",
+          [
+            {
+              text: "Copy Address",
+              onPress: () => {
+                Clipboard.setStringAsync("pickmeupadmin@gmail.com");
+                Alert.alert("Copied", "Email address copied to clipboard.");
+              },
             },
-          },
-          { text: "OK", onPress: () => {} },
-        ]);
+            { text: "OK", onPress: () => {} },
+          ]
+        );
         return "Cannot Book";
       }
       navigation.navigate("Nearby Customer");
