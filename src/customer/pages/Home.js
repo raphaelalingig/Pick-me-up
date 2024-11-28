@@ -15,11 +15,16 @@ import { Text, Button, Surface } from "react-native-paper";
 import { CustomerContext } from "../../context/customerContext";
 import * as Location from "expo-location";
 import userService from "../../services/auth&services";
-import { MaterialCommunityIcons, FontAwesome5, Ionicons } from "@expo/vector-icons";
+import {
+  MaterialCommunityIcons,
+  FontAwesome5,
+  Ionicons,
+} from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
-import { LinearGradient } from 'expo-linear-gradient';
+import { LinearGradient } from "expo-linear-gradient";
+import * as Clipboard from "expo-clipboard";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 const BookNow = ({ setCurrentForm, navigation, checkRideAndLocation }) => {
   const [loading, setLoading] = useState(false);
@@ -29,9 +34,23 @@ const BookNow = ({ setCurrentForm, navigation, checkRideAndLocation }) => {
     try {
       const user_status = await userService.fetchCustomer();
       if (user_status.message === "Account Disabled") {
-        Alert.alert("Account Disabled", "Your account has been disabled. Please contact Admin for more information.");
+        Alert.alert(
+          "Account Disabled",
+          "Your account has been disabled. Please contact Admin for more information.",
+          [
+            {
+              text: "Copy Address",
+              onPress: () => {
+                Clipboard.setStringAsync("pickmeupadmin@gmail.com");
+                Alert.alert("Copied", "Email address copied to clipboard.");
+              },
+            },
+            { text: "OK", onPress: () => {} },
+          ]
+        );
         return "Cannot Book";
       }
+
       const result = await checkRideAndLocation();
       if (result === "proceed") {
         setCurrentForm("ChooseServiceScreen");
@@ -49,7 +68,7 @@ const BookNow = ({ setCurrentForm, navigation, checkRideAndLocation }) => {
       style={styles.background}
     >
       <LinearGradient
-        colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.7)']}
+        colors={["rgba(0,0,0,0.3)", "rgba(0,0,0,0.7)"]}
         style={styles.gradientOverlay}
       >
         <View style={styles.contentContainer}>
@@ -67,7 +86,7 @@ const BookNow = ({ setCurrentForm, navigation, checkRideAndLocation }) => {
               disabled={loading}
             >
               <LinearGradient
-                colors={['#FBC635', '#FDA429']}
+                colors={["#FBC635", "#FDA429"]}
                 style={styles.gradientButton}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
@@ -75,7 +94,14 @@ const BookNow = ({ setCurrentForm, navigation, checkRideAndLocation }) => {
                 <Text style={styles.bookNowText}>
                   {loading ? "Checking..." : "BOOK NOW"}
                 </Text>
-                {!loading && <Ionicons name="arrow-forward" size={24} color="black" style={styles.buttonIcon} />}
+                {!loading && (
+                  <Ionicons
+                    name="arrow-forward"
+                    size={24}
+                    color="black"
+                    style={styles.buttonIcon}
+                  />
+                )}
               </LinearGradient>
             </TouchableOpacity>
 
@@ -83,7 +109,11 @@ const BookNow = ({ setCurrentForm, navigation, checkRideAndLocation }) => {
               style={styles.viewLocationButton}
               onPress={() => navigation.navigate("Location")}
             >
-              <MaterialCommunityIcons name="map-marker" size={24} color="#FBC635" />
+              <MaterialCommunityIcons
+                name="map-marker"
+                size={24}
+                color="#FBC635"
+              />
               <Text style={styles.viewLocationText}>View Location</Text>
             </TouchableOpacity>
           </View>
@@ -99,17 +129,17 @@ const ServiceCard = ({ icon, title, description, onPress, selected }) => (
     onPress={onPress}
   >
     <LinearGradient
-      colors={selected ? ['#FBC635', '#FDA429'] : ['#ffffff', '#f8f8f8']}
+      colors={selected ? ["#FBC635", "#FDA429"] : ["#ffffff", "#f8f8f8"]}
       style={styles.serviceGradient}
     >
-      <View style={styles.serviceIconContainer}>
-        {icon}
-      </View>
+      <View style={styles.serviceIconContainer}>{icon}</View>
       <View style={styles.serviceTextContainer}>
         <Text style={[styles.serviceTitle, selected && styles.selectedText]}>
           {title}
         </Text>
-        <Text style={[styles.serviceDescription, selected && styles.selectedText]}>
+        <Text
+          style={[styles.serviceDescription, selected && styles.selectedText]}
+        >
           {description}
         </Text>
       </View>
@@ -126,13 +156,12 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation, havePakyaw }) => {
   };
 
   const handleCheckPakyaw = (service) => {
-    console.log(havePakyaw)
-    if (havePakyaw === true){
+    console.log(havePakyaw);
+    if (havePakyaw === true) {
       navigation.navigate("Pakyaw");
-    }else{
+    } else {
       handleServiceSelect(service);
     }
-    
   };
 
   return (
@@ -142,10 +171,16 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation, havePakyaw }) => {
     >
       <BlurView intensity={80} tint="light" style={styles.servicesContainer}>
         <Text style={styles.screenTitle}>Choose Your Service</Text>
-        
+
         <View style={styles.servicesGrid}>
           <ServiceCard
-            icon={<MaterialCommunityIcons name="motorbike" size={32} color={selectedService === "Moto Taxi" ? "#000" : "#FBC635"} />}
+            icon={
+              <MaterialCommunityIcons
+                name="motorbike"
+                size={32}
+                color={selectedService === "Moto Taxi" ? "#000" : "#FBC635"}
+              />
+            }
             title="Moto-Taxi"
             description="Quick rides to your destination"
             onPress={() => handleServiceSelect("Moto Taxi")}
@@ -153,7 +188,13 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation, havePakyaw }) => {
           />
 
           <ServiceCard
-            icon={<MaterialCommunityIcons name="bike" size={32} color={selectedService === "Delivery" ? "#000" : "#FBC635"} />}
+            icon={
+              <MaterialCommunityIcons
+                name="bike"
+                size={32}
+                color={selectedService === "Delivery" ? "#000" : "#FBC635"}
+              />
+            }
             title="Delivery"
             description="Fast & reliable deliveries"
             onPress={() => handleServiceSelect("Delivery")}
@@ -161,7 +202,13 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation, havePakyaw }) => {
           />
 
           <ServiceCard
-            icon={<FontAwesome5 name="users" size={28} color={selectedService === "Book Pakyaw" ? "#000" : "#FBC635"} />}
+            icon={
+              <FontAwesome5
+                name="users"
+                size={28}
+                color={selectedService === "Book Pakyaw" ? "#000" : "#FBC635"}
+              />
+            }
             title="Pakyaw"
             description="Group rides & special trips"
             onPress={() => handleCheckPakyaw("Book Pakyaw")}
@@ -187,7 +234,7 @@ const MainComponent = ({ navigation, route }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [havePakyaw, setHavePakyaw] = useState(false);
-  
+
   const { customerCoords, setCustomerCoords } = useContext(CustomerContext);
 
   useEffect(() => {
@@ -197,7 +244,7 @@ const MainComponent = ({ navigation, route }) => {
         setHavePakyaw(havePakyaw);
       }
     });
-  
+
     return unsubscribe;
   }, [navigation, route.params]);
 
@@ -224,13 +271,13 @@ const MainComponent = ({ navigation, route }) => {
 
       const response = await userService.checkActiveBook();
       const ride = response.rideDetails;
-      console.log(ride)
+      console.log(ride);
       if (response && response.hasActiveRide) {
         const { status } = response.rideDetails;
         const { ride_type } = response.rideDetails;
         setHavePakyaw(ride_type === "Pakyaw");
-        console.log("pakyaw???",response.rideDetails.ride_type);
-        if (ride_type !== "Pakyaw"){
+        console.log("pakyaw???", response.rideDetails.ride_type);
+        if (ride_type !== "Pakyaw") {
           setHavePakyaw(false);
           switch (status) {
             case "Available":
@@ -247,7 +294,6 @@ const MainComponent = ({ navigation, route }) => {
               return "review";
           }
         }
-        
       }
 
       return "proceed";
@@ -318,7 +364,7 @@ const styles = StyleSheet.create({
   },
   gradientOverlay: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   contentContainer: {
     flex: 1,
@@ -327,10 +373,10 @@ const styles = StyleSheet.create({
     paddingTop: StatusBar.currentHeight + 20,
   },
   logoContainer: {
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: "rgba(0,0,0,0.8)",
     padding: 25,
     borderRadius: 15,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 50,
   },
   logoText: {
@@ -346,22 +392,22 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   actionContainer: {
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
     marginBottom: 50,
   },
   bookNowButton: {
-    width: '90%',
+    width: "90%",
     height: 60,
     borderRadius: 30,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: 20,
   },
   gradientButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 20,
   },
   bookNowText: {
@@ -374,8 +420,8 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   viewLocationButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 10,
   },
   viewLocationText: {
@@ -402,7 +448,7 @@ const styles = StyleSheet.create({
   },
   serviceCard: {
     borderRadius: 15,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: 15,
     elevation: 3,
     shadowColor: "#000",
@@ -414,17 +460,17 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
   },
   serviceGradient: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   serviceIconContainer: {
     width: 60,
     height: 60,
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: "rgba(255,255,255,0.9)",
     borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   serviceTextContainer: {
     marginLeft: 15,
@@ -449,7 +495,7 @@ const styles = StyleSheet.create({
   backButton: {
     marginTop: 20,
     padding: 15,
-    alignItems: 'center',
+    alignItems: "center",
   },
   backButtonText: {
     fontSize: 16,
