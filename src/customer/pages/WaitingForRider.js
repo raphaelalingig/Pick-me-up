@@ -243,9 +243,12 @@ const WaitingRider = ({ navigation }) => {
     try {
       const response = await userService.apply_rider(ride_id, rider);
       console.log("Accept ride response:", response.data);
-      if (response.data.message === "exist") {
+      if (response.data.message === "not available") {
         setRiderModalVisible(false);
+        Alert.alert("Message", "Rider no longer available.");
+      } else if (response.data.message === "exist") {
         Alert.alert("Message", "You have already applied for this rider.");
+        setRiderModalVisible(false);
       } else if (response.data.message === "applied") {
         Alert.alert("Message", "Applied Successfully!");
         setRiderModalVisible(false);
