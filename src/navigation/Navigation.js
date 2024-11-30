@@ -1,4 +1,5 @@
 import React from "react";
+import { ActivityIndicator } from "react-native";
 import { StatusBar } from "react-native";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { NavigationContainer } from "@react-navigation/native";
@@ -9,6 +10,9 @@ import Icon from "react-native-vector-icons/Ionicons";
 import CustomDrawerContent from "./CustomDrawerContent";
 import AvatarRider from "../rider/avatarDropdown/AvatarRider";
 import AvatarCustomer from "../customer/pages/AvatarCustomer";
+
+
+import { navigationRef } from "./NavigationService";
 
 // Import your screens here
 import Login from "../forms/Login";
@@ -259,13 +263,26 @@ const RiderStack = () => {
 };
 
 const RootStack = () => {
-  const { isAuthenticated, userRole, loading, token } = useAuth();
+  const { isAuthenticated, userRole, loading, checkToken } = useAuth();
+  const [initialLoading, setInitialLoading] = React.useState(true);
+  console.log("ROLE ID:",userRole)
 
-  console.log("RootStack render:", { isAuthenticated, userRole, loading, token });
+  React.useEffect(() => {
+    const validateToken = async () => {
+      await checkToken(); // Validate token on app start
+      setInitialLoading(false); // Set loading to false after validation
+    };
+    validateToken();
+  }, [checkToken]);
 
-  if (loading) {
-    return null; // Or a loading screen
-  }
+  if (initialLoading || loading) {
+    // Show a loading screen while validating token
+    return (
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FBC635' }}>
+        <ActivityIndicator size="large" color="#000000" />
+      </SafeAreaView>
+    );
+  } 
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -280,12 +297,13 @@ const RootStack = () => {
   );
 };
 
+
 const Navigation = () => {
   return (
     <SafeAreaProvider>
       <StatusBar backgroundColor="#FBC635" barStyle="dark-content" />
       <SafeAreaView style={{ flex: 1, backgroundColor: '#FBC635' }}>
-        <NavigationContainer>
+        <NavigationContainer ref={navigationRef}>
           <RootStack />
         </NavigationContainer>
       </SafeAreaView>

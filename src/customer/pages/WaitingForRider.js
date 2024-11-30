@@ -69,7 +69,6 @@ const WaitingRider = ({ navigation }) => {
       const ride = await userService.checkActiveBook();
       setBookDetails(ride.rideDetails);
       setDeliveryDetails(ride.deliveryDeets);
-      console.log(ride.rideDetails.customer_latitude);
       setCustomerLat(parseFloat(ride.rideDetails.customer_latitude));
       setCustomerLng(parseFloat(ride.rideDetails.customer_longitude));
       setRegion({
@@ -79,7 +78,6 @@ const WaitingRider = ({ navigation }) => {
         longitudeDelta: 0.05,
       });
       setIsLoading(false);
-      console.log("RIDESSS:", ride);
     } catch (error) {
       Alert.alert("Error", "Failed to retrieve the latest available ride.");
       setIsLoading(false);
@@ -91,7 +89,6 @@ const WaitingRider = ({ navigation }) => {
       try {
         const response = await userService.getUserId();
         const id = parseInt(response, 10);
-        console.log("Fetched user_id:", id);
         setUserId(id);
       } catch (error) {
         console.error("Error fetching user_id:", error);
@@ -101,70 +98,30 @@ const WaitingRider = ({ navigation }) => {
     fetchUserId();
   }, []);
 
-  const fetchApplications = useCallback(async () => {
-    console.log("Ride ID:", bookDetails.ride_id);
-    try {
-      if (!bookDetails?.ride_id) return;
-
-      const userId = await userService.getUserId();
-      if (!userId) {
-        console.warn("No user ID available");
-        return;
-      }
-
-      const response = await userService.getRideApplications(
-        bookDetails.ride_id
-      );
-      console.log("All applications:", response);
-
-      // Filter out applications where the applier_details.user_id matches the current user's ID
-      const filteredApplications = response.filter(
-        (application) =>
-          application.applier_details.user_id !== parseInt(userId)
-      );
-
-      console.log("Current User ID:", userId);
-      console.log("Filtered applications:", filteredApplications);
-      setApplications(filteredApplications);
-      setModalVisible(true);
-    } catch (error) {
-      console.error("Error fetching applications:", error);
-      Alert.alert("Error", "Failed to retrieve rider applications.");
-    }
-  }, [bookDetails]);
 
   const fetchRiderLocations = async () => {
     try {
       setIsLoadingRiders(true);
       const response = await userService.fetchLoc();
-      console.log("OANSNASF:", customerLat, customerLng);
-
-      // Filter active riders and calculate distances
-      const activeRiders = response.filter(
-        (rider) =>
-          rider.availability === "Available" &&
-          rider.verification_status === "Verified" &&
-          rider.user.status === "Active"
+  
+      const activeRiders = response.filter(rider => 
+        rider.availability === 'Available' &&
+        rider.verification_status === 'Verified' &&
+        rider.user.status === 'Active'
       );
-
-      // Add distance to each rider and sort by proximity
+  
       const ridersWithDistance = sortRidersByDistance(
         activeRiders,
         customerLat,
         customerLng
       );
-
-      // Optional: Filter riders within 10km
+  
       const nearbyRiders = filterRidersByDistance(ridersWithDistance, 10);
-      console.log(nearbyRiders);
-
+  
       setRiderLocations(nearbyRiders);
     } catch (error) {
       console.error("Error fetching rider locations:", error);
-      Alert.alert(
-        "Error",
-        "Failed to retrieve rider locations. Please try again."
-      );
+      Alert.alert("Error", "Failed to retrieve rider locations. Please try again.");
     } finally {
       setIsLoadingRiders(false);
     }
@@ -199,10 +156,9 @@ const WaitingRider = ({ navigation }) => {
     fetchLatestRide();
   }, [userId]);
 
-  // useEffect(() => {
-  //   fetchLatestRide();
-  //   fetchLoc();
-  // }, [fetchLatestRide]);
+  useEffect(() => {
+    fetchLatestRide();
+  }, [fetchLatestRide]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);

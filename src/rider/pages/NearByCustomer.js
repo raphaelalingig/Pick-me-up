@@ -83,8 +83,6 @@ const NearbyCustomerScreen = ({ navigation }) => {
       const response = await userService.getAvailableRides();
       const id = await userService.fetchRider();
 
-      console.log("AVAILABLE RIDE: ", response)
-
       setRider(id);
       setUser_id(id.user_id);
 

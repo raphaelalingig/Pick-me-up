@@ -185,6 +185,7 @@ const ChooseServiceScreen = ({ setCurrentForm, navigation, havePakyaw }) => {
   const handleServiceSelect = (service) => {
     setSelectedService(service);
     navigation.navigate(service);
+    setCurrentForm("BookNow");
   };
 
   const handleCheckPakyaw = (service) => {

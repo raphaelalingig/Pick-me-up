@@ -33,6 +33,26 @@ const userService = {
     }
   },
 
+  checkToken: async (storedToken) => {
+    try {
+      console.log("Full Authorization header:", `Bearer ${storedToken}`);
+      const response = await axios.get(
+        API_URL + 'check_token',
+        {
+          headers: {
+            Authorization: `Bearer ${storedToken}`
+          }
+        }
+      );
+      console.log("Token check response:", response.data);
+      return response;
+    } catch (error) {
+      console.log("Token check error details:", error.response?.data);
+      throw error;
+    }
+  },
+
+
   getUserId: async () => {
     try {
       const userId = await AsyncStorage.getItem("user_id");

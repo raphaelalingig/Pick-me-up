@@ -49,18 +49,8 @@ const Login = ({ navigation }) => {
           latitude: location.coords.latitude,
           status: "Available",
         });
-        Toast.show("Logged In Successfully", {
-          duration: Toast.durations.LONG,
-          position: Toast.positions.BOTTOM,
-          shadow: true,
-          animation: true,
-          hideOnPress: true,
-          backgroundColor: "#333",
-          textColor: "#fff",
-        });
+        
         console.log("Location updated successfully in the database");
-
-        navigation.replace(role === 3 ? "RiderStack" : "CustomerStack");
       } else {
         console.error("Location permission not granted");
         setError("Location permission is required to proceed.");
@@ -94,10 +84,22 @@ const Login = ({ navigation }) => {
 
       if (role === 3 || role === 1 || role === 2) {
         await login(receivedToken, role, user_id, userStatus);
-        await getCurrentLocation(role);
+        Toast.show("Logged In Successfully", {
+          duration: Toast.durations.LONG,
+          position: Toast.positions.BOTTOM,
+          shadow: true,
+          animation: true,
+          hideOnPress: true,
+          backgroundColor: "#333",
+          textColor: "#fff",
+        });
+        const locationSuccess = await getCurrentLocation(role);
+        if (locationSuccess) {
+          navigation.replace("RiderStack");
+        }
       } else if (role === 4) {
         await login(receivedToken, role, user_id, userStatus);
-        navigation.replace(role === 3 ? "RiderStack" : "CustomerStack");
+        navigation.replace("CustomerStack");
       } else {
         showToast("An error occurred during login");
       }

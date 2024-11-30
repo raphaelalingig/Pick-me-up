@@ -23,7 +23,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import ApplyRideModal from "./ApplyRideModal";
 import { usePusher } from "../../context/PusherContext";
-import usePusher1 from "../../services/pusher";
+// import usePusher1 from "../../services/pusher";
 import * as Clipboard from "expo-clipboard";
 
 const { width } = Dimensions.get("window");
@@ -37,7 +37,7 @@ const Home = ({ navigation }) => {
   const [user_id, setUser_Id] = useState();
   const [isOnline, setIsOnline] = useState(false);
   const [statusAnimation] = useState(new Animated.Value(0));
-  const pusher = usePusher1();
+  // const pusher = usePusher1();
   const { showApplyModal, setShowApplyModal, applyRide, setApplyRide } =
     usePusher();
 
@@ -106,44 +106,55 @@ const Home = ({ navigation }) => {
     }
   };
 
-  useEffect(() => {
-    const setupPusher = async () => {
-      try {
-        if (!user_id) return;
-        const bookedChannel = pusher.subscribe("booked");
-        const progressChannel = pusher.subscribe("progress");
+  // useEffect(() => {
+  //   let mounted = true;
+  //   const channels = [];
 
-        bookedChannel.bind("BOOKED", (data) => {
-          console.log("MATCHED DATA received:", data);
-          console.log(user_id);
-          console.log("APPLIER", data.ride.applier);
-          if (data.ride.applier === user_id) {
-            Alert.alert("Ride Match", "You have found a Match!");
-            navigation.navigate("Home");
-          }
-        });
+  //   const setupPusher = async () => {
+  //     try {
+  //       if (!user_id) return;
+  //       const bookedChannel = pusher.subscribe("booked");
+  //       const progressChannel = pusher.subscribe("progress");
+  //       channels.push(bookedChannel, progressChannel);
 
-        progressChannel.bind("RIDE_PROG", (data) => {
-          console.log("Progress DATA received:", data);
-          if (data.update.id === user_id) {
-            if (data.update.status === "Pakyaw") {
-              checkRideAndLocation();
-            }
-          }
-        });
+  //       bookedChannel.bind("BOOKED", (data) => {
+  //         console.log("MATCHED DATA received:", data);
+  //         console.log(user_id);
+  //         console.log("APPLIER", data.ride.applier);
+  //         if (data.ride.applier === user_id) {
+  //           Alert.alert("Ride Match", "You have found a Match!");
+  //           navigation.navigate("Home");
+  //         }
+  //       });
 
-        return () => {
-          progressChannel.unbind_all();
-          bookedChannel.unbind_all();
-          pusher.unsubscribe("booked");
-        };
-      } catch (error) {
-        console.error("Error setting up Pusher:", error);
-      }
-    };
+  //       progressChannel.bind("RIDE_PROG", (data) => {
+  //         console.log("Progress DATA received:", data);
+  //         if (data.update.id === user_id) {
+  //           if (data.update.status === "Pakyaw") {
+  //             checkRideAndLocation();
+  //           }
+  //         }
+  //       });
 
-    setupPusher();
-  }, [user_id]);
+  //       return () => {
+  //         progressChannel.unbind_all();
+  //         bookedChannel.unbind_all();
+  //         pusher.unsubscribe("booked");
+  //       };
+  //     } catch (error) {
+  //       console.error("Error setting up Pusher:", error);
+  //     }
+  //   };
+
+  //   setupPusher();
+  //   return () => {
+  //     mounted = false;
+  //     channels.forEach(channel => {
+  //       channel.unbind_all();
+  //       pusher.unsubscribe(channel.name);
+  //     });
+  //   };
+  // }, [user_id]);
 
   useEffect(() => {
     const checkUserStatus = async () => {
@@ -260,16 +271,16 @@ const Home = ({ navigation }) => {
       }
 
       let location = await Location.getCurrentPositionAsync({});
-      setLocation(location);
+        setLocation(location);
 
-      setRiderCoords({
-        accuracy: location.coords.accuracy,
-        longitude: location.coords.longitude,
-        latitude: location.coords.latitude,
-        altitude: location.coords.altitude,
-        altitudeAccuracy: location.coords.altitudeAccuracy,
-        timestamp: location.timestamp,
-      });
+        setRiderCoords({
+          accuracy: location.coords.accuracy,
+          longitude: location.coords.longitude,
+          latitude: location.coords.latitude,
+          altitude: location.coords.altitude,
+          altitudeAccuracy: location.coords.altitudeAccuracy,
+          timestamp: location.timestamp,
+        });
 
       const rider_lat = location.coords.latitude;
       const rider_long = location.coords.longitude;
@@ -329,8 +340,11 @@ const Home = ({ navigation }) => {
     useCallback(() => {
       checkRideAndLocation();
       setShowApplyModal(false);
-      // setShowMatchModal(false);
-    }, [])
+      // Add cleanup function
+      return () => {
+        // Cleanup code here
+      };
+    }, [checkRideAndLocation, setShowApplyModal])
   );
 
   let text = "Waiting..";
