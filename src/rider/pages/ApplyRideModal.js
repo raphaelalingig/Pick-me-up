@@ -1,10 +1,12 @@
 import React, { useCallback } from 'react';
-import { View, Text, TouchableOpacity, Modal, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import Toast from 'react-native-root-toast';
 
 const ApplyRideModal = ({ visible, ride, userService, onClose, navigation }) => {
   if (!ride) return null;
+  
+  const [isLoading, setIsLoading] = useState(false);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -18,6 +20,7 @@ const ApplyRideModal = ({ visible, ride, userService, onClose, navigation }) => 
 
   const handleDecline = async () => {
     try {
+      setIsLoading(true);
       const apply_id = ride.apply_id;
       const response = await userService.decline_ride(apply_id);
 
@@ -39,7 +42,9 @@ const ApplyRideModal = ({ visible, ride, userService, onClose, navigation }) => 
     } catch (error) {
       console.error("Failed to decline ride:", error);
       Alert.alert("Error", "Failed to decline ride. Please try again.");
-    }
+    } finally {
+    setIsLoading(false);
+  }
   };
 
   const handleCancelConfirmation = useCallback(() => {
@@ -125,7 +130,12 @@ const ApplyRideModal = ({ visible, ride, userService, onClose, navigation }) => 
               style={[styles.button, styles.declineButton]} 
               onPress={handleCancelConfirmation}
             >
+
+              {isLoading ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
               <Text style={styles.declineButtonText}>Decline</Text>
+            )}
             </TouchableOpacity>
           </View>
         </View>
