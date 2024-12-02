@@ -3,6 +3,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { AuthContext } from "./AuthContext";
 import userService from "./auth&services";
+import Toast from "react-native-root-toast";
+import {
+  View,
+  StyleSheet,
+  ImageBackground,
+  TouchableOpacity,
+  ToastAndroid,
+  Alert
+} from "react-native";
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -10,6 +19,14 @@ export const useAuth = () => {
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
+
+  const showToast = (message = "Something went wrong") => {
+    ToastAndroid.showWithGravity(
+      message,
+      ToastAndroid.LONG,
+      ToastAndroid.CENTER
+    );
+  };
 
   const {
     isAuthenticated,
@@ -94,13 +111,17 @@ export const useAuth = () => {
         setUserRole(role);
         setUserId(user_id);
         setUserStatus(status);
-        setToken(storedToken); // Use the token directly from the backend
+        setToken(storedToken);
       } else {
         console.log("Invalid or expired token");
         await logout();
       }
     } catch (error) {
-      console.error("Error during token validation:", error);
+      console.log("Error during token validation:", error);
+      Alert.alert(
+        "Logged Out",
+        "Session Expired or Account Logged In on another device."
+      );
       await logout();
     } finally {
       setLoading(false); // Remove loading state

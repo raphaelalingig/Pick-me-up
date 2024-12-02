@@ -265,7 +265,6 @@ const RiderStack = () => {
 const RootStack = () => {
   const { isAuthenticated, userRole, loading, checkToken } = useAuth();
   const [initialLoading, setInitialLoading] = React.useState(true);
-  console.log("ROLE ID:",userRole)
 
   React.useEffect(() => {
     const validateToken = async () => {

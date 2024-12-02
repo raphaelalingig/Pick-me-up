@@ -18,7 +18,23 @@ export default function App() {
         <PaperProvider>
           <RiderProvider>
             <CustomerProvider>
-              <PusherProvider>
+              <PusherProvider
+                    handleBookedMatch={(ride) => {
+                      Alert.alert(
+                        "Ride Match",
+                        "You have found a Match!",
+                        [
+                          {
+                            text: "OK",
+                            onPress: () => {
+                              // Navigation will be handled by the Navigation component
+                              // which has access to useNavigation
+                            }
+                          }
+                        ]
+                      );
+                    }}
+                  >
                 <Navigation />
               </PusherProvider>
             </CustomerProvider>

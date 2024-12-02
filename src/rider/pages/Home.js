@@ -46,7 +46,6 @@ const Home = ({ navigation }) => {
       try {
         const response = await userService.getUserId();
         const id = parseInt(response, 10);
-        console.log("youvouyvouyFetched user_id:", id);
         setUser_Id(id);
       } catch (error) {
         console.error("Error fetching user_id:", error);
@@ -59,7 +58,6 @@ const Home = ({ navigation }) => {
     const fetchUserAvailability = async () => {
       try {
         const availability = await userService.fetchRider();
-        console.log("Availabilty", availability);
         setIsOnline(availability.availability === "Available");
       } catch (error) {
         console.error("Error fetching user availability:", error);
@@ -71,7 +69,6 @@ const Home = ({ navigation }) => {
   const handleStatusToggle = async (value) => {
     try {
       setLoading(true);
-
       // Send status dynamically based on the toggle value
       const newStatus = value ? "Available" : "Offline";
       await userService.updateRiderOnlineStatus(newStatus);
@@ -97,8 +94,6 @@ const Home = ({ navigation }) => {
         backgroundColor: "#333",
         textColor: "#fff",
       });
-      // Optional feedback (commented out in your code)
-      // Alert.alert("Status Updated", `You are now ${newStatus.toLowerCase()}!`);
     } catch (error) {
       Alert.alert("Error", "Failed to update status. Please try again.");
     } finally {
@@ -228,13 +223,11 @@ const Home = ({ navigation }) => {
   };
 
   const uploadRiderLocation = async (rider_lat, rider_long) => {
-    console.log("COORDS", rider_lat, rider_long);
     try {
       const response = await userService.updateRiderLocation(
         rider_lat,
         rider_long
       );
-      console.log("Updated Succesfully:", response);
     } catch (error) {
       console.error("Error uploading rider location:", error);
     }

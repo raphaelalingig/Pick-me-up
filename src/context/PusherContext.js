@@ -16,10 +16,11 @@ const PusherContext = createContext({
   setShowApplyModal: () => {},
   setShowMatchModal: () => {},
   setMatchDetails: () => {},
+  handleBookedMatch: () => {},
 });
 
 // Provider component
-export const PusherProvider = ({ children }) => {
+export const PusherProvider = ({ children, handleBookedMatch  }) => {
   const [pusher, setPusher] = useState(null);
   const [availableRides, setAvailableRides] = useState([]);
   const [applyRide, setApplyRide] = useState(null);
@@ -27,7 +28,7 @@ export const PusherProvider = ({ children }) => {
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [matchDetails, setMatchDetails] = useState(null);
   
-  const { userId, checkToken } = useAuth();
+  const { userId, token, checkToken } = useAuth();
 
   // Setup Pusher connection
   const setupPusherConnection = useCallback(() => {
@@ -39,27 +40,38 @@ export const PusherProvider = ({ children }) => {
     }
 
     // Create new Pusher instance
+    console.log("PUSHER TOKEN:", token)
     const newPusher = new Pusher('1b95c94058a5463b0b08', {
       cluster: 'ap1',
       encrypted: true,
+      authEndpoint: '/api/broadcasting/auth', // Add your auth endpoint
+      auth: {
+        headers: {
+          // Add your authentication headers here
+          Authorization: `Bearer ${token}`,
+        },
+      },
     });
     setPusher(newPusher);
 
     // Subscribe to channels
-    const userChannel = newPusher.subscribe(`user-logout.${userId}`);
+    const userChannel = newPusher.subscribe('logout');
     const ridesChannel = newPusher.subscribe('rides');
     const appliedChannel = newPusher.subscribe('application');
     const bookedChannel = newPusher.subscribe('booked');
 
     // Event handlers
-    userChannel.bind("UserLoggedOutFromOtherDevices", () => {
-      Toast.show("Logged out due to login on another device.", {
-        duration: Toast.durations.LONG,
-        position: Toast.positions.BOTTOM,
-        backgroundColor: "red",
-        textColor: "#fff",
-      });
-      checkToken();
+    userChannel.bind('LOGOUT', (data) => {
+      console.log("LOGOUT????:  ",data)
+      if (data.userId === userId) {
+        Toast.show("Logging out. Account logged in on another device.", {
+          duration: Toast.durations.LONG,
+          position: Toast.positions.BOTTOM,
+          backgroundColor: "red",
+          textColor: "#fff",
+        });
+        checkToken();
+      }
     });
 
     ridesChannel.bind('RIDES_UPDATE', (data) => {
@@ -98,13 +110,19 @@ export const PusherProvider = ({ children }) => {
     //   }
     // });
 
+    bookedChannel.bind("BOOKED", (data) => {
+      if (data.ride.apply_to === userId) {
+        // Instead of handling navigation directly, emit the event
+      }
+    });
+
     // Cleanup function
     return () => {
       userChannel.unbind_all();
       ridesChannel.unbind_all();
       appliedChannel.unbind_all();
       bookedChannel.unbind_all();
-      newPusher.unsubscribe(`user-logout.${userId}`);
+      newPusher.unsubscribe('logout');
       newPusher.unsubscribe('rides');
       newPusher.unsubscribe('application');
       // newPusher.unsubscribe('booked');
@@ -136,6 +154,7 @@ export const PusherProvider = ({ children }) => {
     setShowApplyModal,
     setShowMatchModal,
     setMatchDetails,
+    handleBookedMatch
   };
 
   return (
