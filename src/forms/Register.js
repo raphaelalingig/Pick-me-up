@@ -13,10 +13,14 @@ import {
   Button,
   Keyboard,
   HelperText,
+  Portal,
+  Modal,
 } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import userService from "../services/auth&services";
+import axios from "axios";
+import API_URL from "../services/api_url";
 
 const FirstForm = memo(
   ({
@@ -235,125 +239,331 @@ const SecondForm = memo(
     mobileError,
     setMobileError,
     validateMobileNumber,
-  }) => (
-    <View style={styles.formContainer}>
-      <View>
-        <Text variant="bodyLarge" style={styles.labels}>
-          Mobile Number
-        </Text>
-        <TextInput
-          placeholder="Phone Number"
-          mode="outlined"
-          value={mobile_number}
-          onChangeText={validateMobileNumber}
-          outlineStyle={[
-            styles.textinputs,
-            (mobileError || errors.mobile_number) && styles.errorInput,
-          ]}
-          keyboardType="phone-pad"
-          maxLength={11} // Add this to limit input length
-        />
-        {(mobileError || errors.mobile_number) && (
-          <HelperText type="error" visible={true}>
-            {mobileError || errors.mobile_number[0]}
-          </HelperText>
-        )}
-      </View>
+    isVerificationModalVisible,
+    setVerificationModalVisible,
+    isEmailVerified,
+    setIsEmailVerified,
+    verificationLoading,
+    setVerificationLoading,
+    verificationError,
+    setVerificationError,
+    verificationCode,
+    setVerificationCode,
+    showToast,
+  }) => {
+    const sendVerificationCode = async () => {
+      if (!email || emailError) {
+        showToast("Please enter a valid email address");
+        return;
+      }
 
-      <View>
-        <Text variant="bodyLarge" style={styles.labels}>
-          Email
-        </Text>
-        <TextInput
-          placeholder="Email Address"
-          mode="outlined"
-          value={email}
-          onChangeText={validateEmail}
-          outlineStyle={[
-            styles.textinputs,
-            (emailError || errors.email) && styles.errorInput,
-          ]}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          type="email"
-        />
-        {(emailError || errors.email) && (
-          <HelperText type="error" visible={true}>
-            {emailError || errors.email[0]}
-          </HelperText>
-        )}
-      </View>
-      <View>
-        <Text variant="bodyLarge" style={styles.labels}>
-          Password
-        </Text>
-        <View style={{ gap: 10 }}>
-          <View>
+      try {
+        setVerificationLoading(true);
+
+        // Complete API endpoint for the request
+        const response = await axios.post(`${API_URL}send-verification-code`, {
+          email,
+        });
+
+        // Explicit check for successful response
+        if (response.status === 200) {
+          console.log("Verification Code Response:", response.data);
+          setVerificationModalVisible(true);
+          showToast(
+            response.data.message || "Verification code sent to your email"
+          );
+        } else {
+          throw new Error("Unexpected response status");
+        }
+      } catch (error) {
+        console.error("Verification Code Error:", error);
+
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to send verification code";
+
+        showToast(errorMessage);
+
+        // Additional debug information
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          console.error("Error Response Data:", error.response.data);
+          console.error("Error Response Status:", error.response.status);
+          console.error("Error Response Headers:", error.response.headers);
+        } else if (error.request) {
+          // The request was made but no response was received
+          console.error("No response received:", error.request);
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          console.error("Error Message:", error.message);
+        }
+      } finally {
+        setVerificationLoading(false);
+      }
+    };
+
+    const verifyEmailCode = async () => {
+      try {
+        setVerificationLoading(true);
+
+        // Complete API endpoint for verifying email code
+        const response = await axios.post(`${API_URL}verify-email-code`, {
+          email,
+          verification_code: verificationCode,
+        });
+
+        if (response.data.email_verified) {
+          setIsEmailVerified(true);
+          setVerificationModalVisible(false);
+          showToast("Email verified successfully");
+          setVerificationError("");
+        }
+      } catch (error) {
+        const errorMessage =
+          error.response?.data?.message || "Invalid verification code";
+        setVerificationError(errorMessage);
+        setIsEmailVerified(false);
+      } finally {
+        setVerificationLoading(false);
+      }
+    };
+
+    return (
+      <View style={styles.formContainer}>
+        <View>
+          <Text variant="bodyLarge" style={styles.labels}>
+            Mobile Number
+          </Text>
+          <TextInput
+            placeholder="Phone Number"
+            mode="outlined"
+            value={mobile_number}
+            onChangeText={validateMobileNumber}
+            outlineStyle={[
+              styles.textinputs,
+              (mobileError || errors.mobile_number) && styles.errorInput,
+            ]}
+            keyboardType="phone-pad"
+            maxLength={11}
+          />
+          {(mobileError || errors.mobile_number) && (
+            <HelperText type="error" visible={true}>
+              {mobileError || errors.mobile_number[0]}
+            </HelperText>
+          )}
+        </View>
+
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <View style={{ flex: 1, marginRight: 10 }}>
+            <Text variant="bodyLarge" style={styles.labels}>
+              Email
+            </Text>
             <TextInput
-              placeholder="Enter Password"
+              placeholder="Email Address"
               mode="outlined"
-              value={password}
-              onChangeText={setPassword}
+              value={email}
+              onChangeText={validateEmail}
               outlineStyle={[
                 styles.textinputs,
-                errors.password && styles.errorInput,
+                (emailError || errors.email) && styles.errorInput,
               ]}
-              secureTextEntry
+              keyboardType="email-address"
+              autoCapitalize="none"
+              type="email"
+              disabled={isEmailVerified}
             />
-            {errors.password && (
+            {(emailError || errors.email) && (
               <HelperText type="error" visible={true}>
-                {errors.password[0]}
+                {emailError || errors.email[0]}
               </HelperText>
             )}
           </View>
-          <View>
-            <TextInput
-              placeholder="Confirm Password"
-              mode="outlined"
-              value={repassword}
-              onChangeText={setRepassword}
-              outlineStyle={[
-                styles.textinputs,
-                password !== repassword && styles.errorInput,
-              ]}
-              secureTextEntry
-            />
-            {password !== repassword && (
-              <HelperText type="error" visible={true}>
-                Passwords do not match
-              </HelperText>
-            )}
+          <Button
+            mode="contained"
+            onPress={sendVerificationCode}
+            loading={verificationLoading}
+            disabled={!email || !!emailError || isEmailVerified}
+            style={{ marginTop: 20 }}
+          >
+            {isEmailVerified ? "✓" : "Send Code"}
+          </Button>
+        </View>
+
+        {/* Email Verification Modal */}
+        <Portal>
+          <Modal
+            visible={isVerificationModalVisible}
+            onDismiss={() => setVerificationModalVisible(false)}
+            contentContainerStyle={{
+              backgroundColor: "white",
+              padding: 24,
+              marginHorizontal: 16,
+              marginVertical: 32,
+              borderRadius: 12,
+              elevation: 6, // Shadow for Android
+              shadowColor: "#000", // Shadow for iOS
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              maxWidth: 400,
+              width: "100%",
+              alignSelf: "center",
+            }}
+          >
+            <View className="space-y-6">
+              {/* Title */}
+              <Text className="text-2xl font-bold text-center text-black">
+                Verification Required
+              </Text>
+
+              {/* Description */}
+              <Text className="text-center text-gray-600 text-sm">
+                Please enter the 6-digit code sent to your email.
+              </Text>
+
+              {/* Input */}
+              <TextInput
+                placeholder="000000"
+                mode="outlined"
+                value={verificationCode}
+                onChangeText={setVerificationCode}
+                maxLength={6}
+                className="text-center text-xl tracking-wider"
+                style={{
+                  backgroundColor: "white",
+                  borderColor: "#FFC533",
+                  borderWidth: 2,
+                  borderRadius: 8, // Rounded corners
+                  paddingVertical: 12,
+                }}
+              />
+
+              {/* Error Message */}
+              {verificationError && (
+                <HelperText type="error" visible={true}>
+                  <Text className="text-red-500 text-sm">
+                    {verificationError}
+                  </Text>
+                </HelperText>
+              )}
+
+              {/* Buttons */}
+              <View className="flex flex-row justify-center space-x-3">
+                <Button
+                  mode="contained"
+                  onPress={() => setVerificationModalVisible(false)}
+                  className="flex-1"
+                  style={{
+                    backgroundColor: "#1C1C1E",
+                    borderRadius: 8,
+                    paddingVertical: 10,
+                  }}
+                  labelStyle={{
+                    color: "white",
+                    fontSize: 16,
+                    fontWeight: "600",
+                  }}
+                >
+                  Cancel
+                </Button>
+
+                <Button
+                  mode="contained"
+                  onPress={verifyEmailCode}
+                  loading={verificationLoading}
+                  disabled={verificationCode.length !== 6}
+                  className="flex-1"
+                  style={{
+                    backgroundColor: "#FFC533",
+                    borderRadius: 8,
+                    paddingVertical: 10,
+                  }}
+                  labelStyle={{
+                    color: "#1C1C1E",
+                    fontSize: 16,
+                    fontWeight: "600",
+                  }}
+                >
+                  {verificationLoading ? "Verifying..." : "Verify"}
+                </Button>
+              </View>
+            </View>
+          </Modal>
+        </Portal>
+
+        <View>
+          <Text variant="bodyLarge" style={styles.labels}>
+            Password
+          </Text>
+          <View style={{ gap: 10 }}>
+            <View>
+              <TextInput
+                placeholder="Enter Password"
+                mode="outlined"
+                value={password}
+                onChangeText={setPassword}
+                outlineStyle={[
+                  styles.textinputs,
+                  errors.password && styles.errorInput,
+                ]}
+                secureTextEntry
+              />
+              {errors.password && (
+                <HelperText type="error" visible={true}>
+                  {errors.password[0]}
+                </HelperText>
+              )}
+            </View>
+            <View>
+              <TextInput
+                placeholder="Confirm Password"
+                mode="outlined"
+                value={repassword}
+                onChangeText={setRepassword}
+                outlineStyle={[
+                  styles.textinputs,
+                  password !== repassword && styles.errorInput,
+                ]}
+                secureTextEntry
+              />
+              {password !== repassword && (
+                <HelperText type="error" visible={true}>
+                  Passwords do not match
+                </HelperText>
+              )}
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.buttonContainer}>
+          <View style={{ flexDirection: "row", gap: 5 }}>
+            <TouchableOpacity>
+              <Button
+                style={styles.button}
+                onPress={() => setCurrentForm("first")}
+                mode="contained"
+              >
+                <Text>Back</Text>
+              </Button>
+            </TouchableOpacity>
+
+            <TouchableOpacity>
+              <Button
+                style={styles.button}
+                mode="contained"
+                onPress={handleRegistration}
+                loading={loading}
+                disabled={loading || !isEmailVerified}
+              >
+                <Text>Submit</Text>
+              </Button>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
-
-      <View style={styles.buttonContainer}>
-        <View style={{ flexDirection: "row", gap: 5 }}>
-          <TouchableOpacity>
-            <Button
-              style={styles.button}
-              onPress={() => setCurrentForm("first")}
-              mode="contained"
-            >
-              <Text>Back</Text>
-            </Button>
-          </TouchableOpacity>
-
-          <TouchableOpacity>
-            <Button
-              style={styles.button}
-              mode="contained"
-              onPress={handleRegistration}
-              loading={loading}
-              disabled={loading}
-            >
-              <Text>Submit</Text>
-            </Button>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  )
+    );
+  }
 );
 
 const Register = ({ navigation }) => {
@@ -378,9 +588,15 @@ const Register = ({ navigation }) => {
   const [errors, setErrors] = useState({});
   const [isLegalAge, setIsLegalAge] = useState(false);
   const [ageError, setAgeError] = useState("");
-
   const datePickerRef = useRef();
   const [date_of_birth, setDateOfBirth] = useState(new Date());
+
+  const [isVerificationModalVisible, setVerificationModalVisible] =
+    useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [verificationLoading, setVerificationLoading] = useState(false);
+  const [verificationError, setVerificationError] = useState("");
 
   const showToast = (message = "Something went wrong") => {
     ToastAndroid.showWithGravity(
@@ -392,6 +608,10 @@ const Register = ({ navigation }) => {
 
   const handleRegistration = async () => {
     try {
+      if (!isEmailVerified) {
+        showToast("Email is not verified");
+        return;
+      }
       setLoading(true);
       setErrors({});
 
@@ -677,6 +897,16 @@ const Register = ({ navigation }) => {
               setMobileError={setMobileError}
               mobileError={mobileError}
               validateMobileNumber={validateMobileNumber}
+              isVerificationModalVisible={isVerificationModalVisible}
+              setVerificationModalVisible={setVerificationModalVisible}
+              isEmailVerified={isEmailVerified}
+              setIsEmailVerified={setIsEmailVerified}
+              verificationLoading={verificationLoading}
+              setVerificationLoading={setVerificationLoading}
+              verificationError={verificationError}
+              setVerificationError={setVerificationError}
+              setVerificationCode={setVerificationCode}
+              verificationCode={verificationCode}
             />
           )}
         </View>
