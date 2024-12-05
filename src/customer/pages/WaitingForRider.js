@@ -202,6 +202,9 @@ const WaitingRider = ({ navigation }) => {
       if (response.data.message === "not available") {
         setRiderModalVisible(false);
         Alert.alert("Message", "Rider no longer available.");
+      } else if (response.data.message === "self") {
+        Alert.alert("Message", "You cannot apply ride to yourself.");
+        setRiderModalVisible(false);
       } else if (response.data.message === "exist") {
         Alert.alert("Message", "You have already applied for this rider.");
         setRiderModalVisible(false);
