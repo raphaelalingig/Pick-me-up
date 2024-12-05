@@ -21,6 +21,27 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import userService from "../services/auth&services";
 import axios from "axios";
 import API_URL from "../services/api_url";
+// Add this import at the top of your file
+import zxcvbn from 'zxcvbn';
+
+// Inside the SecondForm component, add this function
+const getPasswordStrength = (password) => {
+  const result = zxcvbn(password);
+  const strengthLabels = ['Very Weak', 'Weak', 'Average', 'Strong', 'Very Strong'];
+  const strengthColors = [
+    "#FF6B6B",
+    "#FFA06B",
+    "#ffa500",
+    "#6BFF6B",
+    "#00FF00",
+  ];
+  
+  return {
+    score: result.score,
+    label: strengthLabels[result.score],
+    color: strengthColors[result.score]
+  };
+};
 
 const FirstForm = memo(
   ({
@@ -527,6 +548,36 @@ const SecondForm = memo(
                 ]}
                 secureTextEntry
               />
+
+              {password && (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginBottom: 5,
+                  }}
+                >
+                  <View
+                    style={{
+                      height: 5,
+                      width: `${
+                        (getPasswordStrength(password).score + 1) * 20
+                      }%`,
+                      backgroundColor: getPasswordStrength(password).color,
+                      marginRight: 10,
+                    }}
+                  />
+                  <Text
+                    style={{
+                      color: getPasswordStrength(password).color,
+                      fontSize: 12,
+                    }}
+                  >
+                    {getPasswordStrength(password).label}
+                  </Text>
+                </View>
+              )}
+
               {password !== repassword && (
                 <HelperText type="error" visible={true}>
                   Passwords do not match
