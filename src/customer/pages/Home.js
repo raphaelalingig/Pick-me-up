@@ -65,10 +65,10 @@ const BookNow = ({ setCurrentForm, navigation, checkRideAndLocation }) => {
     setLoading(true);
     try {
       const user_status = await userService.fetchCustomer();
-      if (user_status.message === "Account Disabled") {
+      if (user_status.message === "Account Blocked") {
         Alert.alert(
-          "Account Disabled",
-          "Your account has been disabled. Please contact Admin for more information.",
+          "Account Blocked",
+          "Your account has been blocked. Please contact Admin for more information.",
           [
             {
               text: "Copy Address",

@@ -52,6 +52,16 @@ const userService = {
     }
   },
 
+  getFare : async () => {
+    try {
+      const response = await axios.get(API_URL + "view_fare");
+      return response.data; // Assuming the API returns the fare data in the response body
+    } catch (error) {
+      console.error("Error fetching fare data:", error);
+      throw error; // Rethrow to handle it in the calling code
+    }
+  },
+
 
   getUserId: async () => {
     try {

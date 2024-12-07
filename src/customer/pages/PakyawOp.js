@@ -27,6 +27,8 @@ import { CustomerContext } from "../../context/customerContext";
 import userService from "../../services/auth&services";
 import { BlurView } from "expo-blur";
 import { MAP_API_KEY } from "@env";
+import { AuthContext } from "../../services/AuthContext";
+
 
 const GOOGLE_PLACES_API_KEY = MAP_API_KEY;
 
@@ -75,6 +77,7 @@ const PakyawOptionScreen = ({ navigation, route }) => {
   const [scheduledDate, setScheduledDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  const { baseFare, additionalFareRate } = useContext(AuthContext);
 
   useEffect(() => {
     const fetchUserId = async () => {
@@ -176,8 +179,8 @@ const PakyawOptionScreen = ({ navigation, route }) => {
   };
 
   const calculateFare = (distance) => {
-    const baseFare = 40;
-    const additionalFareRate = 12;
+    // const baseFare = 40;
+    // const additionalFareRate = 12;
     const thresholdKm = 2;
 
     let calculatedFare;

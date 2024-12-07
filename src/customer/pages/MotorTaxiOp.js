@@ -16,6 +16,8 @@ import { CustomerContext } from "../../context/customerContext";
 import userService from "../../services/auth&services";
 import { BlurView } from "expo-blur";
 import { MAP_API_KEY } from "@env";
+import { AuthContext } from "../../services/AuthContext";
+import { useAuth } from "../../services/useAuth";
 
 const GOOGLE_PLACES_API_KEY = MAP_API_KEY;
 
@@ -44,6 +46,8 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isCalculatingFare, setIsCalculatingFare] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  // const { baseFare, additionalFareRate, token, role } = useAuth();
+  const { baseFare, additionalFareRate } = useContext(AuthContext);
 
 
   useEffect(() => {
@@ -150,8 +154,8 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
   };
 
   const calculateFare = (distance) => {
-    const baseFare = 40;
-    const additionalFareRate = 12;
+    // const baseFare = 40;
+    // const additionalFareRate = 12;
     const thresholdKm = 2;
 
     let calculatedFare;
