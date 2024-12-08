@@ -530,25 +530,6 @@ const SecondForm = memo(
                 ]}
                 secureTextEntry
               />
-              {errors.password && (
-                <HelperText type="error" visible={true}>
-                  {errors.password[0]}
-                </HelperText>
-              )}
-            </View>
-            <View>
-              <TextInput
-                placeholder="Confirm Password"
-                mode="outlined"
-                value={repassword}
-                onChangeText={setRepassword}
-                outlineStyle={[
-                  styles.textinputs,
-                  password !== repassword && styles.errorInput,
-                ]}
-                secureTextEntry
-              />
-
               {password && (
                 <View
                   style={{
@@ -571,12 +552,39 @@ const SecondForm = memo(
                     style={{
                       color: getPasswordStrength(password).color,
                       fontSize: 12,
+                      fontWeight: "bold",
+                      textShadowColor: "rgba(0, 0, 0, 0.5)", // Adds shadow to text
+                      textShadowOffset: { width: 1, height: 1 },
+                      textShadowRadius: 1,
+                      borderColor: getPasswordStrength(password).color, // Border matches strength color
+                      borderRadius: 5,
+                      paddingHorizontal: 8,
+                      paddingVertical: 2,
                     }}
                   >
                     {getPasswordStrength(password).label}
                   </Text>
                 </View>
               )}
+
+              {errors.password && (
+                <HelperText type="error" visible={true}>
+                  {errors.password[0]}
+                </HelperText>
+              )}
+            </View>
+            <View>
+              <TextInput
+                placeholder="Confirm Password"
+                mode="outlined"
+                value={repassword}
+                onChangeText={setRepassword}
+                outlineStyle={[
+                  styles.textinputs,
+                  password !== repassword && styles.errorInput,
+                ]}
+                secureTextEntry
+              />
 
               {password !== repassword && (
                 <HelperText type="error" visible={true}>
