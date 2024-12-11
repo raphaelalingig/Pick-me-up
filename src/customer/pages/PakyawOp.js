@@ -21,14 +21,12 @@ import {
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
-
 import * as Location from "expo-location";
 import { CustomerContext } from "../../context/customerContext";
 import userService from "../../services/auth&services";
 import { BlurView } from "expo-blur";
 import { MAP_API_KEY } from "@env";
 import { AuthContext } from "../../services/AuthContext";
-
 
 const GOOGLE_PLACES_API_KEY = MAP_API_KEY;
 
@@ -41,20 +39,18 @@ const PlaceSuggestion = ({ suggestion, onPress }) => (
   </TouchableOpacity>
 );
 
-const NumberInput = ({ numberOfRiders, onIncrement, onDecrement }) => {
-  return (
-    <View style={styles.numberInputContainer}>
-      <Text style={styles.fareLabel}>Number of Riders: </Text>
-      <TouchableOpacity onPress={onDecrement} style={styles.numberButton}>
-        <Text style={styles.numberButtonText}>-</Text>
-      </TouchableOpacity>
-      <Text style={styles.numberText}>{numberOfRiders}</Text>
-      <TouchableOpacity onPress={onIncrement} style={styles.numberButton}>
-        <Text style={styles.numberButtonText}>+</Text>
-      </TouchableOpacity>
-    </View>
-  );
-};
+const NumberInput = ({ numberOfRiders, onIncrement, onDecrement }) => (
+  <View style={styles.numberInputContainer}>
+    <Text style={styles.fareLabel}>Number of Riders: </Text>
+    <TouchableOpacity onPress={onDecrement} style={styles.numberButton}>
+      <Text style={styles.numberButtonText}>-</Text>
+    </TouchableOpacity>
+    <Text style={styles.numberText}>{numberOfRiders}</Text>
+    <TouchableOpacity onPress={onIncrement} style={styles.numberButton}>
+      <Text style={styles.numberButtonText}>+</Text>
+    </TouchableOpacity>
+  </View>
+);
 
 const PakyawOptionScreen = ({ navigation, route }) => {
   const [pickupLocation, setPickupLocation] = useState("");
@@ -62,7 +58,7 @@ const PakyawOptionScreen = ({ navigation, route }) => {
   const [dropoffLocation, setDropoffLocation] = useState("");
   const [dropoffAddress, setDropoffAddress] = useState("");
   const [numberOfRiders, setNumberOfRiders] = useState(1);
-  const [fare, setFare] = useState("40.00");
+  const [fare, setFare] = useState();
   const [userId, setUserId] = useState(null);
   const { customerCoords, setCustomerCoords } = useContext(CustomerContext);
   const [totalDistanceRide, setTotalDistanceRide] = useState(0);
@@ -77,7 +73,17 @@ const PakyawOptionScreen = ({ navigation, route }) => {
   const [scheduledDate, setScheduledDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  const [isBackAndForth, setIsBackAndForth] = useState(false);
+  const [returnDate, setReturnDate] = useState(new Date());
+  const [showReturnDatePicker, setShowReturnDatePicker] = useState(false);
   const { baseFare, additionalFareRate } = useContext(AuthContext);
+
+
+  useEffect(() => {
+    if (baseFare) {
+      setFare(Number(baseFare).toFixed(2));
+    }
+  }, [baseFare]);
 
   useEffect(() => {
     const fetchUserId = async () => {
@@ -178,11 +184,11 @@ const PakyawOptionScreen = ({ navigation, route }) => {
     }
   };
 
-  const calculateFare = (distance) => {
+  const calculateFare = (distance, backAndForth = isBackAndForth) => {
     // const baseFare = 40;
     // const additionalFareRate = 12;
     const thresholdKm = 2;
-
+  
     let calculatedFare;
     if (distance <= thresholdKm) {
       calculatedFare = baseFare;
@@ -190,14 +196,20 @@ const PakyawOptionScreen = ({ navigation, route }) => {
       const exceedingDistance = distance - thresholdKm;
       calculatedFare = baseFare + exceedingDistance * additionalFareRate;
     }
-
+  
+    // Double the fare if back and forth is true
+    if (backAndForth) {
+      calculatedFare *= 1.5;
+    }
+  
     setFare(calculatedFare.toFixed(2));
   };
+  
 
   const handleConfirm = async () => {
     if (isLoading) return;
 
-    if (!pickupLocation || !dropoffLocation || !description) {
+    if (!pickupLocation || !dropoffLocation) {
       Alert.alert("Validation Error", "Please fill out all of the fields.");
       return;
     }
@@ -210,19 +222,22 @@ const PakyawOptionScreen = ({ navigation, route }) => {
       .slice(0, 19)
       .replace("T", " ");
 
-    const bookDetails = {
-      user_id: userId,
-      ride_date: formattedCurrentDate,
-      ride_type: "Pakyaw",
-      numberOfRiders: 1,
-      pickup_location: pickupAddress,
-      dropoff_location: dropoffAddress,
-      fare: parseFloat(fare),
-      distance: totalDistanceRide,
-      status: isScheduled ? "Scheduled" : "Available",
-      scheduledDate: scheduledDate,
-      description: description,
-    };
+      const bookDetails = {
+        user_id: userId,
+        ride_date: formattedCurrentDate,
+        ride_type: "Pakyaw",
+        numberOfRiders: numberOfRiders,
+        pickup_location: pickupAddress,
+        dropoff_location: dropoffAddress,
+        fare: parseFloat(fare),
+        distance: totalDistanceRide,
+        status: isScheduled ? "Scheduled" : "Available",
+        scheduledDate,
+        description,
+        isBackAndForth,
+        returnDate,
+      };
+  
 
     console.log("BOOOOK:", bookDetails)
 
@@ -377,6 +392,24 @@ const PakyawOptionScreen = ({ navigation, route }) => {
     }
   };
 
+  const showReturnDatePicker1 = () => {
+    if (Platform.OS === 'android') {
+      DateTimePickerAndroid.open({
+        value: returnDate,
+        mode: 'datetime',
+        is24Hour: true,
+        minimumDate: scheduledDate, // Can't be before scheduled date
+        onChange: (event, selectedDate) => {
+          if (event.type === 'set' && selectedDate) {
+            setReturnDate(selectedDate);
+          }
+        },
+      });
+    } else {
+      setShowReturnDatePicker(true);
+    }
+  };
+
   const handleDateChange = (event, selectedDate) => {
     if (Platform.OS === 'ios') {
     setShowDatePicker(false);
@@ -406,7 +439,7 @@ const PakyawOptionScreen = ({ navigation, route }) => {
 
           <View style={styles.inputContainer}>
             <View style={styles.inputWrapper}>
-            {/* <NumberInput 
+            <NumberInput 
               numberOfRiders={numberOfRiders}
               onIncrement={() => setNumberOfRiders(numberOfRiders + 1)}
               onDecrement={() => {
@@ -414,7 +447,7 @@ const PakyawOptionScreen = ({ navigation, route }) => {
                   setNumberOfRiders(numberOfRiders - 1);
                 }
               }}
-            /> */}
+            />
               <View style={styles.inputWithClear}>
                 <TextInput
                   style={[styles.input, { flex: 1, marginBottom: 0 }]}
@@ -503,21 +536,35 @@ const PakyawOptionScreen = ({ navigation, route }) => {
             </View>
           </View>
 
-          <View style={styles.inputWrapper}>
-              <Text variant="bodyLarge" style={styles.labels}>
-                Description
-              </Text>
-              <TextInput
-                style={[styles.input, styles.instructionsInput]}
-                placeholder="Special instructions"
-                value={description}
-                onChangeText={setDescription} // Bind the instructions input
-              />
-            </View>
+            {/* Back and Forth Toggle */}
+          <View style={styles.toggleContainer}>
+            <Text style={styles.toggleLabel}>Back and Forth</Text>
+            <Switch
+              trackColor={{ false: "#767577", true: "#81b0ff" }}
+              thumbColor={isBackAndForth ? "#f5dd4b" : "#f4f3f4"}
+              ios_backgroundColor="#3e3e3e"
+              onValueChange={() => {
+                setIsBackAndForth((prevValue) => {
+                  const newValue = !prevValue;
+                  console.log("isBackAndForth toggled to:", newValue);
+
+                  // Use the new value directly for fare calculation
+                  if (totalDistanceRide > 0) {
+                    calculateFare(totalDistanceRide, newValue);
+                  }
+
+                  return newValue;
+                });
+              }}
+              value={isBackAndForth}
+            />
+
+
+          </View>
 
           {/* Scheduled Ride Toggle */}
-          <View style={styles.scheduledContainer}>
-              <Text style={styles.scheduledLabel}>Scheduled Ride</Text>
+          <View style={styles.toggleContainer}>
+              <Text style={styles.toggleLabel}>Scheduled Ride</Text>
               <Switch
                 trackColor={{ false: "#767577", true: "#81b0ff" }}
                 thumbColor={isScheduled ? "#f5dd4b" : "#f4f3f4"}
@@ -527,48 +574,11 @@ const PakyawOptionScreen = ({ navigation, route }) => {
               />
             </View>
             {/* Date Picker section */}
-      {isScheduled && (
-        <View style={styles.datePickerContainer}>
-          <TouchableOpacity 
-            onPress={showDatePicker1}
-            style={styles.dateDisplayContainer}
-          >
-            <Text style={styles.dateDisplayText}>
-              {scheduledDate.toLocaleString()}
-            </Text>
-          </TouchableOpacity>
-
-          {/* Only show DateTimePicker component on iOS */}
-          {Platform.OS === 'ios' && showDatePicker && (
-            <DateTimePicker
-              testID="scheduleDatePicker"
-              value={scheduledDate}
-              mode="datetime"
-              is24Hour={true}
-              display="default"
-              onChange={handleDateChange}
-            />
-          )}
-        </View>
-      )}
-
-            {/* Date Picker (conditionally rendered)
-            {isScheduled && (
+          {isScheduled && (
             <View style={styles.datePickerContainer}>
+              <Text style={styles.dateLabel}>Departure Date & Time:</Text>
               <TouchableOpacity 
-                onPress={() => {
-                  if (Platform.OS === 'android') {
-                    DateTimePickerAndroid.open({
-                      value: scheduledDate,
-                      mode: 'datetime',
-                      is24Hour: true,
-                      onChange: handleDateChange,
-                    });
-                  } else {
-                    setShowDatePicker(true);
-                  }
-                }}
-                
+                onPress={showDatePicker1}
                 style={styles.dateDisplayContainer}
               >
                 <Text style={styles.dateDisplayText}>
@@ -576,14 +586,22 @@ const PakyawOptionScreen = ({ navigation, route }) => {
                 </Text>
               </TouchableOpacity>
 
-              {showDatePicker && Platform.OS === 'android' ? (
-                DateTimePickerAndroid.open({
-                  value: scheduledDate,
-                  mode: 'datetime',
-                  is24Hour: true,
-                  onChange: handleDateChange,
-                })
-              ) : (
+              {/* Return Date Picker (only show if back and forth is selected) */}
+              {isBackAndForth && (
+                <>
+                  <Text style={[styles.dateLabel, { marginTop: 10 }]}>Return Date & Time:</Text>
+                  <TouchableOpacity 
+                    onPress={showReturnDatePicker1}
+                    style={styles.dateDisplayContainer}
+                  >
+                    <Text style={styles.dateDisplayText}>
+                      {returnDate.toLocaleString()}
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
+
+              {Platform.OS === 'ios' && showDatePicker && (
                 <DateTimePicker
                   testID="scheduleDatePicker"
                   value={scheduledDate}
@@ -594,23 +612,49 @@ const PakyawOptionScreen = ({ navigation, route }) => {
                 />
               )}
 
+              {Platform.OS === 'ios' && showReturnDatePicker && (
+                <DateTimePicker
+                  testID="returnDatePicker"
+                  value={returnDate}
+                  mode="datetime"
+                  is24Hour={true}
+                  display="default"
+                  minimumDate={scheduledDate}
+                  onChange={handleReturnDateChange}
+                />
+              )}
             </View>
-          )} */}
+          )}
+
+          {/* Description Input */}
+          <View style={styles.inputWrapper}>
+            <Text style={styles.labels}>Description</Text>
+            <TextInput
+              style={[styles.input, styles.instructionsInput]}
+              placeholder="Special instructions"
+              value={description}
+              onChangeText={setDescription}
+              multiline={true}
+            />
+          </View>
 
           <View style={styles.fareContainer}>
             {isCalculatingFare ? (
               <ActivityIndicator size="large" color="black" />
             ) : (
               <>
-                <Text style={styles.fareLabel}>Estimated Fare:</Text>
+                <Text style={styles.fareLabel}>
+                  Estimated Fare {isBackAndForth ? '(Round Trip)' : ''}:
+                </Text>
                 <TextInput
                   style={styles.fareInput}
                   value={fare}
                   onChangeText={setFare}
                   keyboardType="numeric"
+                  editable={false}
                 />
                 <Text style={styles.distanceText}>
-                  Distance: {totalDistanceRide} km
+                  Distance: {totalDistanceRide} km {isBackAndForth ? '(one way)' : ''}
                 </Text>
               </>
             )}
@@ -821,15 +865,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginHorizontal: 16,
   },
-  scheduledContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-    paddingHorizontal: 10,
-  },
-  scheduledLabel: {
-    fontSize: 16,
+  dateLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 5,
+    alignSelf: 'flex-start',
   },
   datePickerContainer: {
     alignItems: 'center',
@@ -848,6 +889,20 @@ const styles = StyleSheet.create({
   instructionsInput: {
     height: 80, // To give more space for instructions input
     textAlignVertical: "top", // To start text from top
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    marginBottom: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 8,
+  },
+  toggleLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
   },
 });
 

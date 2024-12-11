@@ -37,7 +37,7 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
   const [pickupAddress, setPickupAddress] = useState("");
   const [dropoffLocation, setDropoffLocation] = useState("");
   const [dropoffAddress, setDropoffAddress] = useState("");
-  const [fare, setFare] = useState("40.00");
+  const [fare, setFare] = useState();
   const [userId, setUserId] = useState(null);
   const [deliveryType, setDeliveryType] = useState("");
   const [instructions, setInstructions] = useState("");
@@ -53,7 +53,11 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
   const [isClearing, setIsClearing] = useState(false);
   const { baseFare, additionalFareRate } = useContext(AuthContext);
 
-
+  useEffect(() => {
+    if (baseFare) {
+      setFare(Number(baseFare).toFixed(2));
+    }
+  }, [baseFare]);
 
   useEffect(() => {
     const fetchUserId = async () => {

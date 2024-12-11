@@ -17,7 +17,6 @@ import userService from "../../services/auth&services";
 import { BlurView } from "expo-blur";
 import { MAP_API_KEY } from "@env";
 import { AuthContext } from "../../services/AuthContext";
-import { useAuth } from "../../services/useAuth";
 
 const GOOGLE_PLACES_API_KEY = MAP_API_KEY;
 
@@ -31,11 +30,12 @@ const PlaceSuggestion = ({ suggestion, onPress }) => (
 );
 
 const MotorTaxiOptionScreen = ({ navigation, route }) => {
+  const { baseFare, additionalFareRate } = useContext(AuthContext);
   const [pickupLocation, setPickupLocation] = useState("");
   const [pickupAddress, setPickupAddress] = useState("");
   const [dropoffLocation, setDropoffLocation] = useState("");
   const [dropoffAddress, setDropoffAddress] = useState("");
-  const [fare, setFare] = useState("40.00");
+  const [fare, setFare] = useState();
   const [userId, setUserId] = useState(null);
   const { customerCoords, setCustomerCoords } = useContext(CustomerContext);
   const [totalDistanceRide, setTotalDistanceRide] = useState(0);
@@ -47,8 +47,13 @@ const MotorTaxiOptionScreen = ({ navigation, route }) => {
   const [isCalculatingFare, setIsCalculatingFare] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   // const { baseFare, additionalFareRate, token, role } = useAuth();
-  const { baseFare, additionalFareRate } = useContext(AuthContext);
+  console.log(baseFare)
 
+  useEffect(() => {
+    if (baseFare) {
+      setFare(Number(baseFare).toFixed(2));
+    }
+  }, [baseFare]);
 
   useEffect(() => {
     const fetchUserId = async () => {
