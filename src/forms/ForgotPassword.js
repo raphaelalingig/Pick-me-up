@@ -74,10 +74,8 @@ const ForgotPassword = ({ navigation }) => {
   };
 
   return (
-    <ImageBackground
-      source={{
-        uri: "https://media.geeksforgeeks.org/wp-content/uploads/20220217151648/download3.png",
-      }}
+    <View
+      
       style={styles.background}
     >
       <View style={styles.container}>
@@ -148,7 +146,7 @@ const ForgotPassword = ({ navigation }) => {
           </>
         )}
       </View>
-    </ImageBackground>
+    </View>
   );
 };
 

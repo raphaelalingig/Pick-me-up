@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
   input: {
     marginBottom: 20,
   },
-  forgotcontainer: {
+  forgotContainer: {
     flex: 1,
     justifyContent: "center",
     paddingHorizontal: 20,
@@ -271,8 +271,11 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
   },
   forgotPasswordLink: {
-    color: "#D4A017",
+    color: "#D4A017", // Darker yellow
     textDecorationLine: "underline",
+    textShadowColor: "rgba(255, 255, 255, 0.45)", // Shadow color
+    textShadowOffset: { width: 1, height: 1 }, // Shadow offset
+    textShadowRadius: 2, // Shadow blur radius
   },
   button: {
     marginTop: 20,
