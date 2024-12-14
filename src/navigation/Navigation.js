@@ -48,6 +48,7 @@ import MapPicker from "../customer/pages/MapPicker";
 import ReportRiderPage from "../customer/pages/ReportRider";
 import Delivery from "../customer/pages/DeliveryWaiting";
 import WaitingPakyaw from "../customer/pages/PakyawWaiting";
+import ForgotPassword from "../forms/ForgotPassword";
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -170,6 +171,7 @@ const AuthStack = () => {
       <Stack.Screen name="Login" component={Login} />
       <Stack.Screen name="Confirmation" component={Confirmation} />
       <Stack.Screen name="Register" component={Register} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
     </Stack.Navigator>
   );
 };

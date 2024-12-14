@@ -177,7 +177,14 @@ const Login = ({ navigation }) => {
           />
 
           {error && <Text style={styles.error}>{error}</Text>}
-
+          <View style={styles.forgotcontainercontainer}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("ForgotPassword")}
+              style={styles.forgotPasswordContainer}
+            >
+              <Text style={styles.forgotPasswordLink}>Forgot Password?</Text>
+            </TouchableOpacity>
+          </View>
           <Button
             mode="contained"
             style={styles.button}
@@ -254,6 +261,18 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 20,
+  },
+  forgotcontainer: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: 20,
+  },
+  forgotPasswordContainer: {
+    alignSelf: "flex-end",
+  },
+  forgotPasswordLink: {
+    color: "#D4A017",
+    textDecorationLine: "underline",
   },
   button: {
     marginTop: 20,
