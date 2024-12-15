@@ -269,13 +269,16 @@ const styles = StyleSheet.create({
   },
   forgotPasswordContainer: {
     alignSelf: "flex-end",
+    marginTop: 10, // Adds space above the text
   },
   forgotPasswordLink: {
-    color: "#D4A017", // Darker yellow
+    color: "#FFD700", // Brighter yellow for better contrast
+    fontWeight: "bold",
+    letterSpacing: 0.5, // Adds spacing between letters
     textDecorationLine: "underline",
-    textShadowColor: "rgba(255, 255, 255, 0.45)", // Shadow color
-    textShadowOffset: { width: 1, height: 1 }, // Shadow offset
-    textShadowRadius: 2, // Shadow blur radius
+    textShadowColor: "rgba(0, 0, 0, 0.7)", // Stronger shadow for contrast
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
   button: {
     marginTop: 20,
