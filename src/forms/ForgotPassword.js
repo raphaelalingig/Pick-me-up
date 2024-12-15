@@ -176,6 +176,14 @@ const ForgotPassword = ({ navigation }) => {
             >
               Send Verification Code
             </Button>
+            <Button
+            mode="text"
+            onPress={() => navigation.navigate('Login')} // Navigate to Login screen when Cancel is pressed
+            style={styles.secondaryButton}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
           </>
         );
       case 2:
