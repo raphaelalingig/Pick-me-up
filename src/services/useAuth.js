@@ -1,4 +1,4 @@
-import { useContext, useCallback, useEffect } from "react";
+import { useContext, useCallback, useState, useEffect } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { AuthContext } from "./AuthContext";
@@ -15,6 +15,9 @@ import {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
+  
+  const [baseFare, setBaseFare] = useState(null);
+  const [additionalFareRate, setAdditionalFareRate] = useState(null);
 
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
@@ -42,6 +45,22 @@ export const useAuth = () => {
     loading,
     setLoading,
   } = context;
+
+  const fetchFareData = useCallback(async () => {
+    try {
+      const response = await userService.getFare();
+      setBaseFare(response.first_2km);
+      setAdditionalFareRate(response.exceeding_2km);
+      return {
+        baseFare: response.first_2km,
+        additionalFareRate: response.exceeding_2km
+      };
+    } catch (error) {
+      console.error("Error fetching fare data:", error);
+      Alert.alert("Error", "Failed to fetch fare data.");
+      throw error;
+    }
+  }, []);
 
   // Login function
   const login = useCallback(
@@ -143,5 +162,8 @@ export const useAuth = () => {
     logout,
     checkToken,
     loading,
+    fetchFareData,
+    baseFare,
+    additionalFareRate,
   };
 };

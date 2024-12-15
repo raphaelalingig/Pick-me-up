@@ -1,133 +1,231 @@
-// ForgotPassword.js
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
   TextInput,
-  TouchableOpacity,
   Alert,
-  ImageBackground,
-} from "react-native";
-import { Text, Button } from "react-native-paper";
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
+import { Text, Button } from 'react-native-paper';
+import API_URL from '../services/api_url';
 
 const ForgotPassword = ({ navigation }) => {
-  const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [step, setStep] = useState(1); // Track the current step
+  const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePassword = (password) => {
+    return password.length >= 8;
+  };
 
   const handleSendEmail = async () => {
     if (!email) {
-      Alert.alert("Error", "Please enter your email address.");
+      Alert.alert('Error', 'Please enter your email address.');
       return;
     }
 
+    if (!validateEmail(email)) {
+      Alert.alert('Error', 'Please enter a valid email address.');
+      return;
+    }
+
+    setLoading(true);
     try {
-      // Replace this with your API call to send a confirmation code
-      await fakeApiSendCode(email);
+      const response = await fetch(`${API_URL}password-reset/send-code`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to send verification code');
+      }
+
       Alert.alert(
-        "Success",
-        "A confirmation code has been sent to your email."
+        'Success',
+        'A verification code has been sent to your email.',
+        [{ text: 'OK', onPress: () => setStep(2) }]
       );
-      setStep(2);
     } catch (error) {
-      Alert.alert("Error", "Failed to send email. Please try again.");
+      console.error("ERROR", error.message)
+      Alert.alert('Error', error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleVerifyCode = async () => {
     if (!code) {
-      Alert.alert("Error", "Please enter the confirmation code.");
+      Alert.alert('Error', 'Please enter the verification code.');
       return;
     }
 
+    setLoading(true);
     try {
-      // Replace this with your API call to verify the confirmation code
-      await fakeApiVerifyCode(email, code);
-      Alert.alert("Success", "Code verified. You can now set a new password.");
-      setStep(3);
+      const response = await fetch(`${API_URL}password-reset/verify-code`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, verification_code: code }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Invalid verification code');
+      }
+
+      Alert.alert(
+        'Success',
+        'Code verified successfully. Please set your new password.',
+        [{ text: 'OK', onPress: () => setStep(3) }]
+      );
     } catch (error) {
-      Alert.alert("Error", "Invalid confirmation code. Please try again.");
+      Alert.alert('Error', error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleResetPassword = async () => {
     if (!newPassword || !confirmPassword) {
-      Alert.alert("Error", "Please fill in all password fields.");
+      Alert.alert('Error', 'Please fill in all password fields.');
+      return;
+    }
+
+    if (!validatePassword(newPassword)) {
+      Alert.alert('Error', 'Password must be at least 8 characters long.');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match.");
+      Alert.alert('Error', 'Passwords do not match.');
       return;
     }
 
+    setLoading(true);
     try {
-      // Replace this with your API call to reset the password
-      await fakeApiResetPassword(email, newPassword);
-      Alert.alert("Success", "Your password has been reset. Please log in.");
-      navigation.navigate("Login");
+      const response = await fetch(`${API_URL}password-reset/reset`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password: newPassword,
+          password_confirmation: confirmPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to reset password');
+      }
+
+      Alert.alert('Success', 'Your password has been reset successfully.', [
+        { text: 'OK', onPress: () => navigation.navigate('Login') },
+      ]);
     } catch (error) {
-      Alert.alert("Error", "Failed to reset password. Please try again.");
+      Alert.alert('Error', error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  return (
-    <View
-      
-      style={styles.background}
-    >
-      <View style={styles.container}>
-        {step === 1 && (
+  const renderStepContent = () => {
+    switch (step) {
+      case 1:
+        return (
           <>
             <Text style={styles.title}>Forgot Password</Text>
+            <Text style={styles.description}>
+              Enter your email address and we'll send you a verification code.
+            </Text>
             <TextInput
               style={styles.input}
               placeholder="Enter your email"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
+              autoCapitalize="none"
+              editable={!loading}
             />
             <Button
               mode="contained"
               onPress={handleSendEmail}
               style={styles.button}
+              loading={loading}
+              disabled={loading}
             >
-              Send Email
+              Send Verification Code
             </Button>
           </>
-        )}
-
-        {step === 2 && (
+        );
+      case 2:
+        return (
           <>
-            <Text style={styles.title}>Enter Confirmation Code</Text>
+            <Text style={styles.title}>Verify Code</Text>
+            <Text style={styles.description}>
+              Enter the verification code sent to your email.
+            </Text>
             <TextInput
               style={styles.input}
-              placeholder="Enter the code"
+              placeholder="Enter verification code"
               value={code}
               onChangeText={setCode}
-              keyboardType="numeric"
+              keyboardType="number-pad"
+              editable={!loading}
             />
             <Button
               mode="contained"
               onPress={handleVerifyCode}
               style={styles.button}
+              loading={loading}
+              disabled={loading}
             >
               Verify Code
             </Button>
+            <Button
+              mode="text"
+              onPress={() => setStep(1)}
+              style={styles.secondaryButton}
+              disabled={loading}
+            >
+              Back to Email
+            </Button>
           </>
-        )}
-
-        {step === 3 && (
+        );
+      case 3:
+        return (
           <>
             <Text style={styles.title}>Reset Password</Text>
+            <Text style={styles.description}>
+              Create a new password for your account.
+            </Text>
             <TextInput
               style={styles.input}
               placeholder="New password"
               value={newPassword}
               onChangeText={setNewPassword}
               secureTextEntry
+              editable={!loading}
             />
             <TextInput
               style={styles.input}
@@ -135,68 +233,105 @@ const ForgotPassword = ({ navigation }) => {
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry
+              editable={!loading}
             />
             <Button
               mode="contained"
               onPress={handleResetPassword}
               style={styles.button}
+              loading={loading}
+              disabled={loading}
             >
               Reset Password
             </Button>
+            <Button
+              mode="text"
+              onPress={() => setStep(2)}
+              style={styles.secondaryButton}
+              disabled={loading}
+            >
+              Back to Verification
+            </Button>
           </>
-        )}
-      </View>
-    </View>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.content}>
+          {loading && (
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="large" color="#daa520" />
+            </View>
+          )}
+          {renderStepContent()}
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
-};
-
-const fakeApiSendCode = async (email) => {
-  // Simulate API call
-  return new Promise((resolve) => setTimeout(resolve, 1000));
-};
-
-const fakeApiVerifyCode = async (email, code) => {
-  // Simulate API call
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (code === "1234") resolve();
-      else reject();
-    }, 1000);
-  });
-};
-
-const fakeApiResetPassword = async (email, password) => {
-  // Simulate API call
-  return new Promise((resolve) => setTimeout(resolve, 1000));
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
+    backgroundColor: '#fff',
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
     padding: 20,
+    marginTop: 40,
   },
   title: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+    color: '#333',
+  },
+  description: {
+    fontSize: 16,
+    color: '#666',
     marginBottom: 20,
-    textAlign: "center",
+    textAlign: 'center',
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
-    padding: 10,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 15,
     marginBottom: 15,
-    backgroundColor: "#f8f8ff",
+    backgroundColor: '#f8f8ff',
+    fontSize: 16,
   },
   button: {
-    backgroundColor: "#daa520",
+    backgroundColor: '#daa520',
+    marginTop: 10,
+    padding: 8,
+    borderRadius: 8,
+  },
+  secondaryButton: {
     marginTop: 10,
   },
-  background: {
-    flex: 1,
-    resizeMode: "cover",
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
   },
 });
 

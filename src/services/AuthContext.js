@@ -11,8 +11,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(null);
   const [userId, setUserId] = useState(null);
-  const [baseFare, setBaseFare] = useState(null);
-  const [additionalFareRate, setAdditionalFareRate] = useState(null);
 
   useEffect(() => {
     const checkAuthState = async () => {
@@ -45,21 +43,6 @@ export const AuthProvider = ({ children }) => {
     checkAuthState();
   }, []);
 
-  useEffect(() => {
-    const fetchFareData = async () => {
-      try {
-        const response = await userService.getFare(); // Adjust based on your service method
-        setBaseFare(response.first_2km); // Correct usage
-        setAdditionalFareRate(response.exceeding_2km); // Correct usage
-      } catch (error) {
-        console.error("Error fetching fare data:", error);
-        alert("Failed to fetch fare data.");
-      }
-    };
-
-    fetchFareData();
-  }, []);
-
   return (
     <AuthContext.Provider
       value={{
@@ -75,8 +58,6 @@ export const AuthProvider = ({ children }) => {
         setLoading,
         token,
         setToken,
-        baseFare,
-        additionalFareRate,
       }}
     >
       {children}

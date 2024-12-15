@@ -18,7 +18,7 @@ import { CustomerContext } from "../../context/customerContext";
 import userService from "../../services/auth&services";
 import { BlurView } from "expo-blur";
 import { MAP_API_KEY } from "@env";
-import { AuthContext } from "../../services/AuthContext";
+import { useAuth } from "../../services/useAuth";
 
 // Correctly assign the API key
 const GOOGLE_PLACES_API_KEY = MAP_API_KEY;
@@ -51,13 +51,26 @@ const DeliveryOptionScreen = ({ navigation, route }) => {
   const [isCalculatingFare, setIsCalculatingFare] = useState(false);
   const [isRiderDecide, setIsRiderDecide] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
-  const { baseFare, additionalFareRate } = useContext(AuthContext);
-
-  useEffect(() => {
-    if (baseFare) {
-      setFare(Number(baseFare).toFixed(2));
-    }
-  }, [baseFare]);
+  const { fetchFareData, baseFare, additionalFareRate } = useAuth();
+  
+    const loadFares = async () => {
+      try {
+        setIsCalculatingFare(true);
+        const fares = await fetchFareData();
+        
+        console.log('base fare:', fares.baseFare);
+        console.log('Fetched fares:', fares);
+        setFare(Number(baseFare).toFixed(2));
+      } catch (err) {
+        console.error("Error fetching fares", err);
+      } finally {
+        setIsCalculatingFare(false);
+      }
+    };
+  
+    useEffect(() => {
+      loadFares();
+    }, []);
 
   useEffect(() => {
     const fetchUserId = async () => {
