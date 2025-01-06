@@ -26,7 +26,12 @@
           "apiKey": "AIzaSyAekXSq_b4GaHneUKEBVsl4UTGlaskobFo"
         }
       },
-      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"]
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -40,6 +45,11 @@
           "locationWhenInUsePermission": "Allow Pick Me Up to use your location while using the app."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "f89dceb1-ed3a-4a63-9c65-d86636879257"
+      }
+    }
   }
 }
