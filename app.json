@@ -45,11 +45,6 @@
           "locationWhenInUsePermission": "Allow Pick Me Up to use your location while using the app."
         }
       ]
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "f89dceb1-ed3a-4a63-9c65-d86636879257"
-      }
-    }
+    ]
   }
 }
